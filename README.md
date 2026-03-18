@@ -1,73 +1,37 @@
-# React + TypeScript + Vite
+# i-want-to-perfect
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Vite + React 기반 프로젝트입니다. `main` 브랜치에 푸시하면 GitHub Pages로 자동 배포되도록 설정되어 있습니다.
 
-Currently, two official plugins are available:
+## Local development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Build
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build
 ```
+
+## GitHub Pages deployment
+
+배포 대상 저장소:
+
+`https://github.com/hansaejo5-blip/i-want-to-perfect`
+
+설정된 내용:
+
+- Vite `base` 경로를 `/i-want-to-perfect/`로 지정
+- `.github/workflows/deploy.yml`에서 `main` 브랜치 푸시 시 자동 빌드/배포
+- git remote `origin`을 해당 저장소로 연결
+
+추가로 GitHub 저장소에서 한 번만 확인할 것:
+
+1. `Settings > Pages > Source`가 `GitHub Actions`로 잡혀 있는지 확인
+2. 로컬 변경사항을 커밋한 뒤 `origin/main`으로 푸시
+
+배포 주소는 보통 아래 형식입니다.
+
+`https://hansaejo5-blip.github.io/i-want-to-perfect/`
