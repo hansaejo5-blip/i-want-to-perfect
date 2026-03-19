@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://i-want-to-perfect.vercel.app/sitemap.xml

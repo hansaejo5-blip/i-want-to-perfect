@@ -1,0 +1,6 @@
+export { GuidePage } from './GuidePage'
+export { HomePage } from './HomePage'
+export { PlayPage } from './PlayPage'
+export { PrivacyPage } from './PrivacyPage'
+export { SupportPage } from './SupportPage'
+export { UpdatesPage } from './UpdatesPage'
