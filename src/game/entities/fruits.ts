@@ -20,7 +20,7 @@ export interface BallDefinition {
 const BALL_DEFINITIONS: BallDefinition[] = [
   {
     level: 0,
-    radius: 18,
+    radius: 18.9,
     fill: "#9f7a55",
     stroke: "#7a5332",
     accent: "#c7a07b",
@@ -29,7 +29,7 @@ const BALL_DEFINITIONS: BallDefinition[] = [
   },
   {
     level: 1,
-    radius: 25,
+    radius: 26.25,
     fill: "#b09b67",
     stroke: "#7a5332",
     accent: "#ddd0a2",
@@ -38,7 +38,7 @@ const BALL_DEFINITIONS: BallDefinition[] = [
   },
   {
     level: 2,
-    radius: 32,
+    radius: 33.6,
     fill: "#8fb374",
     stroke: "#7a5332",
     accent: "#f1a7b4",
@@ -47,7 +47,7 @@ const BALL_DEFINITIONS: BallDefinition[] = [
   },
   {
     level: 3,
-    radius: 40,
+    radius: 42,
     fill: "#ffe39f",
     stroke: "#7a5332",
     accent: "#f4b8c8",
@@ -56,7 +56,7 @@ const BALL_DEFINITIONS: BallDefinition[] = [
   },
   {
     level: 4,
-    radius: 49,
+    radius: 51.45,
     fill: "#ffd77d",
     stroke: "#7a5332",
     accent: "#f29797",
@@ -65,7 +65,7 @@ const BALL_DEFINITIONS: BallDefinition[] = [
   },
   {
     level: 5,
-    radius: 59,
+    radius: 61.95,
     fill: "#ffd7e6",
     stroke: "#7a5332",
     accent: "#f49aaf",
@@ -74,7 +74,7 @@ const BALL_DEFINITIONS: BallDefinition[] = [
   },
   {
     level: 6,
-    radius: 70,
+    radius: 73.5,
     fill: "#fff0a8",
     stroke: "#7a5332",
     accent: "#cab8ff",
@@ -83,7 +83,7 @@ const BALL_DEFINITIONS: BallDefinition[] = [
   },
   {
     level: 7,
-    radius: 88,
+    radius: 92.4,
     fill: "#fff3b0",
     stroke: "#7a5332",
     accent: "#cdbeff",
@@ -124,10 +124,10 @@ export function createBallBody(x: number, y: number, level: BallLevel): BallBody
   const body = Bodies.circle(x, y, definition.radius, {
     label: "ball",
     restitution: BALL_RESTITUTION,
-    friction: 0.055,
+    friction: 0.04,
     frictionAir: BALL_FRICTION_AIR,
     density: BALL_DENSITY,
-    frictionStatic: 0.24,
+    frictionStatic: 0.16,
     slop: 0.01,
     sleepThreshold: BALL_SLEEP_THRESHOLD,
   }) as BallBody

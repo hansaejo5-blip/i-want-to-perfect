@@ -1,13 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
+import { createGameAudioController } from './audio'
 import { createGame } from './createGame'
 import { createInitialGameSnapshot } from './state/gameState'
 import type { GameSnapshot } from './types'
 import { GameOverlay } from './ui/GameOverlay'
+import type { RunEndedSummary } from './stats'
 
-export function GameScreen() {
+type GameScreenProps = {
+  isMuted?: boolean
+  onRunEnded?: (summary: RunEndedSummary) => void
+}
+
+export function GameScreen({ isMuted = false, onRunEnded }: GameScreenProps) {
   const frameRef = useRef<HTMLDivElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const gameRef = useRef<ReturnType<typeof createGame> | null>(null)
+  const audioRef = useRef<ReturnType<typeof createGameAudioController> | null>(null)
+  const hasReportedRunEndRef = useRef(false)
   const [sessionId, setSessionId] = useState(0)
   const [snapshot, setSnapshot] = useState<GameSnapshot>(
     createInitialGameSnapshot(),
@@ -15,6 +24,12 @@ export function GameScreen() {
   const [isLandscape, setIsLandscape] = useState(() => {
     return window.innerWidth >= window.innerHeight
   })
+
+  if (audioRef.current === null) {
+    audioRef.current = createGameAudioController()
+  }
+
+  const audio = audioRef.current
 
   useEffect(() => {
     const frame = frameRef.current
@@ -27,6 +42,9 @@ export function GameScreen() {
     const game = createGame({
       canvas,
       onStateChange: setSnapshot,
+      onShoot: () => audio.playShoot(),
+      onMerge: () => audio.playMerge(),
+      onGameOver: () => audio.playGameOver(),
     })
 
     gameRef.current = game
@@ -57,7 +75,35 @@ export function GameScreen() {
       game.destroy()
       gameRef.current = null
     }
-  }, [sessionId])
+  }, [audio, sessionId])
+
+  useEffect(() => {
+    audio.setMuted(isMuted)
+  }, [audio, isMuted])
+
+  useEffect(() => {
+    if (snapshot.isGameOver === false) {
+      hasReportedRunEndRef.current = false
+      return
+    }
+
+    if (hasReportedRunEndRef.current) {
+      return
+    }
+
+    hasReportedRunEndRef.current = true
+    onRunEnded?.({
+      score: snapshot.score,
+      bestScore: snapshot.bestScore,
+      shotCount: snapshot.shotCount,
+    })
+  }, [onRunEnded, snapshot.bestScore, snapshot.isGameOver, snapshot.score, snapshot.shotCount])
+
+  useEffect(() => {
+    return () => {
+      audio.destroy()
+    }
+  }, [audio])
 
   return (
     <section className="game-screen">
@@ -69,6 +115,7 @@ export function GameScreen() {
             if (isLandscape === false) {
               return
             }
+            audio.unlock()
             event.currentTarget.setPointerCapture(event.pointerId)
             gameRef.current?.pointerDown(event.clientX, event.clientY)
           }}
@@ -82,6 +129,7 @@ export function GameScreen() {
             if (isLandscape === false) {
               return
             }
+            audio.unlock()
             gameRef.current?.pointerUp(event.clientX, event.clientY)
           }}
           onPointerCancel={(event) => {

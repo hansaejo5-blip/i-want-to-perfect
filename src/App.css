@@ -208,7 +208,6 @@ summary:focus-visible {
 }
 
 .hero-section__copy,
-.hero-section__media,
 .prose-card,
 .control-card,
 .update-card,
@@ -239,11 +238,21 @@ summary:focus-visible {
   color: var(--muted);
 }
 
+.hero-section__media {
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 251, 245, 0.72);
+}
+
 .hero-section__media img {
   width: 100%;
   aspect-ratio: 16 / 10;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   border-radius: 18px;
+  background: linear-gradient(180deg, rgba(247, 244, 236, 0.92) 0%, rgba(239, 230, 216, 0.92) 100%);
 }
 
 .feature-grid,
@@ -294,15 +303,25 @@ summary:focus-visible {
 }
 
 .play-page__hero,
+.play-toolbar,
+.run-stats-section,
 .cta-row-section {
   display: grid;
   gap: 6px;
+}
+
+.play-toolbar {
+  justify-items: end;
 }
 
 .play-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
   gap: 18px;
+}
+
+.play-toolbar .cta-button {
+  min-width: 132px;
 }
 
 .play-layout__game {
@@ -325,6 +344,77 @@ summary:focus-visible {
 
 .play-layout__game .game-screen {
   min-height: 620px;
+}
+
+.run-stats-section {
+  background: linear-gradient(180deg, rgba(255, 248, 239, 0.96) 0%, rgba(244, 232, 212, 0.96) 100%);
+}
+
+.run-stats-copy {
+  margin: 0;
+  color: #6c4d34;
+}
+
+.run-stats-copy strong {
+  color: #a76c34;
+}
+
+.run-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.run-stat-card {
+  display: grid;
+  gap: 8px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: rgba(255, 248, 238, 0.86);
+  box-shadow: inset 0 0 0 1px rgba(176, 136, 98, 0.2), 0 12px 28px rgba(122, 83, 50, 0.08);
+}
+
+.run-stat-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.share-run-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(255, 252, 247, 0.92);
+  box-shadow: inset 0 0 0 1px rgba(176, 136, 98, 0.22);
+  color: #6c4d34;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.share-run-button svg {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+}
+
+.run-stat-card--score strong {
+  color: #c57f37;
+}
+
+.run-stat-card--rank strong {
+  color: #8c9f56;
+}
+
+.run-stat-card strong {
+  font-size: 1.3rem;
+  color: #6c4d34;
 }
 
 .support-grid {
@@ -562,6 +652,7 @@ summary:focus-visible {
   .screenshot-grid,
   .update-grid,
   .play-layout,
+  .run-stats-grid,
   .support-grid {
     grid-template-columns: 1fr;
   }
@@ -584,6 +675,10 @@ summary:focus-visible {
   .play-layout__game .game-screen,
   .game-frame {
     min-height: 520px;
+  }
+
+  .play-toolbar {
+    justify-items: stretch;
   }
 }
 

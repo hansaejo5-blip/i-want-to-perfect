@@ -20,7 +20,7 @@ import {
 } from '../entities/fruits'
 import type { BallLevel } from '../types'
 
-const SHOT_SPEED_MULTIPLIER = 1.08
+const SHOT_SPEED_MULTIPLIER = 1.3
 
 export interface CannonState {
   x: number

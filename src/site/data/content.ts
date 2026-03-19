@@ -1,4 +1,4 @@
-import heroImage from '../../assets/hero.png'
+import heroImage from '../../assets/hero-shot.png'
 import { DISCORD_URL, ITCH_URL, NEWSLETTER_URL } from '../router'
 
 export const homeHero = {

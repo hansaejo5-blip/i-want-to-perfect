@@ -7,6 +7,7 @@ import {
   CANNON_BASE_RADIUS,
   DANGER_DURATION_MS,
   FIXED_TIMESTEP_MS,
+  GAME_SPEED_MULTIPLIER,
   MAX_PHYSICS_STEPS,
   MAX_SHOT_POWER,
   MIN_DRAG_DISTANCE,
@@ -37,7 +38,7 @@ import {
 import type { BallBody, BallLevel, GameSnapshot } from './types'
 import type { BowlGeometry } from './world/bowl'
 
-const SHOT_SPEED_MULTIPLIER = 1.08
+const SHOT_SPEED_MULTIPLIER = 1.3
 
 const BEST_SCORE_STORAGE_KEY = 'blip-perfect-best-score'
 const COMBO_WINDOW_MS = 1500
@@ -54,6 +55,9 @@ const SCORE_BY_LEVEL: Partial<Record<BallLevel, number>> = {
 interface CreateGameOptions {
   canvas: HTMLCanvasElement
   onStateChange: (snapshot: GameSnapshot) => void
+  onShoot?: () => void
+  onMerge?: () => void
+  onGameOver?: () => void
 }
 
 interface Viewport {
@@ -122,6 +126,9 @@ function getMergeScore(level: BallLevel) {
 export function createGame({
   canvas,
   onStateChange,
+  onShoot,
+  onMerge,
+  onGameOver,
 }: CreateGameOptions): GameInstance {
   const context = canvas.getContext('2d')
 
@@ -166,6 +173,15 @@ export function createGame({
   let bestScore = storedBestScore
   let comboCount = 0
   let lastMergeAt: number | null = null
+
+  const triggerGameOver = () => {
+    if (isGameOver) {
+      return
+    }
+
+    isGameOver = true
+    onGameOver?.()
+  }
 
   const onWallBounce = (event: Matter.IEventCollision<Engine>) => {
     for (const pair of event.pairs) {
@@ -294,17 +310,29 @@ export function createGame({
       cannon.x + Math.cos(angleRad) * (CANNON_BARREL_LENGTH + muzzleRadius + 8)
     let py =
       cannon.y + Math.sin(angleRad) * (CANNON_BARREL_LENGTH + muzzleRadius + 8)
-    let vx = Math.cos(angleRad) * cannon.shotPower * SHOT_SPEED_MULTIPLIER
-    let vy = Math.sin(angleRad) * cannon.shotPower * SHOT_SPEED_MULTIPLIER
+    let vx =
+      Math.cos(angleRad) *
+      cannon.shotPower *
+      SHOT_SPEED_MULTIPLIER *
+      GAME_SPEED_MULTIPLIER
+    let vy =
+      Math.sin(angleRad) *
+      cannon.shotPower *
+      SHOT_SPEED_MULTIPLIER *
+      GAME_SPEED_MULTIPLIER
     const gravityStep =
-      engine.gravity.y * engine.gravity.scale * FIXED_TIMESTEP_MS * FIXED_TIMESTEP_MS
+      engine.gravity.y *
+      engine.gravity.scale *
+      FIXED_TIMESTEP_MS *
+      FIXED_TIMESTEP_MS *
+      GAME_SPEED_MULTIPLIER
     const powerRatio = Math.min(
       Math.max((cannon.shotPower - MIN_SHOT_POWER) / (MAX_SHOT_POWER - MIN_SHOT_POWER), 0),
       1,
     )
     const radius = 1.8 + powerRatio * 2.2
 
-    for (let step = 0; step < 18; step += 1) {
+    for (let step = 0; step < 5; step += 1) {
       px += vx
       py += vy
       vy += gravityStep
@@ -395,6 +423,8 @@ export function createGame({
         startedAt: time,
         durationMs: 1000,
       })
+
+      onMerge?.()
     }
   }
 
@@ -420,7 +450,7 @@ export function createGame({
 
     floorBallCount = nextFloorBallCount
     if (floorBallCount >= 3) {
-      isGameOver = true
+      triggerGameOver()
     }
   }
 
@@ -452,7 +482,7 @@ export function createGame({
       isDangerActive = true
 
       if (time - dangerStartTime >= DANGER_DURATION_MS) {
-        isGameOver = true
+        triggerGameOver()
       }
     } else {
       isDangerActive = false
@@ -596,6 +626,7 @@ export function createGame({
           advanceCannonQueue(cannon, getSpawnBallLevel(getMaxFieldLevel()))
           const snapshot = store.getSnapshot()
           store.update({ shotCount: snapshot.shotCount + 1 })
+          onShoot?.()
         }
       }
 

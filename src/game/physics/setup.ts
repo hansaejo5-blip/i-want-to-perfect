@@ -1,4 +1,5 @@
 import { Composite, Engine } from 'matter-js'
+import { GAME_SPEED_MULTIPLIER } from '../config'
 import { createBowlSetup } from '../world/bowl'
 
 export function createPhysicsEngine() {
@@ -9,6 +10,8 @@ export function createPhysicsEngine() {
     velocityIterations: 10,
     constraintIterations: 3,
   })
+
+  engine.timing.timeScale = GAME_SPEED_MULTIPLIER
 
   const bowl = createBowlSetup()
   Composite.add(engine.world, bowl.bodies)

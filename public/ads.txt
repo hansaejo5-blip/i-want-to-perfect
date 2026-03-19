@@ -1,3 +1,1 @@
-# Replace the placeholder below with your real AdSense publisher record after approval.
-# Example format:
-# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+google.com, pub-3405229390554193, DIRECT, f08c47fec0942fa0

@@ -10,10 +10,10 @@ import { FIXED_TIMESTEP_MS } from '../config'
 import { getNextBallLevel, isBallBody } from '../entities/fruits'
 import type { BallLevel, BallBody } from '../types'
 
-const MERGE_CONTACT_MS = 3
-const MAX_RELATIVE_SPEED = 11.8
-const IMMEDIATE_MERGE_SPEED = 10.8
-const MERGE_DISTANCE_TOLERANCE = 28
+const MERGE_CONTACT_MS = 1.5
+const MAX_RELATIVE_SPEED = 14.4
+const IMMEDIATE_MERGE_SPEED = 13.4
+const MERGE_DISTANCE_TOLERANCE = 40
 const LAUNCHED_MERGE_WINDOW_MS = 2200
 
 export interface MergeCandidate {
@@ -163,7 +163,7 @@ export function createCollisionHooks(engine: Engine) {
     const hasLaunchHit =
       launchedBodyTouchesSettledBall &&
       penetrationDepth >= minRadius * 0.025 &&
-      relativeSpeed <= 12.2
+      relativeSpeed <= 14.8
 
     state.hadDeepContact = state.hadDeepContact || hasDeepContact
     state.hadStrongPush = state.hadStrongPush || hasStrongPush
@@ -191,7 +191,7 @@ export function createCollisionHooks(engine: Engine) {
       penetrationDepth >= minRadius * 0.032
     const launchedMerge =
       state.hadLaunchHit &&
-      relativeSpeed <= 12.2 &&
+      relativeSpeed <= 14.8 &&
       penetrationDepth >= minRadius * 0.025
 
     if (sustainedContact === false && immediateMerge === false && fallingIntoRestingMerge === false && pushedMerge === false && dropMerge === false && launchedMerge === false) {
