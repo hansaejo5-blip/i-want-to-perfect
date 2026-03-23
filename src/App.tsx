@@ -87,6 +87,41 @@ function App() {
     })
     ogUrlTag.content = SITE_URL + meta.canonicalPath
 
+    const ogImageTag = ensureMetaTag('meta[property="og:image"]', () => {
+      const element = document.createElement('meta')
+      element.setAttribute('property', 'og:image')
+      return element
+    })
+    ogImageTag.content = SITE_URL + '/og-image.png'
+
+    const twitterCardTag = ensureMetaTag('meta[name="twitter:card"]', () => {
+      const element = document.createElement('meta')
+      element.name = 'twitter:card'
+      return element
+    })
+    twitterCardTag.content = 'summary_large_image'
+
+    const twitterTitleTag = ensureMetaTag('meta[name="twitter:title"]', () => {
+      const element = document.createElement('meta')
+      element.name = 'twitter:title'
+      return element
+    })
+    twitterTitleTag.content = meta.title
+
+    const twitterDescriptionTag = ensureMetaTag('meta[name="twitter:description"]', () => {
+      const element = document.createElement('meta')
+      element.name = 'twitter:description'
+      return element
+    })
+    twitterDescriptionTag.content = meta.description
+
+    const twitterImageTag = ensureMetaTag('meta[name="twitter:image"]', () => {
+      const element = document.createElement('meta')
+      element.name = 'twitter:image'
+      return element
+    })
+    twitterImageTag.content = SITE_URL + '/og-image.png'
+
     const canonicalLink = ensureLinkTag('link[rel="canonical"]', () => {
       const element = document.createElement('link')
       element.rel = 'canonical'
