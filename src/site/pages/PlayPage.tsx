@@ -32,113 +32,6 @@ function getShareText(latestRun: RecordedRunSummary | null, bestScore: number, t
   return 'Play Perfect Drop and climb the shared leaderboard.'
 }
 
-async function createInstagramCard(latestRun: RecordedRunSummary | null, bestScore: number, totalRuns: number) {
-  const canvas = document.createElement('canvas')
-  canvas.width = 1080
-  canvas.height = 1350
-  const context = canvas.getContext('2d')
-  if (!context) {
-    return null
-  }
-
-  const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height)
-  gradient.addColorStop(0, '#f7efdf')
-  gradient.addColorStop(0.52, '#f4dfbe')
-  gradient.addColorStop(1, '#d8c28b')
-  context.fillStyle = gradient
-  context.fillRect(0, 0, canvas.width, canvas.height)
-
-  context.fillStyle = 'rgba(255, 251, 245, 0.9)'
-  context.strokeStyle = 'rgba(122, 83, 50, 0.12)'
-  context.lineWidth = 4
-  context.beginPath()
-  context.roundRect(72, 80, 936, 1190, 48)
-  context.fill()
-  context.stroke()
-
-  context.fillStyle = '#55694a'
-  context.font = '700 34px Pretendard, Noto Sans KR, sans-serif'
-  context.fillText('PERFECT DROP', 126, 170)
-
-  context.fillStyle = '#4f412f'
-  context.font = '800 110px Pretendard, Noto Sans KR, sans-serif'
-  context.fillText(String(latestRun?.score ?? bestScore), 126, 350)
-
-  context.fillStyle = '#7a6c5b'
-  context.font = '700 38px Pretendard, Noto Sans KR, sans-serif'
-  context.fillText(latestRun ? 'Latest score' : 'Best score', 126, 410)
-
-  const statCards = [
-    {
-      label: 'Percentile',
-      value: latestRun ? `Top ${latestRun.topPercent}%` : totalRuns > 0 ? 'Leaderboard live' : 'Start a run',
-      x: 126,
-      y: 500,
-    },
-    {
-      label: 'Best score',
-      value: String(bestScore),
-      x: 518,
-      y: 500,
-    },
-    {
-      label: 'Total runs',
-      value: String(totalRuns),
-      x: 126,
-      y: 760,
-    },
-    {
-      label: 'Share',
-      value: '@perfectdrop',
-      x: 518,
-      y: 760,
-    },
-  ]
-
-  for (const card of statCards) {
-    context.fillStyle = 'rgba(255, 248, 238, 0.96)'
-    context.beginPath()
-    context.roundRect(card.x, card.y, 304, 188, 34)
-    context.fill()
-
-    context.fillStyle = '#7a6c5b'
-    context.font = '700 28px Pretendard, Noto Sans KR, sans-serif'
-    context.fillText(card.label, card.x + 28, card.y + 56)
-
-    context.fillStyle = '#4f412f'
-    context.font = '800 48px Pretendard, Noto Sans KR, sans-serif'
-    context.fillText(card.value, card.x + 28, card.y + 126)
-  }
-
-  context.fillStyle = '#6c4d34'
-  context.font = '700 42px Pretendard, Noto Sans KR, sans-serif'
-  context.fillText('Garden merge challenge', 126, 1060)
-
-  context.fillStyle = '#7a6c5b'
-  context.font = '500 32px Pretendard, Noto Sans KR, sans-serif'
-  context.fillText('Stack, merge, and climb the leaderboard.', 126, 1120)
-  context.fillText('Share this card to Instagram Stories or Feed.', 126, 1168)
-
-  context.fillStyle = '#55694a'
-  context.font = '700 30px Pretendard, Noto Sans KR, sans-serif'
-  context.fillText(SITE_URL, 126, 1230)
-
-  const blob = await new Promise<Blob | null>((resolve) => {
-    canvas.toBlob((value) => resolve(value), 'image/png')
-  })
-
-  return blob
-}
-
-function downloadFile(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob)
-  const anchor = document.createElement('a')
-  anchor.href = url
-  anchor.download = filename
-  anchor.click()
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
-
 export function PlayPage({ navigate }: PlayPageProps) {
   const [sessionKey, setSessionKey] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
@@ -185,7 +78,7 @@ export function PlayPage({ navigate }: PlayPageProps) {
   const totalRuns = latestRun?.totalRuns ?? leaderboard?.totalRuns ?? 0
   const bestScore = latestRun?.bestScore ?? leaderboard?.playerBestScore ?? 0
 
-  const handleShare = async () => {
+  const handleShare = async (mode: 'default' | 'instagram' = 'default') => {
     const shareText = getShareText(latestRun, bestScore, totalRuns)
 
     try {
@@ -199,43 +92,21 @@ export function PlayPage({ navigate }: PlayPageProps) {
       }
 
       await navigator.clipboard.writeText(`${shareText} ${SITE_URL}`)
+
+      if (mode === 'instagram') {
+        setInstagramLabel('Copied')
+        if (instagramResetRef.current !== null) {
+          window.clearTimeout(instagramResetRef.current)
+        }
+        instagramResetRef.current = window.setTimeout(() => setInstagramLabel('Instagram'), 1800)
+        return
+      }
+
       setShareLabel('Copied')
       if (shareResetRef.current !== null) {
         window.clearTimeout(shareResetRef.current)
       }
       shareResetRef.current = window.setTimeout(() => setShareLabel('Share'), 1800)
-    } catch {
-      // Ignore cancelled shares and clipboard failures.
-    }
-  }
-
-  const handleInstagramShare = async () => {
-    const shareText = `${getShareText(latestRun, bestScore, totalRuns)} ${SITE_URL}`
-
-    try {
-      const imageBlob = await createInstagramCard(latestRun, bestScore, totalRuns)
-      if (!imageBlob) {
-        return
-      }
-
-      const imageFile = new File([imageBlob], 'perfect-drop-instagram-card.png', { type: 'image/png' })
-
-      if (navigator.share && typeof navigator.canShare === 'function' && navigator.canShare({ files: [imageFile] })) {
-        await navigator.share({
-          title: 'Perfect Drop',
-          text: shareText,
-          files: [imageFile],
-        })
-        return
-      }
-
-      downloadFile(imageBlob, 'perfect-drop-instagram-card.png')
-      await navigator.clipboard.writeText(shareText)
-      setInstagramLabel('Saved + Copied')
-      if (instagramResetRef.current !== null) {
-        window.clearTimeout(instagramResetRef.current)
-      }
-      instagramResetRef.current = window.setTimeout(() => setInstagramLabel('Instagram'), 2200)
     } catch {
       // Ignore cancelled shares and clipboard failures.
     }
@@ -264,7 +135,7 @@ export function PlayPage({ navigate }: PlayPageProps) {
             variant="ghost"
             onClick={() => setIsMuted((value) => !value)}
           />
-          <CTAButton label={instagramLabel} navigate={navigate} variant="ghost" onClick={() => void handleInstagramShare()} />
+          <CTAButton label={instagramLabel} navigate={navigate} variant="ghost" onClick={() => void handleShare('instagram')} />
           <CTAButton label={shareLabel} navigate={navigate} variant="secondary" onClick={() => void handleShare()} />
         </div>
       </section>
