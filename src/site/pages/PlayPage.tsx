@@ -180,7 +180,15 @@ export function PlayPage({ navigate }: PlayPageProps) {
             <strong>{latestRun ? `Top ${latestRun.topPercent}%` : isLeaderboardReady ? 'Ready' : 'Loading'}</strong>
           </div>
           <div className="run-stat-card">
-            <span className="hud-label">Best score</span>
+            <div className="run-stat-card__top">
+              <span className="hud-label">Best score</span>
+              <button className="share-run-button" type="button" onClick={() => void handleShare()}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M15 8a3 3 0 1 0-2.82-4H12a3 3 0 0 0 .18 1.01L7.91 7.27a3 3 0 0 0-1.91-.69 3 3 0 1 0 1.91 5.31l4.27 2.26A3 3 0 0 0 12 15a3 3 0 1 0 .18 1.01l-4.27-2.26A3 3 0 0 0 8 12c0-.35-.06-.69-.18-1.01l4.27-2.26c.53.52 1.25.84 2.01.84Z" />
+                </svg>
+                <span>{shareLabel}</span>
+              </button>
+            </div>
             <strong>{bestScore}</strong>
           </div>
           <div className="run-stat-card">
