@@ -1,8 +1,12 @@
-const SCORE_HISTORY_STORAGE_KEY = 'blip-perfect-score-history'
-const LEADERBOARD_CACHE_STORAGE_KEY = 'blip-perfect-leaderboard-cache'
-const PLAYER_ID_STORAGE_KEY = 'blip-perfect-player-id'
+const SCORE_HISTORY_STORAGE_KEY = "blip-perfect-score-history"
+const LEADERBOARD_CACHE_STORAGE_KEY = "blip-perfect-leaderboard-cache"
+const PLAYER_ID_STORAGE_KEY = "blip-perfect-player-id"
+const PLAYER_DISPLAY_NAME_STORAGE_KEY = "blip-perfect-player-display-name"
 const MAX_STORED_RUNS = 300
 const LEADERBOARD_PREVIEW_SIZE = 8
+const DISPLAY_NAME_LIMIT = 24
+
+export type LeaderboardStorage = "vercel-kv" | "memory"
 
 type LocalRun = {
   score: number
@@ -28,8 +32,10 @@ export interface LeaderboardSnapshot {
   leaderboard: LeaderboardEntry[]
   totalRuns: number
   playerBestScore: number | null
+  playerDisplayName: string
   updatedAt: string | null
-  source: 'remote' | 'local'
+  source: "remote" | "local"
+  storage: LeaderboardStorage
 }
 
 export interface RecordedRunSummary extends RunEndedSummary {
@@ -39,14 +45,17 @@ export interface RecordedRunSummary extends RunEndedSummary {
   leaderboard: LeaderboardEntry[]
   playerId: string
   playerDisplayName: string
-  source: 'remote' | 'local'
+  source: "remote" | "local"
+  storage: LeaderboardStorage
 }
 
 type LeaderboardApiResponse = {
   leaderboard: LeaderboardEntry[]
   totalRuns: number
   playerBestScore: number | null
+  playerDisplayName: string
   updatedAt: string | null
+  storage: LeaderboardStorage
   rank?: number
   topPercent?: number
 }
@@ -54,11 +63,15 @@ type LeaderboardApiResponse = {
 type CachedLeaderboard = LeaderboardSnapshot
 
 function createPlayerId() {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID()
   }
 
-  return `player-${Math.random().toString(36).slice(2, 10)}`
+  return "player-" + Math.random().toString(36).slice(2, 10)
+}
+
+function normalizePlayerDisplayName(value: string) {
+  return value.replace(/\s+/g, " ").trim().slice(0, DISPLAY_NAME_LIMIT)
 }
 
 export function getPlayerId() {
@@ -76,12 +89,32 @@ export function getPlayerId() {
   }
 }
 
-export function formatPlayerName(playerId: string) {
-  return `Player ${playerId.replace(/[^a-z0-9]/gi, '').slice(-4).toUpperCase().padStart(4, '0')}`
+export function getPlayerDisplayName() {
+  try {
+    return normalizePlayerDisplayName(window.localStorage.getItem(PLAYER_DISPLAY_NAME_STORAGE_KEY) ?? "")
+  } catch {
+    return ""
+  }
+}
+
+function writePlayerDisplayName(name: string) {
+  const normalized = normalizePlayerDisplayName(name)
+
+  try {
+    if (normalized) {
+      window.localStorage.setItem(PLAYER_DISPLAY_NAME_STORAGE_KEY, normalized)
+    } else {
+      window.localStorage.removeItem(PLAYER_DISPLAY_NAME_STORAGE_KEY)
+    }
+  } catch {
+    // Ignore storage failures in sandboxed/private contexts.
+  }
+
+  return normalized
 }
 
 function normalizeLocalRun(value: unknown): LocalRun | null {
-  if (typeof value === 'number') {
+  if (typeof value === "number") {
     return {
       score: value,
       shotCount: 0,
@@ -89,14 +122,14 @@ function normalizeLocalRun(value: unknown): LocalRun | null {
     }
   }
 
-  if (typeof value !== 'object' || value === null) {
+  if (typeof value !== "object" || value === null) {
     return null
   }
 
   const candidate = value as Partial<LocalRun>
   const score = Number(candidate.score)
   const shotCount = Number(candidate.shotCount ?? 0)
-  const recordedAt = typeof candidate.recordedAt === 'string' ? candidate.recordedAt : new Date().toISOString()
+  const recordedAt = typeof candidate.recordedAt === "string" ? candidate.recordedAt : new Date().toISOString()
 
   if (Number.isFinite(score) === false || score < 0) {
     return null
@@ -149,7 +182,7 @@ function readCachedLeaderboard() {
     }
 
     const parsed = JSON.parse(raw) as CachedLeaderboard
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
       return null
     }
 
@@ -157,11 +190,13 @@ function readCachedLeaderboard() {
       leaderboard: Array.isArray(parsed.leaderboard) ? parsed.leaderboard : [],
       totalRuns: Number(parsed.totalRuns) || 0,
       playerBestScore:
-        typeof parsed.playerBestScore === 'number' && Number.isFinite(parsed.playerBestScore)
+        typeof parsed.playerBestScore === "number" && Number.isFinite(parsed.playerBestScore)
           ? parsed.playerBestScore
           : null,
-      updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : null,
-      source: parsed.source === 'remote' ? 'remote' : 'local',
+      playerDisplayName: typeof parsed.playerDisplayName === "string" ? parsed.playerDisplayName : "",
+      updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : null,
+      source: parsed.source === "remote" ? "remote" : "local",
+      storage: parsed.storage === "vercel-kv" ? "vercel-kv" : "memory",
     } satisfies CachedLeaderboard
   } catch {
     return null
@@ -177,7 +212,7 @@ function writeCachedLeaderboard(snapshot: LeaderboardSnapshot) {
 }
 
 function buildLocalEntries(playerId: string, runs: LocalRun[]) {
-  const playerName = formatPlayerName(playerId)
+  const playerDisplayName = getPlayerDisplayName()
 
   return runs
     .slice()
@@ -191,7 +226,7 @@ function buildLocalEntries(playerId: string, runs: LocalRun[]) {
     .slice(0, LEADERBOARD_PREVIEW_SIZE)
     .map((run) => ({
       playerId,
-      displayName: playerName,
+      displayName: playerDisplayName,
       score: run.score,
       shotCount: run.shotCount,
       recordedAt: run.recordedAt,
@@ -200,6 +235,7 @@ function buildLocalEntries(playerId: string, runs: LocalRun[]) {
 
 function buildLocalSnapshot(playerId: string): LeaderboardSnapshot {
   const runs = readLocalRuns()
+  const playerDisplayName = getPlayerDisplayName()
   const playerBestScore = runs.reduce<number | null>((best, run) => {
     if (best === null || run.score > best) {
       return run.score
@@ -212,8 +248,10 @@ function buildLocalSnapshot(playerId: string): LeaderboardSnapshot {
     leaderboard: buildLocalEntries(playerId, runs),
     totalRuns: runs.length,
     playerBestScore,
+    playerDisplayName,
     updatedAt: runs[0]?.recordedAt ?? null,
-    source: 'local',
+    source: "local",
+    storage: "memory",
   }
 
   writeCachedLeaderboard(snapshot)
@@ -233,23 +271,29 @@ async function requestLeaderboard<T>(input: RequestInfo, init?: RequestInit) {
   }
 }
 
+function buildRemoteSnapshot(remote: LeaderboardApiResponse): LeaderboardSnapshot {
+  return {
+    leaderboard: remote.leaderboard,
+    totalRuns: remote.totalRuns,
+    playerBestScore: remote.playerBestScore,
+    playerDisplayName: remote.playerDisplayName,
+    updatedAt: remote.updatedAt,
+    source: "remote",
+    storage: remote.storage,
+  }
+}
+
 export function getCachedLeaderboardSnapshot() {
   return readCachedLeaderboard()
 }
 
 export async function loadLeaderboard() {
   const playerId = getPlayerId()
-  const remote = await requestLeaderboard<LeaderboardApiResponse>(`/api/leaderboard?playerId=${encodeURIComponent(playerId)}`)
+  const remote = await requestLeaderboard<LeaderboardApiResponse>("/api/leaderboard?playerId=" + encodeURIComponent(playerId))
 
   if (remote) {
-    const snapshot: LeaderboardSnapshot = {
-      leaderboard: remote.leaderboard,
-      totalRuns: remote.totalRuns,
-      playerBestScore: remote.playerBestScore,
-      updatedAt: remote.updatedAt,
-      source: 'remote',
-    }
-
+    writePlayerDisplayName(remote.playerDisplayName)
+    const snapshot = buildRemoteSnapshot(remote)
     writeCachedLeaderboard(snapshot)
     return snapshot
   }
@@ -258,6 +302,7 @@ export async function loadLeaderboard() {
 }
 
 function buildLocalRecordedSummary(summary: RunEndedSummary, playerId: string, runs: LocalRun[]): RecordedRunSummary {
+  const playerDisplayName = getPlayerDisplayName()
   const higherScores = runs.filter((run) => run.score > summary.score).length
   const rank = higherScores + 1
   const totalRuns = runs.length
@@ -270,13 +315,51 @@ function buildLocalRecordedSummary(summary: RunEndedSummary, playerId: string, r
     topPercent,
     leaderboard: buildLocalEntries(playerId, runs),
     playerId,
-    playerDisplayName: formatPlayerName(playerId),
-    source: 'local',
+    playerDisplayName,
+    source: "local",
+    storage: "memory",
   }
+}
+
+export async function savePlayerProfile(name: string) {
+  const playerId = getPlayerId()
+  const playerDisplayName = writePlayerDisplayName(name)
+
+  const remote = await requestLeaderboard<LeaderboardApiResponse>("/api/leaderboard", {
+    method: "PATCH",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      playerId,
+      displayName: playerDisplayName,
+    }),
+  })
+
+  if (remote) {
+    writePlayerDisplayName(remote.playerDisplayName)
+    const snapshot = buildRemoteSnapshot(remote)
+    writeCachedLeaderboard(snapshot)
+    return snapshot
+  }
+
+  const fallback = readCachedLeaderboard() ?? buildLocalSnapshot(playerId)
+  const snapshot: LeaderboardSnapshot = {
+    ...fallback,
+    playerDisplayName,
+    leaderboard: fallback.leaderboard.map((entry) => (
+      entry.playerId === playerId
+        ? { ...entry, displayName: playerDisplayName }
+        : entry
+    )),
+  }
+  writeCachedLeaderboard(snapshot)
+  return snapshot
 }
 
 export async function recordRun(summary: RunEndedSummary): Promise<RecordedRunSummary> {
   const playerId = getPlayerId()
+  const playerDisplayName = getPlayerDisplayName()
   const nextRun: LocalRun = {
     score: summary.score,
     shotCount: summary.shotCount,
@@ -290,34 +373,31 @@ export async function recordRun(summary: RunEndedSummary): Promise<RecordedRunSu
     leaderboard: localResult.leaderboard,
     totalRuns: localResult.totalRuns,
     playerBestScore: summary.bestScore,
+    playerDisplayName,
     updatedAt: nextRun.recordedAt,
-    source: 'local',
+    source: "local",
+    storage: "memory",
   })
 
-  const remote = await requestLeaderboard<LeaderboardApiResponse>('/api/leaderboard', {
-    method: 'POST',
+  const remote = await requestLeaderboard<LeaderboardApiResponse>("/api/leaderboard", {
+    method: "POST",
     headers: {
-      'content-type': 'application/json',
+      "content-type": "application/json",
     },
     body: JSON.stringify({
       playerId,
-      displayName: formatPlayerName(playerId),
+      displayName: playerDisplayName,
       score: summary.score,
       shotCount: summary.shotCount,
     }),
   })
 
-  if (remote === null || typeof remote.rank !== 'number' || typeof remote.topPercent !== 'number') {
+  if (remote === null || typeof remote.rank !== "number" || typeof remote.topPercent !== "number") {
     return localResult
   }
 
-  const snapshot: LeaderboardSnapshot = {
-    leaderboard: remote.leaderboard,
-    totalRuns: remote.totalRuns,
-    playerBestScore: remote.playerBestScore,
-    updatedAt: remote.updatedAt,
-    source: 'remote',
-  }
+  writePlayerDisplayName(remote.playerDisplayName)
+  const snapshot = buildRemoteSnapshot(remote)
   writeCachedLeaderboard(snapshot)
 
   return {
@@ -327,7 +407,8 @@ export async function recordRun(summary: RunEndedSummary): Promise<RecordedRunSu
     topPercent: remote.topPercent,
     leaderboard: remote.leaderboard,
     playerId,
-    playerDisplayName: formatPlayerName(playerId),
-    source: 'remote',
+    playerDisplayName: remote.playerDisplayName,
+    source: "remote",
+    storage: remote.storage,
   }
 }

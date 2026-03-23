@@ -1,35 +1,53 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { GameScreen } from '../../game/GameScreen'
-import { getCachedLeaderboardSnapshot, getPlayerId, loadLeaderboard, recordRun, type LeaderboardSnapshot, type RecordedRunSummary } from '../../game/stats'
-import { CTAButton } from '../components/CTAButton'
-import { PageContainer } from '../components/PageContainer'
-import { SectionTitle } from '../components/SectionTitle'
-import { playPageCopy } from '../data/content'
-import { ITCH_URL, SITE_URL, type Route } from '../router'
+import { useEffect, useMemo, useRef, useState } from "react"
+import { GameScreen } from "../../game/GameScreen"
+import {
+  getCachedLeaderboardSnapshot,
+  getPlayerDisplayName,
+  getPlayerId,
+  loadLeaderboard,
+  recordRun,
+  savePlayerProfile,
+  type LeaderboardEntry,
+  type LeaderboardSnapshot,
+  type RecordedRunSummary,
+} from "../../game/stats"
+import { CTAButton } from "../components/CTAButton"
+import { PageContainer } from "../components/PageContainer"
+import { SectionTitle } from "../components/SectionTitle"
+import { playPageCopy } from "../data/content"
+import { ITCH_URL, SITE_URL, type Route } from "../router"
 
 type PlayPageProps = {
   navigate: (route: Route) => void
 }
 
-const leaderboardTimestampFormatter = new Intl.DateTimeFormat('en-US', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
+const leaderboardTimestampFormatter = new Intl.DateTimeFormat("en-US", {
+  dateStyle: "medium",
+  timeStyle: "short",
 })
 
 function getShareText(latestRun: RecordedRunSummary | null, bestScore: number, totalRuns: number) {
   if (latestRun) {
-    return `I scored ${latestRun.score} in Perfect Drop and landed in the top ${latestRun.topPercent}% of ${latestRun.totalRuns} runs. Can you beat it?`
+    return "I scored " + latestRun.score + " in Perfect Drop and landed in the top " + latestRun.topPercent + "% of " + latestRun.totalRuns + " runs. Can you beat it?"
   }
 
   if (bestScore > 0) {
-    return `My best score in Perfect Drop is ${bestScore}. Jump in and try to beat it.`
+    return "My best score in Perfect Drop is " + bestScore + ". Jump in and try to beat it."
   }
 
   if (totalRuns > 0) {
-    return `Perfect Drop already has ${totalRuns} recorded runs. Jump in and climb the leaderboard.`
+    return "Perfect Drop already has " + totalRuns + " recorded runs. Jump in and climb the leaderboard."
   }
 
-  return 'Play Perfect Drop and climb the shared leaderboard.'
+  return "Play Perfect Drop and climb the shared leaderboard."
+}
+
+function getLeaderboardLabel(entry: LeaderboardEntry, currentPlayerId: string) {
+  if (entry.displayName.trim()) {
+    return entry.displayName
+  }
+
+  return entry.playerId === currentPlayerId ? "You" : "Others"
 }
 
 export function PlayPage({ navigate }: PlayPageProps) {
@@ -38,16 +56,20 @@ export function PlayPage({ navigate }: PlayPageProps) {
   const [latestRun, setLatestRun] = useState<RecordedRunSummary | null>(null)
   const [leaderboard, setLeaderboard] = useState<LeaderboardSnapshot | null>(() => getCachedLeaderboardSnapshot())
   const [isLeaderboardReady, setIsLeaderboardReady] = useState(() => getCachedLeaderboardSnapshot() !== null)
-  const [shareLabel, setShareLabel] = useState('Share')
-  const [instagramLabel, setInstagramLabel] = useState('Instagram')
+  const [shareLabel, setShareLabel] = useState("Share")
+  const [instagramLabel, setInstagramLabel] = useState("Instagram")
+  const [playerNameInput, setPlayerNameInput] = useState(() => getPlayerDisplayName())
+  const [nameActionLabel, setNameActionLabel] = useState("Save name")
   const frameRef = useRef<HTMLDivElement | null>(null)
   const shareResetRef = useRef<number | null>(null)
   const instagramResetRef = useRef<number | null>(null)
+  const nameResetRef = useRef<number | null>(null)
   const currentPlayerId = useMemo(() => getPlayerId(), [])
 
   useEffect(() => {
     void loadLeaderboard().then((snapshot) => {
       setLeaderboard(snapshot)
+      setPlayerNameInput(snapshot.playerDisplayName)
       setIsLeaderboardReady(true)
     })
 
@@ -57,6 +79,9 @@ export function PlayPage({ navigate }: PlayPageProps) {
       }
       if (instagramResetRef.current !== null) {
         window.clearTimeout(instagramResetRef.current)
+      }
+      if (nameResetRef.current !== null) {
+        window.clearTimeout(nameResetRef.current)
       }
     }
   }, [])
@@ -78,30 +103,30 @@ export function PlayPage({ navigate }: PlayPageProps) {
   const totalRuns = latestRun?.totalRuns ?? leaderboard?.totalRuns ?? 0
   const bestScore = latestRun?.bestScore ?? leaderboard?.playerBestScore ?? 0
 
-  const handleShare = async (mode: 'default' | 'instagram' = 'default') => {
+  const handleShare = async (mode: "default" | "instagram" = "default") => {
     const shareText = getShareText(latestRun, bestScore, totalRuns)
-    const sharePayload = `${shareText} ${SITE_URL}`
+    const sharePayload = shareText + " " + SITE_URL
 
-    if (mode === 'instagram') {
+    if (mode === "instagram") {
       try {
         await navigator.clipboard.writeText(sharePayload)
-        setInstagramLabel('Copied')
+        setInstagramLabel("Copied")
       } catch {
-        setInstagramLabel('Open Instagram Web')
+        setInstagramLabel("Open Instagram Web")
       }
 
       if (instagramResetRef.current !== null) {
         window.clearTimeout(instagramResetRef.current)
       }
-      instagramResetRef.current = window.setTimeout(() => setInstagramLabel('Instagram'), 2200)
-      window.open('https://www.instagram.com/direct/inbox/', '_blank', 'noopener,noreferrer')
+      instagramResetRef.current = window.setTimeout(() => setInstagramLabel("Instagram"), 2200)
+      window.open("https://www.instagram.com/direct/inbox/", "_blank", "noopener,noreferrer")
       return
     }
 
     try {
       if (navigator.share) {
         await navigator.share({
-          title: 'Perfect Drop',
+          title: "Perfect Drop",
           text: shareText,
           url: SITE_URL,
         })
@@ -109,20 +134,43 @@ export function PlayPage({ navigate }: PlayPageProps) {
       }
 
       await navigator.clipboard.writeText(sharePayload)
-      setShareLabel('Copied')
+      setShareLabel("Copied")
       if (shareResetRef.current !== null) {
         window.clearTimeout(shareResetRef.current)
       }
-      shareResetRef.current = window.setTimeout(() => setShareLabel('Share'), 1800)
+      shareResetRef.current = window.setTimeout(() => setShareLabel("Share"), 1800)
     } catch {
       // Ignore cancelled shares and clipboard failures.
     }
   }
 
+  const handleSaveName = async () => {
+    const snapshot = await savePlayerProfile(playerNameInput)
+    setLeaderboard(snapshot)
+    setPlayerNameInput(snapshot.playerDisplayName)
+    setLatestRun((current) => {
+      if (current === null) {
+        return current
+      }
+
+      return {
+        ...current,
+        playerDisplayName: snapshot.playerDisplayName,
+        leaderboard: snapshot.leaderboard,
+      }
+    })
+    setNameActionLabel(snapshot.playerDisplayName ? "Saved" : "Cleared")
+    if (nameResetRef.current !== null) {
+      window.clearTimeout(nameResetRef.current)
+    }
+    nameResetRef.current = window.setTimeout(() => setNameActionLabel("Save name"), 1800)
+  }
+
   const displayedLeaderboard = latestRun?.leaderboard.length
     ? latestRun.leaderboard
     : leaderboard?.leaderboard ?? []
-  const leaderboardStatus = latestRun?.source ?? leaderboard?.source ?? 'local'
+  const leaderboardStatus = latestRun?.source ?? leaderboard?.source ?? "local"
+  const leaderboardStorage = latestRun?.storage ?? leaderboard?.storage ?? "memory"
   const updatedAt = leaderboard?.updatedAt
     ? leaderboardTimestampFormatter.format(new Date(leaderboard.updatedAt))
     : null
@@ -137,12 +185,12 @@ export function PlayPage({ navigate }: PlayPageProps) {
       <section className="page-section play-toolbar">
         <div className="play-toolbar__actions">
           <CTAButton
-            label={isMuted ? 'Unmute' : 'Mute'}
+            label={isMuted ? "Unmute" : "Mute"}
             navigate={navigate}
             variant="ghost"
             onClick={() => setIsMuted((value) => !value)}
           />
-          <CTAButton label={instagramLabel} navigate={navigate} variant="ghost" onClick={() => void handleShare('instagram')} />
+          <CTAButton label={instagramLabel} navigate={navigate} variant="ghost" onClick={() => void handleShare("instagram")} />
           <CTAButton label={shareLabel} navigate={navigate} variant="secondary" onClick={() => void handleShare()} />
         </div>
       </section>
@@ -155,12 +203,15 @@ export function PlayPage({ navigate }: PlayPageProps) {
             onRunEnded={(summary) => {
               void recordRun(summary).then((result) => {
                 setLatestRun(result)
+                setPlayerNameInput(result.playerDisplayName)
                 setLeaderboard({
                   leaderboard: result.leaderboard,
                   totalRuns: result.totalRuns,
                   playerBestScore: result.bestScore,
+                  playerDisplayName: result.playerDisplayName,
                   updatedAt: new Date().toISOString(),
                   source: result.source,
+                  storage: result.storage,
                 })
                 setIsLeaderboardReady(true)
               })
@@ -215,7 +266,7 @@ export function PlayPage({ navigate }: PlayPageProps) {
           </div>
           <div className="run-stat-card run-stat-card--rank">
             <span className="hud-label">Percentile</span>
-            <strong>{latestRun ? `Top ${latestRun.topPercent}%` : isLeaderboardReady ? 'Ready' : 'Loading'}</strong>
+            <strong>{latestRun ? "Top " + latestRun.topPercent + "%" : isLeaderboardReady ? "Ready" : "Loading"}</strong>
           </div>
           <div className="run-stat-card">
             <div className="run-stat-card__top">
@@ -239,12 +290,53 @@ export function PlayPage({ navigate }: PlayPageProps) {
             <div>
               <strong>Top runs</strong>
               <p>
-                {leaderboardStatus === 'remote' ? 'Shared leaderboard live' : 'Showing saved local results'}
-                {updatedAt ? `, updated ${updatedAt}` : ''}
+                {leaderboardStatus === "remote"
+                  ? (leaderboardStorage === "vercel-kv" ? "Shared leaderboard live and persistent" : "Shared leaderboard live with temporary server storage")
+                  : "Showing saved local results"}
+                {updatedAt ? ", updated " + updatedAt : ""}
               </p>
             </div>
             {latestRun ? <span className="leaderboard-badge">Rank #{latestRun.rank}</span> : null}
           </div>
+          <form
+            className="leaderboard-name-form"
+            onSubmit={(event) => {
+              event.preventDefault()
+              void handleSaveName()
+            }}
+          >
+            <label className="leaderboard-name-form__field">
+              <span>Name on leaderboard (optional)</span>
+              <input
+                type="text"
+                maxLength={24}
+                value={playerNameInput}
+                onChange={(event) => setPlayerNameInput(event.target.value)}
+                placeholder="Leave blank to stay anonymous"
+              />
+            </label>
+            <div className="leaderboard-name-form__actions">
+              <button className="leaderboard-name-button" type="submit">{nameActionLabel}</button>
+              <button
+                className="leaderboard-name-button leaderboard-name-button--ghost"
+                type="button"
+                onClick={() => {
+                  setPlayerNameInput("")
+                  void savePlayerProfile("").then((snapshot) => {
+                    setLeaderboard(snapshot)
+                    setLatestRun((current) => current ? { ...current, playerDisplayName: "", leaderboard: snapshot.leaderboard } : current)
+                    setNameActionLabel("Cleared")
+                    if (nameResetRef.current !== null) {
+                      window.clearTimeout(nameResetRef.current)
+                    }
+                    nameResetRef.current = window.setTimeout(() => setNameActionLabel("Save name"), 1800)
+                  })
+                }}
+              >
+                Stay anonymous
+              </button>
+            </div>
+          </form>
           {displayedLeaderboard.length ? (
             <div className="leaderboard-table" role="table" aria-label="Leaderboard">
               <div className="leaderboard-table__head" role="row">
@@ -255,12 +347,12 @@ export function PlayPage({ navigate }: PlayPageProps) {
               </div>
               {displayedLeaderboard.map((entry, index) => (
                 <div
-                  key={`${entry.playerId}-${entry.recordedAt}-${index}`}
-                  className={`leaderboard-table__row ${entry.playerId === currentPlayerId ? 'is-current-player' : ''}`}
+                  key={entry.playerId + "-" + entry.recordedAt + "-" + index}
+                  className={"leaderboard-table__row " + (entry.playerId === currentPlayerId ? "is-current-player" : "")}
                   role="row"
                 >
                   <span>#{index + 1}</span>
-                  <span>{entry.playerId === currentPlayerId ? 'You' : entry.displayName}</span>
+                  <span>{getLeaderboardLabel(entry, currentPlayerId)}</span>
                   <strong>{entry.score}</strong>
                   <span>{entry.shotCount}</span>
                 </div>
