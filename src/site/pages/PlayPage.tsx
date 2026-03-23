@@ -86,24 +86,15 @@ export function PlayPage({ navigate }: PlayPageProps) {
       try {
         await navigator.clipboard.writeText(sharePayload)
         setInstagramLabel('Copied')
-        if (instagramResetRef.current !== null) {
-          window.clearTimeout(instagramResetRef.current)
-        }
-        instagramResetRef.current = window.setTimeout(() => setInstagramLabel('Instagram'), 2200)
       } catch {
-        setInstagramLabel('Open Instagram')
-        if (instagramResetRef.current !== null) {
-          window.clearTimeout(instagramResetRef.current)
-        }
-        instagramResetRef.current = window.setTimeout(() => setInstagramLabel('Instagram'), 2200)
+        setInstagramLabel('Open Instagram Web')
       }
 
-      window.location.href = 'instagram://direct-inbox'
-      window.setTimeout(() => {
-        if (document.visibilityState === 'visible') {
-          window.location.href = 'https://www.instagram.com/direct/inbox/'
-        }
-      }, 900)
+      if (instagramResetRef.current !== null) {
+        window.clearTimeout(instagramResetRef.current)
+      }
+      instagramResetRef.current = window.setTimeout(() => setInstagramLabel('Instagram'), 2200)
+      window.open('https://www.instagram.com/direct/inbox/', '_blank', 'noopener,noreferrer')
       return
     }
 
