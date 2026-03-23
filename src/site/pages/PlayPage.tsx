@@ -80,6 +80,32 @@ export function PlayPage({ navigate }: PlayPageProps) {
 
   const handleShare = async (mode: 'default' | 'instagram' = 'default') => {
     const shareText = getShareText(latestRun, bestScore, totalRuns)
+    const sharePayload = `${shareText} ${SITE_URL}`
+
+    if (mode === 'instagram') {
+      try {
+        await navigator.clipboard.writeText(sharePayload)
+        setInstagramLabel('Copied')
+        if (instagramResetRef.current !== null) {
+          window.clearTimeout(instagramResetRef.current)
+        }
+        instagramResetRef.current = window.setTimeout(() => setInstagramLabel('Instagram'), 2200)
+      } catch {
+        setInstagramLabel('Open Instagram')
+        if (instagramResetRef.current !== null) {
+          window.clearTimeout(instagramResetRef.current)
+        }
+        instagramResetRef.current = window.setTimeout(() => setInstagramLabel('Instagram'), 2200)
+      }
+
+      window.location.href = 'instagram://direct-inbox'
+      window.setTimeout(() => {
+        if (document.visibilityState === 'visible') {
+          window.location.href = 'https://www.instagram.com/direct/inbox/'
+        }
+      }, 900)
+      return
+    }
 
     try {
       if (navigator.share) {
@@ -91,17 +117,7 @@ export function PlayPage({ navigate }: PlayPageProps) {
         return
       }
 
-      await navigator.clipboard.writeText(`${shareText} ${SITE_URL}`)
-
-      if (mode === 'instagram') {
-        setInstagramLabel('Copied')
-        if (instagramResetRef.current !== null) {
-          window.clearTimeout(instagramResetRef.current)
-        }
-        instagramResetRef.current = window.setTimeout(() => setInstagramLabel('Instagram'), 1800)
-        return
-      }
-
+      await navigator.clipboard.writeText(sharePayload)
       setShareLabel('Copied')
       if (shareResetRef.current !== null) {
         window.clearTimeout(shareResetRef.current)
