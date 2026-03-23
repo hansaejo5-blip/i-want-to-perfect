@@ -123,11 +123,11 @@ export function createBallBody(x: number, y: number, level: BallLevel): BallBody
   const definition = getBallDefinition(level)
   const body = Bodies.circle(x, y, definition.radius, {
     label: "ball",
-    restitution: BALL_RESTITUTION,
-    friction: 0.04,
+    restitution: BALL_RESTITUTION + 0.02,
+    friction: 0.035,
     frictionAir: BALL_FRICTION_AIR,
     density: BALL_DENSITY,
-    frictionStatic: 0.16,
+    frictionStatic: 0.13,
     slop: 0.01,
     sleepThreshold: BALL_SLEEP_THRESHOLD,
   }) as BallBody
