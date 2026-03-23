@@ -311,7 +311,15 @@ summary:focus-visible {
 }
 
 .play-toolbar {
-  justify-items: end;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.play-toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
 }
 
 .play-layout {
@@ -415,6 +423,83 @@ summary:focus-visible {
 .run-stat-card strong {
   font-size: 1.3rem;
   color: #6c4d34;
+}
+
+.leaderboard-panel {
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: 22px;
+  background: rgba(255, 252, 247, 0.84);
+  box-shadow: inset 0 0 0 1px rgba(176, 136, 98, 0.18);
+}
+
+.leaderboard-panel__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.leaderboard-panel__top strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 1rem;
+}
+
+.leaderboard-panel__top p,
+.leaderboard-empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.leaderboard-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(140, 159, 86, 0.14);
+  color: #62703b;
+  font-weight: 700;
+}
+
+.leaderboard-table {
+  display: grid;
+  gap: 10px;
+}
+
+.leaderboard-table__head,
+.leaderboard-table__row {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1.4fr) minmax(90px, 0.8fr) minmax(90px, 0.8fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.leaderboard-table__head {
+  padding: 0 14px;
+  color: rgba(108, 77, 52, 0.62);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.leaderboard-table__row {
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 247, 236, 0.9);
+  box-shadow: inset 0 0 0 1px rgba(176, 136, 98, 0.18);
+}
+
+.leaderboard-table__row strong {
+  color: #a76c34;
+}
+
+.leaderboard-table__row.is-current-player {
+  background: rgba(236, 244, 219, 0.9);
+  box-shadow: inset 0 0 0 1px rgba(127, 148, 112, 0.28);
 }
 
 .support-grid {
@@ -678,7 +763,21 @@ summary:focus-visible {
   }
 
   .play-toolbar {
-    justify-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .play-toolbar__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .leaderboard-panel__top {
+    display: grid;
+  }
+
+  .leaderboard-table__head,
+  .leaderboard-table__row {
+    grid-template-columns: 1fr;
   }
 }
 
