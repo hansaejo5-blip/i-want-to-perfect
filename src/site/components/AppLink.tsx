@@ -11,8 +11,12 @@ type AppLinkProps = {
   ariaLabel?: string
 }
 
-const isInternalRoute = (href: string): href is Route => {
-  return href === '/' || href === '/play' || href === '/guide' || href === '/updates' || href === '/support' || href === '/privacy'
+const INTERNAL_ROUTES: Route[] = ['/', '/play', '/guide', '/updates', '/support', '/privacy']
+
+function getInternalRoute(href: string): Route | null {
+  const [path] = href.split('#')
+  const normalizedPath = (path || '/') as Route
+  return INTERNAL_ROUTES.includes(normalizedPath) ? normalizedPath : null
 }
 
 export function AppLink({ href, children, className, navigate, target, rel, ariaLabel }: AppLinkProps) {
@@ -21,10 +25,22 @@ export function AppLink({ href, children, className, navigate, target, rel, aria
       return
     }
 
-    if (isInternalRoute(href)) {
-      event.preventDefault()
-      navigate(href)
+    const internalRoute = getInternalRoute(href)
+    if (!internalRoute) {
+      return
     }
+
+    event.preventDefault()
+    const hash = href.includes('#') ? '#' + href.split('#')[1] : ''
+
+    if (hash) {
+      window.history.pushState({}, '', internalRoute + hash)
+      window.dispatchEvent(new PopStateEvent('popstate'))
+      window.dispatchEvent(new HashChangeEvent('hashchange'))
+      return
+    }
+
+    navigate(internalRoute)
   }
 
   return (

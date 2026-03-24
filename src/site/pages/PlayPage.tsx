@@ -394,6 +394,28 @@ export function PlayPage({ navigate }: PlayPageProps) {
   const currentPlayerId = useMemo(() => getPlayerId(), [])
 
   useEffect(() => {
+    const jumpToGame = (behavior: ScrollBehavior) => {
+      frameRef.current?.scrollIntoView({ block: 'start', behavior })
+    }
+
+    const shouldJumpToGame =
+      window.location.hash === '#game' ||
+      window.matchMedia('(max-width: 960px) and (pointer: coarse)').matches
+
+    if (shouldJumpToGame) {
+      window.requestAnimationFrame(() => {
+        window.setTimeout(() => jumpToGame('auto'), 40)
+      })
+    }
+
+    const handleHashChange = () => {
+      if (window.location.hash === '#game') {
+        jumpToGame('smooth')
+      }
+    }
+
+    window.addEventListener('hashchange', handleHashChange)
+
     void loadLeaderboard().then((snapshot) => {
       setLeaderboard(snapshot)
       setPlayerNameInput(snapshot.playerDisplayName)
@@ -401,6 +423,7 @@ export function PlayPage({ navigate }: PlayPageProps) {
     })
 
     return () => {
+      window.removeEventListener('hashchange', handleHashChange)
       if (shareResetRef.current !== null) {
         window.clearTimeout(shareResetRef.current)
       }
@@ -554,7 +577,7 @@ export function PlayPage({ navigate }: PlayPageProps) {
       </section>
 
       <section className="page-section play-layout">
-        <div className="play-layout__game card" ref={frameRef}>
+        <div className="play-layout__game card" ref={frameRef} id="game">
           <GameScreen
             key={sessionKey}
             isMuted={isMuted}

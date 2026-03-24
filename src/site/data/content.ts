@@ -5,7 +5,7 @@ export const homeHero = {
   eyebrow: 'Garden Merge Game',
   title: 'Perfect Drop',
   description: 'Drop matching blooms, shape the board carefully, and grow your run one merge at a time.',
-  primaryCta: { label: 'Play Now', href: '/play' },
+  primaryCta: { label: 'Play Now', href: '/play#game' },
   secondaryCta: { label: 'Play on itch.io', href: ITCH_URL },
   media: {
     src: heroImage,

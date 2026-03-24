@@ -24,7 +24,7 @@ export function Header({ route, navigate }: HeaderProps) {
           ))}
         </nav>
         <div className="site-header__actions">
-          <CTAButton label="Play Now" href="/play" navigate={navigate} />
+          <CTAButton label="Play Now" href="/play#game" navigate={navigate} />
           <CTAButton label="itch.io" href={ITCH_URL} navigate={navigate} variant="ghost" target="_blank" rel="noreferrer" />
         </div>
       </div>
