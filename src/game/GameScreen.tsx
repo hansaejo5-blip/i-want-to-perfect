@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { CANNON_X, CANNON_Y, WORLD_HEIGHT, WORLD_WIDTH } from './config'
 import { createGameAudioController } from './audio'
 import { createGame } from './createGame'
@@ -10,6 +10,7 @@ import type { RunEndedSummary } from './stats'
 type GameScreenProps = {
   isMuted?: boolean
   onRunEnded?: (summary: RunEndedSummary) => void
+  autoEnterFullscreenSignal?: number
 }
 
 type ScreenOrientationApi = {
@@ -64,7 +65,11 @@ function unlockOrientation() {
   }
 }
 
-export function GameScreen({ isMuted = false, onRunEnded }: GameScreenProps) {
+export function GameScreen({
+  isMuted = false,
+  onRunEnded,
+  autoEnterFullscreenSignal = 0,
+}: GameScreenProps) {
   const frameRef = useRef<HTMLDivElement | null>(null)
   const stageRef = useRef<HTMLDivElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -74,6 +79,7 @@ export function GameScreen({ isMuted = false, onRunEnded }: GameScreenProps) {
   const scheduledLayoutFrameRef = useRef<number | null>(null)
   const delayedLayoutTimeoutRef = useRef<number | null>(null)
   const syncLayoutRef = useRef<() => void>(() => {})
+  const hasAttemptedAutoFullscreenRef = useRef(false)
   const [sessionId, setSessionId] = useState(0)
   const [snapshot, setSnapshot] = useState<GameSnapshot>(
     createInitialGameSnapshot(),
@@ -252,6 +258,15 @@ export function GameScreen({ isMuted = false, onRunEnded }: GameScreenProps) {
     await lockLandscapeOrientation()
     syncLayoutRef.current()
   }
+
+  useLayoutEffect(() => {
+    if (!isMobile || autoEnterFullscreenSignal === 0 || hasAttemptedAutoFullscreenRef.current) {
+      return
+    }
+
+    hasAttemptedAutoFullscreenRef.current = true
+    void toggleFullscreen()
+  }, [autoEnterFullscreenSignal, isMobile])
 
   const showDragHint = snapshot.shotCount === 0 && snapshot.isGameOver === false
   const dragHintStyle = {

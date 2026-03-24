@@ -376,6 +376,8 @@ function getFilterCopy(filter: LeaderboardFilter) {
   }
 }
 
+const PLAY_FULLSCREEN_FLAG = 'perfect-drop-enter-fullscreen'
+
 export function PlayPage({ navigate }: PlayPageProps) {
   const [sessionKey, setSessionKey] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
@@ -387,6 +389,18 @@ export function PlayPage({ navigate }: PlayPageProps) {
   const [playerNameInput, setPlayerNameInput] = useState(() => getPlayerDisplayName())
   const [nameActionLabel, setNameActionLabel] = useState("Save name")
   const [activeFilter, setActiveFilter] = useState<LeaderboardFilter>("all")
+  const [autoEnterFullscreenSignal] = useState(() => {
+    try {
+      if (window.sessionStorage.getItem(PLAY_FULLSCREEN_FLAG) === '1') {
+        window.sessionStorage.removeItem(PLAY_FULLSCREEN_FLAG)
+        return 1
+      }
+    } catch {
+      // Ignore storage failures.
+    }
+
+    return 0
+  })
   const frameRef = useRef<HTMLDivElement | null>(null)
   const shareResetRef = useRef<number | null>(null)
   const instagramResetRef = useRef<number | null>(null)
@@ -581,6 +595,7 @@ export function PlayPage({ navigate }: PlayPageProps) {
           <GameScreen
             key={sessionKey}
             isMuted={isMuted}
+            autoEnterFullscreenSignal={autoEnterFullscreenSignal}
             onRunEnded={(summary) => {
               void recordRun(summary).then((result) => {
                 setLatestRun(result)
