@@ -381,7 +381,12 @@ export function createGame({
       Composite.remove(engine.world, bodyA)
       Composite.remove(engine.world, bodyB)
 
-      const mergedBall = createBallBody(candidate.x, candidate.y, candidate.nextLevel)
+      const mergedDefinition = getBallDefinition(candidate.nextLevel)
+      const mergedSpawnY =
+        candidate.nextLevel === 7
+          ? Math.min(candidate.y, BOWL_BOTTOM - mergedDefinition.radius * 1.08) - mergedDefinition.radius * 0.12
+          : candidate.y
+      const mergedBall = createBallBody(candidate.x, mergedSpawnY, candidate.nextLevel)
       Body.setVelocity(mergedBall, {
         x: candidate.velocityX,
         y: candidate.velocityY,
@@ -964,6 +969,59 @@ function drawBall(context: CanvasRenderingContext2D, body: MatterBody) {
   drawBallSprite(context, body.position.x, body.position.y, body.angle, definition, false)
 }
 
+export function drawBallPreviewToCanvas(
+  canvas: HTMLCanvasElement,
+  level: BallLevel,
+  size = 220,
+  options?: { silhouette?: boolean },
+) {
+  const context = canvas.getContext('2d')
+  if (!context) {
+    return
+  }
+
+  const dpr = window.devicePixelRatio || 1
+  canvas.width = Math.round(size * dpr)
+  canvas.height = Math.round(size * dpr)
+  canvas.style.width = String(size) + 'px'
+  canvas.style.height = String(size) + 'px'
+
+  context.setTransform(1, 0, 0, 1, 0, 0)
+  context.clearRect(0, 0, canvas.width, canvas.height)
+  context.scale(dpr, dpr)
+
+  const definition = getBallDefinition(level)
+  const fitWidth = definition.radius * 2.7
+  const fitHeight = definition.radius * 2.28
+  const scale = Math.min((size * 0.9) / fitWidth, (size * 0.9) / fitHeight)
+
+  context.save()
+  context.translate(size * 0.5, size * 0.56)
+  context.scale(scale, scale)
+  drawBallSprite(context, 0, 0, 0, definition, true)
+  context.restore()
+
+  if (options?.silhouette) {
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
+    const { data } = imageData
+
+    for (let index = 0; index < data.length; index += 4) {
+      const alpha = data[index + 3]
+      if (alpha === 0) {
+        continue
+      }
+
+      const brightness = data[index] * 0.299 + data[index + 1] * 0.587 + data[index + 2] * 0.114
+      const value = brightness > 185 ? 214 : brightness > 120 ? 124 : 66
+      data[index] = value
+      data[index + 1] = value
+      data[index + 2] = value
+    }
+
+    context.putImageData(imageData, 0, 0)
+  }
+}
+
 function drawBallSprite(
   context: CanvasRenderingContext2D,
   x: number,
@@ -983,26 +1041,30 @@ function drawBallSprite(
   context.arc(radius * 0.16, radius * 0.18, radius * 0.95, 0, Math.PI * 2)
   context.fill()
 
-  context.beginPath()
-  context.arc(0, 0, radius, 0, Math.PI * 2)
-  context.clip()
+  if (definition.level === 7) {
+    drawFinalCrownedBody(context, radius)
+  } else {
+    context.beginPath()
+    context.arc(0, 0, radius, 0, Math.PI * 2)
+    context.clip()
 
-  const bodyGradient = context.createRadialGradient(
-    -radius * 0.35,
-    -radius * 0.4,
-    radius * 0.18,
-    0,
-    0,
-    radius * 1.1,
-  )
-  bodyGradient.addColorStop(0, '#fff8ef')
-  bodyGradient.addColorStop(0.24, definition.accent)
-  bodyGradient.addColorStop(0.55, definition.fill)
-  bodyGradient.addColorStop(1, definition.stroke)
-  context.fillStyle = bodyGradient
-  context.beginPath()
-  context.arc(0, 0, radius, 0, Math.PI * 2)
-  context.fill()
+    const bodyGradient = context.createRadialGradient(
+      -radius * 0.35,
+      -radius * 0.4,
+      radius * 0.18,
+      0,
+      0,
+      radius * 1.1,
+    )
+    bodyGradient.addColorStop(0, '#fff8ef')
+    bodyGradient.addColorStop(0.24, definition.accent)
+    bodyGradient.addColorStop(0.55, definition.fill)
+    bodyGradient.addColorStop(1, definition.stroke)
+    context.fillStyle = bodyGradient
+    context.beginPath()
+    context.arc(0, 0, radius, 0, Math.PI * 2)
+    context.fill()
+  }
 
   drawBallDetails(context, definition)
 
@@ -1013,11 +1075,15 @@ function drawBallSprite(
   context.rotate(angle)
   context.strokeStyle = definition.stroke
   context.lineWidth = isPreview ? 3.5 : 3
-  context.beginPath()
-  context.arc(0, 0, radius, 0, Math.PI * 2)
+  if (definition.level === 7) {
+    traceFinalCrownedBodyPath(context, radius)
+  } else {
+    context.beginPath()
+    context.arc(0, 0, radius, 0, Math.PI * 2)
+  }
   context.stroke()
 
-  context.fillStyle = 'rgba(255, 255, 255, 0.42)'
+  context.fillStyle = definition.level === 7 ? 'rgba(255, 255, 255, 0.34)' : 'rgba(255, 255, 255, 0.42)'
   context.beginPath()
   context.ellipse(-radius * 0.34, -radius * 0.42, radius * 0.26, radius * 0.16, -0.5, 0, Math.PI * 2)
   context.fill()
@@ -1077,14 +1143,11 @@ function drawBallDetails(
       break
     case 7:
       drawStarlitAura(context, radius)
-      drawLeaf(context, -radius * 0.42, 0, radius * 0.16, radius * 0.07, -0.55, definition.leaf)
-      drawLeaf(context, radius * 0.42, 0, radius * 0.16, radius * 0.07, 0.55, definition.leaf)
-      drawSoftHaloPetals(context, radius, '#cdbeff', 12, 0.66, 0.3, 0.17)
-      drawSoftHaloPetals(context, radius * 0.8, '#f7e7f7', 10, 0.44, 0.24, 0.14)
-      drawStarRing(context, radius)
-      drawStarlitCore(context, radius)
+      drawLeaf(context, -radius * 0.4, -radius * 0.05, radius * 0.14, radius * 0.065, -0.55, definition.leaf)
+      drawLeaf(context, radius * 0.4, -radius * 0.05, radius * 0.14, radius * 0.065, 0.55, definition.leaf)
+      drawFinalBloomCore(context, radius)
       drawTinyCrown(context, radius)
-      drawTinyFace(context, radius * 0.84, 'rgba(122, 83, 50, 0.55)')
+      drawTinyFace(context, radius * 0.62, 'rgba(122, 83, 50, 0.56)')
       break
   }
 
@@ -1143,6 +1206,127 @@ function drawPetalRing(
   context.fill()
 }
 
+function getFinalCrownedPetalRadius(radius: number, angle: number) {
+  const petalCount = 20
+  const normalizedAngle = angle - Math.PI / 2
+  const bloomWave = (Math.cos(normalizedAngle * petalCount) + 1) * 0.5
+  const outerSpread = bloomWave * radius * 0.19
+  const petalSoftener = Math.cos(normalizedAngle * petalCount * 2) * radius * 0.01
+  const naturalDrift = Math.cos(normalizedAngle * 5) * radius * 0.006
+  return radius * 0.83 + outerSpread + petalSoftener + naturalDrift
+}
+
+function traceFinalCrownedBodyPath(context: CanvasRenderingContext2D, radius: number) {
+  const steps = 180
+
+  for (let index = 0; index <= steps; index += 1) {
+    const angle = (Math.PI * 2 * index) / steps - Math.PI / 2
+    const currentRadius = getFinalCrownedPetalRadius(radius, angle)
+    const x = Math.cos(angle) * currentRadius
+    const y = Math.sin(angle) * currentRadius
+
+    if (index === 0) {
+      context.beginPath()
+      context.moveTo(x, y)
+    } else {
+      context.lineTo(x, y)
+    }
+  }
+
+  context.closePath()
+}
+
+function drawOpenBloomPetal(
+  context: CanvasRenderingContext2D,
+  radius: number,
+  length: number,
+  width: number,
+  tipColor: string,
+  baseColor: string,
+) {
+  const baseY = radius * 0.01
+  const petalGradient = context.createLinearGradient(0, baseY, 0, -radius * length)
+  petalGradient.addColorStop(0, baseColor)
+  petalGradient.addColorStop(0.4, 'rgba(255, 232, 216, 0.96)')
+  petalGradient.addColorStop(1, tipColor)
+  context.fillStyle = petalGradient
+  context.beginPath()
+  context.moveTo(0, baseY)
+  context.bezierCurveTo(
+    radius * width * 0.96,
+    -radius * length * 0.04,
+    radius * width * 1.08,
+    -radius * length * 0.54,
+    0,
+    -radius * length,
+  )
+  context.bezierCurveTo(
+    -radius * width * 1.08,
+    -radius * length * 0.54,
+    -radius * width * 0.96,
+    -radius * length * 0.04,
+    0,
+    baseY,
+  )
+  context.closePath()
+  context.fill()
+
+  context.strokeStyle = 'rgba(176, 126, 94, 0.1)'
+  context.lineWidth = Math.max(radius * 0.008, 0.6)
+  context.stroke()
+
+  context.strokeStyle = 'rgba(255, 255, 255, 0.18)'
+  context.lineWidth = Math.max(radius * 0.006, 0.4)
+  context.beginPath()
+  context.moveTo(0, baseY)
+  context.quadraticCurveTo(0, -radius * length * 0.36, 0, -radius * (length - 0.012))
+  context.stroke()
+}
+
+function drawFinalOpenPetalRing(
+  context: CanvasRenderingContext2D,
+  radius: number,
+  petalCount: number,
+  offset: number,
+  length: number,
+  width: number,
+  tipColor: string,
+  baseColor: string,
+  phase: number,
+) {
+  for (let index = 0; index < petalCount; index += 1) {
+    const angle = (Math.PI * 2 * index) / petalCount - Math.PI / 2
+    const sway = Math.sin(index * 1.31 + phase) * 0.008
+    const bloomLift = Math.cos(index * 1.11 + phase) * radius * 0.008
+    const px = Math.cos(angle) * (radius * offset + bloomLift)
+    const py = Math.sin(angle) * (radius * offset + bloomLift)
+
+    context.save()
+    context.translate(px, py)
+    context.rotate(angle + sway)
+    drawOpenBloomPetal(context, radius, length, width, tipColor, baseColor)
+    context.restore()
+  }
+}
+
+function drawFinalCrownedBody(
+  context: CanvasRenderingContext2D,
+  radius: number,
+) {
+  drawFinalOpenPetalRing(context, radius, 24, 0.68, 0.56, 0.092, '#fff8ef', '#f2c9af', 0.08)
+  drawFinalOpenPetalRing(context, radius, 18, 0.45, 0.43, 0.082, '#fff1db', '#efc8d2', 0.42)
+  drawFinalOpenPetalRing(context, radius, 12, 0.27, 0.31, 0.068, '#fff6e7', '#f1dde9', 0.76)
+
+  const centerBase = context.createRadialGradient(0, -radius * 0.06, radius * 0.04, 0, 0, radius * 0.42)
+  centerBase.addColorStop(0, 'rgba(255, 247, 228, 0.98)')
+  centerBase.addColorStop(0.6, 'rgba(255, 233, 180, 0.95)')
+  centerBase.addColorStop(1, 'rgba(230, 184, 112, 0.88)')
+  context.fillStyle = centerBase
+  context.beginPath()
+  context.arc(0, 0, radius * 0.3, 0, Math.PI * 2)
+  context.fill()
+}
+
 function drawStarlitAura(context: CanvasRenderingContext2D, radius: number) {
   const aura = context.createRadialGradient(0, 0, radius * 0.1, 0, 0, radius * 1.14)
   aura.addColorStop(0, 'rgba(255, 243, 176, 0.38)')
@@ -1155,55 +1339,40 @@ function drawStarlitAura(context: CanvasRenderingContext2D, radius: number) {
   context.fill()
 }
 
-function drawSoftHaloPetals(
-  context: CanvasRenderingContext2D,
-  radius: number,
-  color: string,
-  petalCount: number,
-  offset: number,
-  petalWidth: number,
-  petalHeight: number,
-) {
-  context.save()
-  context.globalAlpha = 0.72
-  drawLongPetalRing(context, radius, color, petalCount, offset, petalWidth, petalHeight)
-  context.restore()
-}
+function drawFinalBloomCore(context: CanvasRenderingContext2D, radius: number) {
+  const pollenRingRadius = radius * 0.25
 
-function drawStarRing(context: CanvasRenderingContext2D, radius: number) {
-  context.save()
-  context.strokeStyle = 'rgba(255, 248, 220, 0.72)'
-  context.lineWidth = 2
+  context.fillStyle = 'rgba(255, 250, 235, 0.88)'
   context.beginPath()
-  context.arc(0, 0, radius * 0.9, 0, Math.PI * 2)
-  context.stroke()
-
-  for (let index = 0; index < 10; index += 1) {
-    const angle = (Math.PI * 2 * index) / 10 - Math.PI / 2
-    const px = Math.cos(angle) * radius * 0.9
-    const py = Math.sin(angle) * radius * 0.9
-    context.fillStyle = 'rgba(255, 248, 220, 0.92)'
-    context.beginPath()
-    context.arc(px, py, radius * 0.035, 0, Math.PI * 2)
-    context.fill()
-  }
-  context.restore()
-}
-
-function drawStarlitCore(context: CanvasRenderingContext2D, radius: number) {
-  const outer = context.createRadialGradient(0, 0, radius * 0.08, 0, 0, radius * 0.4)
-  outer.addColorStop(0, '#fffdf0')
-  outer.addColorStop(0.34, '#fff3b0')
-  outer.addColorStop(0.7, '#ffe08a')
-  outer.addColorStop(1, 'rgba(255, 224, 138, 0.28)')
-  context.fillStyle = outer
-  context.beginPath()
-  context.arc(0, 0, radius * 0.29, 0, Math.PI * 2)
+  context.arc(0, 0, radius * 0.25, 0, Math.PI * 2)
   context.fill()
 
-  context.fillStyle = 'rgba(255, 248, 220, 0.9)'
+  for (let index = 0; index < 24; index += 1) {
+    const angle = (Math.PI * 2 * index) / 24 - Math.PI / 2
+    const px = Math.cos(angle) * pollenRingRadius
+    const py = Math.sin(angle) * pollenRingRadius
+    const beadRadius = index % 2 === 0 ? radius * 0.027 : radius * 0.022
+    context.fillStyle = index % 3 === 0 ? '#f2c958' : '#f7e6b2'
+    context.beginPath()
+    context.arc(px, py, beadRadius, 0, Math.PI * 2)
+    context.fill()
+  }
+
+  const seedGradient = context.createRadialGradient(0, -radius * 0.03, radius * 0.03, 0, 0, radius * 0.19)
+  seedGradient.addColorStop(0, '#5a3425')
+  seedGradient.addColorStop(0.62, '#3a2018')
+  seedGradient.addColorStop(1, '#24120e')
+  context.fillStyle = seedGradient
   context.beginPath()
-  context.arc(-radius * 0.08, -radius * 0.1, radius * 0.08, 0, Math.PI * 2)
+  context.arc(0, 0, radius * 0.16, 0, Math.PI * 2)
+  context.fill()
+
+  const faceBase = context.createRadialGradient(0, -radius * 0.03, radius * 0.02, 0, radius * 0.03, radius * 0.22)
+  faceBase.addColorStop(0, 'rgba(255, 248, 234, 0.98)')
+  faceBase.addColorStop(1, 'rgba(252, 223, 166, 0.96)')
+  context.fillStyle = faceBase
+  context.beginPath()
+  context.arc(0, radius * 0.03, radius * 0.18, 0, Math.PI * 2)
   context.fill()
 }
 

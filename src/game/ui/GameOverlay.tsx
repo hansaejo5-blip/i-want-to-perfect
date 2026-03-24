@@ -3,13 +3,13 @@ import type { GameSnapshot } from '../types'
 
 interface GameOverlayProps {
   snapshot: GameSnapshot
-  isLandscape: boolean
+  showMobileFullscreenHint: boolean
   onRestart: () => void
 }
 
 export function GameOverlay({
   snapshot,
-  isLandscape,
+  showMobileFullscreenHint,
   onRestart,
 }: GameOverlayProps) {
   const secondsLeft = (snapshot.dangerTimeLeftMs / 1000).toFixed(1)
@@ -58,10 +58,12 @@ export function GameOverlay({
               />
             </div>
           </div>
-          <div className="guide-card">
-            <span className="hud-label">Garden Bench</span>
-            <strong>{isLandscape ? 'Landscape' : 'Rotate device'}</strong>
-          </div>
+          {showMobileFullscreenHint ? (
+            <div className="guide-card guide-card--fullscreen-priority">
+              <span className="hud-label">Best on Phone</span>
+              <strong>Tap fullscreen</strong>
+            </div>
+          ) : null}
         </div>
       </div>
 

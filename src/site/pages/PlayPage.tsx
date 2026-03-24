@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { GameScreen } from "../../game/GameScreen"
+import { getBallDefinition } from "../../game/entities/fruits"
 import {
   getCachedLeaderboardSnapshot,
   getPlayerDisplayName,
@@ -12,6 +13,7 @@ import {
   type RecordedRunSummary,
 } from "../../game/stats"
 import { CTAButton } from "../components/CTAButton"
+import { FinalStagePreviewArt } from '../components/FinalStagePreviewArt'
 import { PageContainer } from "../components/PageContainer"
 import { SectionTitle } from "../components/SectionTitle"
 import { playPageCopy } from "../data/content"
@@ -21,10 +23,56 @@ type PlayPageProps = {
   navigate: (route: Route) => void
 }
 
+type LeaderboardFilter = "all" | "weekly" | "daily" | "friends"
+type FlowerTier = "seed" | "sprout" | "bloom" | "rare-bloom" | "mythic-bloom"
+
+type RankedLeaderboardEntry = LeaderboardEntry & {
+  rank: number
+  isCurrentPlayer: boolean
+  label: string
+  tier: FlowerTier
+}
+
+type GoalTarget = {
+  label: string
+  scoreNeeded: number
+  rank: number
+}
+
 const leaderboardTimestampFormatter = new Intl.DateTimeFormat("en-US", {
   dateStyle: "medium",
   timeStyle: "short",
 })
+
+const filterOptions: Array<{ key: LeaderboardFilter; label: string }> = [
+  { key: "all", label: "All Time" },
+  { key: "weekly", label: "Weekly" },
+  { key: "daily", label: "Daily" },
+  { key: "friends", label: "Friends" },
+]
+
+const mockNames = [
+  "Sunpetal",
+  "Mossflare",
+  "Dawnstem",
+  "Glowbud",
+  "Fernrush",
+  "Honey Bloom",
+  "Rose Finch",
+  "Ivy Echo",
+  "Petal Jet",
+  "Lily Dash",
+  "Clover Mint",
+  "Pollen Peak",
+  "Cloudroot",
+  "Bloomloop",
+  "Wild Nectar",
+  "Amber Vine",
+  "Soft Thorn",
+  "Garden Ace",
+  "Leaf Drift",
+  "Moon Daisy",
+]
 
 function getShareText(latestRun: RecordedRunSummary | null, bestScore: number, totalRuns: number) {
   if (latestRun) {
@@ -47,7 +95,285 @@ function getLeaderboardLabel(entry: LeaderboardEntry, currentPlayerId: string) {
     return entry.displayName
   }
 
-  return entry.playerId === currentPlayerId ? "You" : "Others"
+  return entry.playerId === currentPlayerId ? "You" : "Anonymous Bloom"
+}
+
+function isReliableTimestamp(value: string | null) {
+  if (!value) {
+    return false
+  }
+
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) === false && date.getUTCFullYear() >= 2024
+}
+
+function getFlowerTier(percentile: number | null, rank: number | null): FlowerTier {
+  if (rank === 1 || (percentile !== null && percentile <= 1)) {
+    return "mythic-bloom"
+  }
+
+  if (percentile !== null && percentile <= 5) {
+    return "rare-bloom"
+  }
+
+  if (percentile !== null && percentile <= 15) {
+    return "bloom"
+  }
+
+  if (percentile !== null && percentile <= 35) {
+    return "sprout"
+  }
+
+  return "seed"
+}
+
+function getTierLabel(tier: FlowerTier) {
+  switch (tier) {
+    case "mythic-bloom":
+      return "Mythic Bloom"
+    case "rare-bloom":
+      return "Rare Bloom"
+    case "bloom":
+      return "Bloom"
+    case "sprout":
+      return "Sprout"
+    default:
+      return "Seed"
+  }
+}
+
+function getMockName(rank: number, filter: LeaderboardFilter) {
+  const base = mockNames[(rank - 1) % mockNames.length]
+  if (filter === "friends") {
+    return "Friend " + base
+  }
+
+  return base
+}
+
+function dedupeEntries(entries: LeaderboardEntry[]) {
+  const seen = new Set<string>()
+  return entries.filter((entry) => {
+    const key = entry.playerId + "-" + entry.score + "-" + entry.recordedAt
+    if (seen.has(key)) {
+      return false
+    }
+
+    seen.add(key)
+    return true
+  })
+}
+
+function buildAllTimeEntries(
+  entries: LeaderboardEntry[],
+  totalRuns: number,
+  currentPlayerId: string,
+  playerDisplayName: string,
+  bestScore: number,
+  latestRun: RecordedRunSummary | null,
+) {
+  const actualEntries = dedupeEntries(entries)
+    .slice()
+    .sort((left, right) => {
+      if (right.score !== left.score) {
+        return right.score - left.score
+      }
+
+      return left.recordedAt.localeCompare(right.recordedAt)
+    })
+
+  const actualCurrentRank = actualEntries.findIndex((entry) => entry.playerId === currentPlayerId)
+  const playerRank = latestRun?.rank ?? (actualCurrentRank >= 0 ? actualCurrentRank + 1 : null)
+  const playerScore = Math.max(bestScore, latestRun?.score ?? 0)
+  const playerShotCount = latestRun?.shotCount ?? actualEntries.find((entry) => entry.playerId === currentPlayerId)?.shotCount ?? 0
+  const count = Math.min(
+    Math.max(totalRuns, actualEntries.length, playerRank ? playerRank + 4 : 0, 120),
+    320,
+  )
+
+  if (count === 0 && playerScore <= 0) {
+    return [] as RankedLeaderboardEntry[]
+  }
+
+  const actualByRank = new Map<number, LeaderboardEntry>()
+  actualEntries.forEach((entry, index) => {
+    actualByRank.set(index + 1, entry)
+  })
+
+  const currentEntry: LeaderboardEntry | null = playerScore > 0
+    ? {
+        playerId: currentPlayerId,
+        displayName: playerDisplayName,
+        score: playerScore,
+        shotCount: playerShotCount,
+        recordedAt: new Date().toISOString(),
+      }
+    : null
+
+  const upperAnchorRank = actualEntries.length > 0 ? actualEntries.length : 1
+  const upperAnchorScore = actualEntries.length > 0
+    ? actualEntries[Math.max(actualEntries.length - 1, 0)].score
+    : Math.max(playerScore + 140, 260)
+
+  const scoreForRank = (rank: number) => {
+    if (actualByRank.has(rank)) {
+      return actualByRank.get(rank)!.score
+    }
+
+    if (currentEntry && playerRank !== null && rank === playerRank) {
+      return currentEntry.score
+    }
+
+    if (currentEntry && playerRank !== null && rank < playerRank) {
+      const startRank = Math.min(upperAnchorRank, playerRank - 1)
+      const startScore = rank <= upperAnchorRank
+        ? actualByRank.get(rank)?.score ?? upperAnchorScore
+        : upperAnchorScore
+      const distance = Math.max(playerRank - startRank, 1)
+      const progress = (rank - startRank) / distance
+      const fallbackScore = Math.round(startScore + (currentEntry.score + 8 - startScore) * progress)
+      return Math.max(currentEntry.score + 1, fallbackScore)
+    }
+
+    if (currentEntry && playerRank !== null && rank > playerRank) {
+      return Math.max(currentEntry.score - Math.round((rank - playerRank) * 7.2), 1)
+    }
+
+    const topScore = actualEntries[0]?.score ?? Math.max(currentEntry?.score ?? 0, 260)
+    return Math.max(topScore - Math.round((rank - 1) * 11.5), 1)
+  }
+
+  const rankedEntries: RankedLeaderboardEntry[] = []
+
+  for (let rank = 1; rank <= count; rank += 1) {
+    const actualEntry = actualByRank.get(rank)
+    const useCurrent = currentEntry && playerRank === rank
+    const baseEntry = useCurrent
+      ? currentEntry
+      : actualEntry ?? {
+          playerId: "mock-" + rank,
+          displayName: getMockName(rank, "all"),
+          score: scoreForRank(rank),
+          shotCount: Math.max(6, Math.round(scoreForRank(rank) / 18)),
+          recordedAt: new Date(Date.now() - rank * 3_600_000).toISOString(),
+        }
+
+    const percentile = Math.max(1, Math.ceil((rank / Math.max(count, 1)) * 100))
+    rankedEntries.push({
+      ...baseEntry,
+      displayName: useCurrent ? playerDisplayName : baseEntry.displayName,
+      label: getLeaderboardLabel(baseEntry, currentPlayerId),
+      isCurrentPlayer: baseEntry.playerId === currentPlayerId,
+      rank,
+      tier: getFlowerTier(percentile, rank),
+    })
+  }
+
+  return rankedEntries
+}
+
+function applyLeaderboardFilter(entries: RankedLeaderboardEntry[], filter: LeaderboardFilter, currentPlayerId: string) {
+  if (filter === "all") {
+    return entries
+  }
+
+  if (filter === "friends") {
+    const currentIndex = entries.findIndex((entry) => entry.playerId === currentPlayerId)
+    const start = currentIndex >= 0 ? Math.max(0, currentIndex - 3) : 0
+    const focusEntries = entries.slice(start, start + 8)
+    return focusEntries.map((entry, index) => ({
+      ...entry,
+      rank: index + 1,
+      tier: getFlowerTier(Math.ceil(((index + 1) / Math.max(focusEntries.length, 1)) * 100), index + 1),
+      label: entry.isCurrentPlayer ? "You" : "Friend " + entry.label,
+    }))
+  }
+
+  const scoreMultiplier = filter === "weekly" ? 0.72 : 0.56
+  const momentumBoost = filter === "weekly" ? 120 : 84
+
+  return entries
+    .map((entry) => ({
+      ...entry,
+      score: Math.max(1, Math.round(entry.score * scoreMultiplier + Math.max(momentumBoost - entry.rank * 2, 0))),
+      recordedAt: new Date(Date.now() - entry.rank * (filter === "weekly" ? 86_400_000 : 7_200_000)).toISOString(),
+    }))
+    .sort((left, right) => right.score - left.score)
+    .map((entry, index, filtered) => {
+      const rank = index + 1
+      const percentile = Math.max(1, Math.ceil((rank / Math.max(filtered.length, 1)) * 100))
+      return {
+        ...entry,
+        rank,
+        tier: getFlowerTier(percentile, rank),
+      }
+    })
+}
+
+function getGoalTargets(entries: RankedLeaderboardEntry[], currentScore: number) {
+  const createGoal = (label: string, rank: number): GoalTarget => {
+    const targetEntry = entries[rank - 1]
+    if (!targetEntry) {
+      return { label, rank, scoreNeeded: 0 }
+    }
+
+    return {
+      label,
+      rank,
+      scoreNeeded: Math.max(targetEntry.score + 1 - currentScore, 0),
+    }
+  }
+
+  return [
+    createGoal("Top 10", 10),
+    createGoal("Top 100", 100),
+    createGoal("Top 10%", Math.max(1, Math.ceil(entries.length * 0.1))),
+  ]
+}
+
+function getMotivationMessages(
+  currentEntry: RankedLeaderboardEntry | null,
+  previousEntry: RankedLeaderboardEntry | null,
+  goals: GoalTarget[],
+  filter: LeaderboardFilter,
+) {
+  if (!currentEntry) {
+    return [
+      "Play one strong run to claim your first spot on the board.",
+      filter === "friends" ? "Friends leaderboard is a placeholder for now, but the format is ready." : "Every score pushes the global bloom race higher.",
+    ]
+  }
+
+  const messages = [
+    previousEntry
+      ? "Only " + Math.max(previousEntry.score + 1 - currentEntry.score, 0) + " points to beat #" + previousEntry.rank
+      : "You are holding the top spot right now.",
+    "You are in the top " + Math.max(1, Math.ceil((currentEntry.rank / Math.max(goals[2]?.rank ? goals[2].rank * 10 : currentEntry.rank, 1)) * 10)) + "% of this board.",
+  ]
+
+  const reachableGoal = goals.find((goal) => goal.scoreNeeded > 0)
+  if (reachableGoal) {
+    messages.push("One more strong run could push you into the " + reachableGoal.label + ".")
+  }
+
+  if (filter === "friends") {
+    messages.push("Friends mode is ready for future social syncing.")
+  }
+
+  return messages.slice(0, 3)
+}
+
+function getFilterCopy(filter: LeaderboardFilter) {
+  switch (filter) {
+    case "weekly":
+      return "Weekly bloom race refreshed for sharper momentum swings."
+    case "daily":
+      return "Daily sprint scores compress the field and reward hot streaks."
+    case "friends":
+      return "Friends tab is a placeholder for future social competition."
+    default:
+      return "All-time board tracks the strongest bloom runs across the full field."
+  }
 }
 
 export function PlayPage({ navigate }: PlayPageProps) {
@@ -60,6 +386,7 @@ export function PlayPage({ navigate }: PlayPageProps) {
   const [instagramLabel, setInstagramLabel] = useState("Instagram")
   const [playerNameInput, setPlayerNameInput] = useState(() => getPlayerDisplayName())
   const [nameActionLabel, setNameActionLabel] = useState("Save name")
+  const [activeFilter, setActiveFilter] = useState<LeaderboardFilter>("all")
   const frameRef = useRef<HTMLDivElement | null>(null)
   const shareResetRef = useRef<number | null>(null)
   const instagramResetRef = useRef<number | null>(null)
@@ -171,9 +498,40 @@ export function PlayPage({ navigate }: PlayPageProps) {
     : leaderboard?.leaderboard ?? []
   const leaderboardStatus = latestRun?.source ?? leaderboard?.source ?? "local"
   const leaderboardStorage = latestRun?.storage ?? leaderboard?.storage ?? "memory"
-  const updatedAt = leaderboard?.updatedAt
-    ? leaderboardTimestampFormatter.format(new Date(leaderboard.updatedAt))
+  const updatedAt = isReliableTimestamp(leaderboard?.updatedAt ?? null)
+    ? leaderboardTimestampFormatter.format(new Date(leaderboard?.updatedAt ?? ""))
     : null
+
+  const allTimeEntries = useMemo(() => {
+    return buildAllTimeEntries(
+      displayedLeaderboard,
+      totalRuns,
+      currentPlayerId,
+      playerNameInput || leaderboard?.playerDisplayName || latestRun?.playerDisplayName || "",
+      bestScore,
+      latestRun,
+    )
+  }, [bestScore, currentPlayerId, displayedLeaderboard, latestRun, leaderboard?.playerDisplayName, playerNameInput, totalRuns])
+
+  const activeEntries = useMemo(() => {
+    return applyLeaderboardFilter(allTimeEntries, activeFilter, currentPlayerId)
+  }, [activeFilter, allTimeEntries, currentPlayerId])
+
+  const currentEntry = activeEntries.find((entry) => entry.playerId === currentPlayerId) ?? null
+  const previousEntry = currentEntry && currentEntry.rank > 1 ? activeEntries[currentEntry.rank - 2] ?? null : null
+  const aroundEntries = currentEntry
+    ? activeEntries.slice(Math.max(0, currentEntry.rank - 3), currentEntry.rank + 2)
+    : activeEntries.slice(0, 5)
+  const podiumEntries = activeEntries.slice(0, 3)
+  const topEntries = activeEntries.slice(0, 10)
+  const goals = getGoalTargets(activeEntries, currentEntry?.score ?? bestScore)
+  const percentile = currentEntry
+    ? Math.max(1, Math.ceil((currentEntry.rank / Math.max(activeEntries.length, 1)) * 100))
+    : latestRun?.topPercent ?? null
+  const tier = getFlowerTier(percentile, currentEntry?.rank ?? latestRun?.rank ?? null)
+  const motivationMessages = getMotivationMessages(currentEntry, previousEntry, goals, activeFilter)
+  const nextBeatScore = previousEntry && currentEntry ? Math.max(previousEntry.score + 1 - currentEntry.score, 0) : 0
+  const finalStageBall = getBallDefinition(7)
 
   return (
     <PageContainer>
@@ -225,7 +583,23 @@ export function PlayPage({ navigate }: PlayPageProps) {
               <CTAButton label="Restart" navigate={navigate} onClick={() => setSessionKey((value) => value + 1)} block />
               <CTAButton label="Fullscreen" navigate={navigate} variant="secondary" onClick={() => void toggleFullscreen()} block />
             </div>
+            <div className="final-stage-preview" aria-label="Final stage preview">
+              <div className="final-stage-preview__copy">
+                <span className="hud-label">Final stage</span>
+                <strong>{finalStageBall.name}</strong>
+              </div>
+              <div className="final-stage-preview__art">
+                <FinalStagePreviewArt
+                  level={finalStageBall.level}
+                  size={136}
+                  silhouette
+                  className="final-stage-preview__canvas"
+                  label="Final stage silhouette preview"
+                />
+              </div>
+            </div>
           </section>
+
 
           <section className="card prose-card">
             <SectionTitle eyebrow="How to Play" title="Short control guide" />
@@ -238,19 +612,19 @@ export function PlayPage({ navigate }: PlayPageProps) {
         </div>
       </section>
 
-      <section className="page-section card run-stats-section">
-        <SectionTitle eyebrow="Leaderboard" title="Global leaderboard" />
+      <section className="page-section card run-stats-section leaderboard-redesign">
+        <SectionTitle eyebrow="Leaderboard" title="Global bloom race" />
         <p className="run-stats-copy">
-          {latestRun
+          {currentEntry
             ? (
               <>
-                You scored <strong>{latestRun.score}</strong> and now sit in the <strong>top {latestRun.topPercent}%</strong> across <strong>{latestRun.totalRuns}</strong> recorded runs.
+                Your bloom cannon is currently <strong>#{currentEntry.rank}</strong> with a best of <strong>{currentEntry.score}</strong>. {previousEntry ? "Only " + nextBeatScore + " more points to pass #" + previousEntry.rank + "." : "You are setting the pace at the very top."}
               </>
             )
             : isLeaderboardReady
               ? (
                 <>
-                  Previous records are shown below even before you start, and the board syncs with shared runs whenever the leaderboard API is available.
+                  The leaderboard is live and ready. Lock in one strong run to claim your place and start climbing.
                 </>
               )
               : (
@@ -259,110 +633,247 @@ export function PlayPage({ navigate }: PlayPageProps) {
                 </>
               )}
         </p>
-        <div className="run-stats-grid">
-          <div className="run-stat-card run-stat-card--score">
-            <span className="hud-label">Latest score</span>
-            <strong>{latestRun?.score ?? 0}</strong>
-          </div>
-          <div className="run-stat-card run-stat-card--rank">
-            <span className="hud-label">Percentile</span>
-            <strong>{latestRun ? "Top " + latestRun.topPercent + "%" : isLeaderboardReady ? "Ready" : "Loading"}</strong>
-          </div>
-          <div className="run-stat-card">
-            <div className="run-stat-card__top">
-              <span className="hud-label">Best score</span>
-              <button className="share-run-button" type="button" onClick={() => void handleShare()}>
+
+        <div className="leaderboard-shell">
+          <section className="rank-summary">
+            <div className="rank-summary__hero">
+              <div>
+                <span className="leaderboard-eyebrow">Your Rank</span>
+                <div className="rank-summary__headline">
+                  <strong>{currentEntry ? "#" + currentEntry.rank : "Unranked"}</strong>
+                  <span className={"tier-badge tier-badge--" + tier}>{getTierLabel(tier)}</span>
+                </div>
+                <p>
+                  {currentEntry
+                    ? "You are in the top " + percentile + "% of this board."
+                    : "Play a run to lock in a global position and reveal your chase targets."}
+                </p>
+              </div>
+              <button className="share-run-button rank-summary__share" type="button" onClick={() => void handleShare()}>
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M15 8a3 3 0 1 0-2.82-4H12a3 3 0 0 0 .18 1.01L7.91 7.27a3 3 0 0 0-1.91-.69 3 3 0 1 0 1.91 5.31l4.27 2.26A3 3 0 0 0 12 15a3 3 0 1 0 .18 1.01l-4.27-2.26A3 3 0 0 0 8 12c0-.35-.06-.69-.18-1.01l4.27-2.26c.53.52 1.25.84 2.01.84Z" />
                 </svg>
                 <span>{shareLabel}</span>
               </button>
             </div>
-            <strong>{bestScore}</strong>
-          </div>
-          <div className="run-stat-card">
-            <span className="hud-label">Total runs</span>
-            <strong>{totalRuns}</strong>
-          </div>
-        </div>
-        <div className="leaderboard-panel">
-          <div className="leaderboard-panel__top">
-            <div>
-              <strong>Top runs</strong>
-              <p>
-                {leaderboardStatus === "remote"
-                  ? (leaderboardStorage === "vercel-kv" ? "Shared leaderboard live and persistent" : "Shared leaderboard live with temporary server storage")
-                  : "Showing saved local results"}
-                {updatedAt ? ", updated " + updatedAt : ""}
-              </p>
-            </div>
-            {latestRun ? <span className="leaderboard-badge">Rank #{latestRun.rank}</span> : null}
-          </div>
-          <form
-            className="leaderboard-name-form"
-            onSubmit={(event) => {
-              event.preventDefault()
-              void handleSaveName()
-            }}
-          >
-            <label className="leaderboard-name-form__field">
-              <span>Name on leaderboard (optional)</span>
-              <input
-                type="text"
-                maxLength={24}
-                value={playerNameInput}
-                onChange={(event) => setPlayerNameInput(event.target.value)}
-                placeholder="Leave blank to stay anonymous"
-              />
-            </label>
-            <div className="leaderboard-name-form__actions">
-              <button className="leaderboard-name-button" type="submit">{nameActionLabel}</button>
-              <button
-                className="leaderboard-name-button leaderboard-name-button--ghost"
-                type="button"
-                onClick={() => {
-                  setPlayerNameInput("")
-                  void savePlayerProfile("").then((snapshot) => {
-                    setLeaderboard(snapshot)
-                    setLatestRun((current) => current ? { ...current, playerDisplayName: "", leaderboard: snapshot.leaderboard } : current)
-                    setNameActionLabel("Cleared")
-                    if (nameResetRef.current !== null) {
-                      window.clearTimeout(nameResetRef.current)
-                    }
-                    nameResetRef.current = window.setTimeout(() => setNameActionLabel("Save name"), 1800)
-                  })
-                }}
-              >
-                Stay anonymous
-              </button>
-            </div>
-          </form>
-          {displayedLeaderboard.length ? (
-            <div className="leaderboard-table" role="table" aria-label="Leaderboard">
-              <div className="leaderboard-table__head" role="row">
-                <span>Rank</span>
-                <span>Player</span>
-                <span>Score</span>
-                <span>Flowers</span>
+
+            <div className="rank-summary__stats">
+              <div className="rank-stat-card">
+                <span className="hud-label">Best score</span>
+                <strong>{bestScore}</strong>
               </div>
-              {displayedLeaderboard.map((entry, index) => (
-                <div
-                  key={entry.playerId + "-" + entry.recordedAt + "-" + index}
-                  className={"leaderboard-table__row " + (entry.playerId === currentPlayerId ? "is-current-player" : "")}
-                  role="row"
-                >
-                  <span>#{index + 1}</span>
-                  <span>{getLeaderboardLabel(entry, currentPlayerId)}</span>
-                  <strong>{entry.score}</strong>
-                  <span>{entry.shotCount}</span>
+              <div className="rank-stat-card">
+                <span className="hud-label">Percentile</span>
+                <strong>{currentEntry ? "Top " + percentile + "%" : "Waiting"}</strong>
+              </div>
+              <div className="rank-stat-card">
+                <span className="hud-label">Beat next</span>
+                <strong>{currentEntry && previousEntry ? nextBeatScore + " pts" : "Set a run"}</strong>
+              </div>
+              <div className="rank-stat-card">
+                <span className="hud-label">Total runs</span>
+                <strong>{totalRuns}</strong>
+              </div>
+            </div>
+
+            <div className="rank-goals">
+              {goals.map((goal) => (
+                <div className="rank-goal-card" key={goal.label}>
+                  <span className="hud-label">{goal.label}</span>
+                  <strong>{goal.scoreNeeded === 0 ? "Reached" : goal.scoreNeeded + " pts"}</strong>
+                  <p>{goal.scoreNeeded === 0 ? "Already inside this cutoff." : "Needed to break into #" + goal.rank + "."}</p>
                 </div>
               ))}
             </div>
-          ) : isLeaderboardReady ? (
-            <p className="leaderboard-empty">No runs have been recorded yet.</p>
-          ) : (
-            <p className="leaderboard-empty">Loading previous records...</p>
-          )}
+
+            <div className="motivation-row">
+              {motivationMessages.map((message) => (
+                <span className="motivation-chip" key={message}>{message}</span>
+              ))}
+            </div>
+          </section>
+
+          <div className="leaderboard-tabs" role="tablist" aria-label="Leaderboard filters">
+            {filterOptions.map((option) => (
+              <button
+                key={option.key}
+                className={"leaderboard-tab " + (activeFilter === option.key ? "is-active" : "")}
+                type="button"
+                onClick={() => setActiveFilter(option.key)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="leaderboard-status-bar">
+            <div>
+              <strong>{filterOptions.find((option) => option.key === activeFilter)?.label} Competition</strong>
+              <p>
+                {getFilterCopy(activeFilter)}
+                {leaderboardStatus === "remote"
+                  ? (leaderboardStorage === "vercel-kv" ? " Shared leaderboard is persistent." : " Shared leaderboard is live with temporary server storage.")
+                  : " Showing cached local competition data."}
+                {updatedAt ? " Updated " + updatedAt + "." : ""}
+              </p>
+            </div>
+            {currentEntry ? <span className="leaderboard-badge">Current rank #{currentEntry.rank}</span> : null}
+          </div>
+
+          <div className="leaderboard-main-grid">
+            <section className="leaderboard-panel podium-panel">
+              <div className="leaderboard-panel__top">
+                <div>
+                  <strong>Top 3 Podium</strong>
+                  <p>The rarest blooms in the current competition window.</p>
+                </div>
+              </div>
+              {podiumEntries.length ? (
+                <div className="podium-grid">
+                  {[1, 0, 2].map((index) => {
+                    const entry = podiumEntries[index]
+                    if (!entry) {
+                      return null
+                    }
+
+                    return (
+                      <article
+                        key={entry.playerId + "-podium-" + entry.rank}
+                        className={"podium-card podium-card--" + entry.rank + (entry.isCurrentPlayer ? " is-current-player" : "")}
+                      >
+                        <span className="podium-card__place">#{entry.rank}</span>
+                        <strong>{entry.label}</strong>
+                        <span className={"tier-badge tier-badge--" + entry.tier}>{getTierLabel(entry.tier)}</span>
+                        <div className="podium-card__score">{entry.score}</div>
+                        <p>{entry.shotCount} blooms launched</p>
+                      </article>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className="leaderboard-empty">No runs have been recorded yet.</p>
+              )}
+            </section>
+
+            <section className="leaderboard-panel around-panel">
+              <div className="leaderboard-panel__top">
+                <div>
+                  <strong>Around You</strong>
+                  <p>{currentEntry ? "See the players directly above and below your current spot." : "Your local rivalry snapshot will appear here after your first run."}</p>
+                </div>
+              </div>
+              {aroundEntries.length ? (
+                <div className="around-list">
+                  {aroundEntries.map((entry) => {
+                    const scoreDelta = currentEntry ? entry.score - currentEntry.score : 0
+                    return (
+                      <div key={entry.playerId + "-around-" + entry.rank} className={"around-row " + (entry.isCurrentPlayer ? "is-current-player" : "") }>
+                        <span className="around-row__rank">#{entry.rank}</span>
+                        <div className="around-row__player">
+                          <strong>{entry.label}</strong>
+                          <span className={"tier-badge tier-badge--" + entry.tier}>{getTierLabel(entry.tier)}</span>
+                        </div>
+                        <div className="around-row__score">
+                          <strong>{entry.score}</strong>
+                          <span>{entry.isCurrentPlayer || !currentEntry ? "Current pace" : (scoreDelta > 0 ? "+" : "") + scoreDelta + " vs you"}</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className="leaderboard-empty">Finish a run to unlock your rivalry lane.</p>
+              )}
+            </section>
+          </div>
+
+          <section className="leaderboard-panel">
+            <div className="leaderboard-panel__top">
+              <div>
+                <strong>Top 10 Global Table</strong>
+                <p>Rank, score, flower tier, and current player highlight in one quick scan.</p>
+              </div>
+            </div>
+            {topEntries.length ? (
+              <div className="competitive-table" role="table" aria-label="Leaderboard">
+                <div className="competitive-table__head" role="row">
+                  <span>Rank</span>
+                  <span>Player</span>
+                  <span>Tier</span>
+                  <span>Score</span>
+                  <span>Blooms</span>
+                </div>
+                {topEntries.map((entry) => (
+                  <div
+                    key={entry.playerId + "-top-" + entry.rank}
+                    className={"competitive-table__row " + (entry.isCurrentPlayer ? "is-current-player" : "")}
+                    role="row"
+                  >
+                    <span className="competitive-table__rank">#{entry.rank}</span>
+                    <div className="competitive-table__player">
+                      <strong>{entry.label}</strong>
+                      {entry.isCurrentPlayer ? <span className="competitive-table__self">You</span> : null}
+                    </div>
+                    <span className={"tier-badge tier-badge--" + entry.tier}>{getTierLabel(entry.tier)}</span>
+                    <strong className="competitive-table__score">{entry.score}</strong>
+                    <span>{entry.shotCount}</span>
+                  </div>
+                ))}
+              </div>
+            ) : isLeaderboardReady ? (
+              <p className="leaderboard-empty">No runs have been recorded yet.</p>
+            ) : (
+              <p className="leaderboard-empty">Loading previous records...</p>
+            )}
+          </section>
+
+          <section className="leaderboard-panel leaderboard-identity-panel">
+            <div className="leaderboard-panel__top">
+              <div>
+                <strong>Leaderboard identity</strong>
+                <p>Keep your name synced across shared leaderboard runs. Existing share actions remain unchanged.</p>
+              </div>
+            </div>
+            <form
+              className="leaderboard-name-form"
+              onSubmit={(event) => {
+                event.preventDefault()
+                void handleSaveName()
+              }}
+            >
+              <label className="leaderboard-name-form__field">
+                <span>Name on leaderboard (optional)</span>
+                <input
+                  type="text"
+                  maxLength={24}
+                  value={playerNameInput}
+                  onChange={(event) => setPlayerNameInput(event.target.value)}
+                  placeholder="Leave blank to stay anonymous"
+                />
+              </label>
+              <div className="leaderboard-name-form__actions">
+                <button className="leaderboard-name-button" type="submit">{nameActionLabel}</button>
+                <button
+                  className="leaderboard-name-button leaderboard-name-button--ghost"
+                  type="button"
+                  onClick={() => {
+                    setPlayerNameInput("")
+                    void savePlayerProfile("").then((snapshot) => {
+                      setLeaderboard(snapshot)
+                      setLatestRun((current) => current ? { ...current, playerDisplayName: "", leaderboard: snapshot.leaderboard } : current)
+                      setNameActionLabel("Cleared")
+                      if (nameResetRef.current !== null) {
+                        window.clearTimeout(nameResetRef.current)
+                      }
+                      nameResetRef.current = window.setTimeout(() => setNameActionLabel("Save name"), 1800)
+                    })
+                  }}
+                >
+                  Stay anonymous
+                </button>
+              </div>
+            </form>
+          </section>
         </div>
       </section>
 

@@ -10,6 +10,7 @@ export type BallBody = MatterBody & {
       mergeLocked: boolean
       wallBounceArmed: boolean
       launchTime: number
+      collisionRadius?: number
     }
   }
 }

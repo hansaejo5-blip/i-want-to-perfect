@@ -10,7 +10,7 @@ import { FIXED_TIMESTEP_MS } from '../config'
 import { getNextBallLevel, isBallBody } from '../entities/fruits'
 import type { BallLevel, BallBody } from '../types'
 
-const MERGE_CONTACT_MS = 1.3
+const MERGE_CONTACT_MS = 0.14
 const MAX_RELATIVE_SPEED = 15.2
 const IMMEDIATE_MERGE_SPEED = 14.1
 const MERGE_DISTANCE_TOLERANCE = 50
@@ -135,8 +135,8 @@ export function createCollisionHooks(engine: Engine) {
 
     const relativeVelocity = Vector.sub(bodyA.velocity, bodyB.velocity)
     const relativeSpeed = Vector.magnitude(relativeVelocity)
-    const radiusA = bodyA.circleRadius ?? 0
-    const radiusB = bodyB.circleRadius ?? 0
+    const radiusA = ballA.collisionRadius ?? bodyA.circleRadius ?? 0
+    const radiusB = ballB.collisionRadius ?? bodyB.circleRadius ?? 0
     const centerDistance = Vector.magnitude(Vector.sub(bodyA.position, bodyB.position))
     const penetrationDepth = pair.collision.depth
     const normalX = pair.collision.normal.x

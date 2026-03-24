@@ -1,4 +1,8 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_REF\" = \"gh-pages\" ]; then exit 0; else exit 1; fi",
   "rewrites": [
     {
       "source": "/((?!api/|assets/|audio/|icons.svg|favicon.svg|robots.txt|ads.txt|sitemap.xml|og-image.png).*)",
