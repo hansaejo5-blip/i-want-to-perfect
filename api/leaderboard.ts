@@ -41,7 +41,6 @@ type LeaderboardResponse = {
 }
 
 const STORE_KEY = 'perfect-drop-leaderboard-v2'
-const MAX_LEADERBOARD_SIZE = 12
 const DISPLAY_NAME_LIMIT = 24
 
 function createEmptyStore(): LeaderboardStore {
@@ -98,56 +97,6 @@ async function kvRequest(path: string, init?: RequestInit) {
   }
 }
 
-async function readStore() {
-  if (hasKvConfig()) {
-    const response = await kvRequest(`/get/${STORE_KEY}`)
-    if (response) {
-      const data = await response.json().catch(() => null) as { result?: string | null } | null
-      const raw = typeof data?.result === 'string' ? data.result : null
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw) as Partial<LeaderboardStore>
-          return {
-            totalRuns: Number(parsed.totalRuns) || 0,
-            updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : null,
-            scoreCounts: typeof parsed.scoreCounts === 'object' && parsed.scoreCounts !== null ? parsed.scoreCounts : {},
-            leaderboard: Array.isArray(parsed.leaderboard) ? parsed.leaderboard : [],
-            playerBestScores: typeof parsed.playerBestScores === 'object' && parsed.playerBestScores !== null ? parsed.playerBestScores : {},
-            playerDisplayNames: typeof parsed.playerDisplayNames === 'object' && parsed.playerDisplayNames !== null ? parsed.playerDisplayNames : {},
-          } satisfies LeaderboardStore
-        } catch {
-          return createEmptyStore()
-        }
-      }
-    }
-  }
-
-  return getMemoryStore()
-}
-
-async function writeStore(store: LeaderboardStore) {
-  if (hasKvConfig()) {
-    const response = await kvRequest('/set', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        key: STORE_KEY,
-        value: JSON.stringify(store),
-      }),
-    })
-
-    if (response) {
-      return 'vercel-kv' satisfies StorageMode
-    }
-  }
-
-  const runtime = globalThis as typeof globalThis & { __perfectDropLeaderboard?: LeaderboardStore }
-  runtime.__perfectDropLeaderboard = store
-  return 'memory' satisfies StorageMode
-}
-
 function sortLeaderboard(entries: LeaderboardEntry[]) {
   return entries.sort((left, right) => {
     if (right.score !== left.score) {
@@ -162,12 +111,123 @@ function sortLeaderboard(entries: LeaderboardEntry[]) {
   })
 }
 
-function calculateRank(score: number, scoreCounts: Record<string, number>) {
-  let higherScores = 0
+function isBetterEntry(candidate: LeaderboardEntry, current: LeaderboardEntry) {
+  if (candidate.score !== current.score) {
+    return candidate.score > current.score
+  }
 
-  for (const [scoreValue, count] of Object.entries(scoreCounts)) {
-    if (Number(scoreValue) > score) {
-      higherScores += count
+  if (candidate.shotCount !== current.shotCount) {
+    return candidate.shotCount < current.shotCount
+  }
+
+  return candidate.recordedAt < current.recordedAt
+}
+
+function collapseToBestEntries(entries: LeaderboardEntry[]) {
+  const bestByPlayer = new Map<string, LeaderboardEntry>()
+
+  for (const entry of entries) {
+    if (!entry || typeof entry.playerId !== 'string' || entry.playerId.length === 0) {
+      continue
+    }
+
+    const normalized: LeaderboardEntry = {
+      playerId: entry.playerId,
+      displayName: typeof entry.displayName === 'string' ? entry.displayName : '',
+      score: Number(entry.score) || 0,
+      shotCount: Number(entry.shotCount) || 0,
+      recordedAt: typeof entry.recordedAt === 'string' ? entry.recordedAt : new Date().toISOString(),
+    }
+
+    const existing = bestByPlayer.get(normalized.playerId)
+    if (!existing || isBetterEntry(normalized, existing)) {
+      bestByPlayer.set(normalized.playerId, normalized)
+    }
+  }
+
+  return sortLeaderboard(Array.from(bestByPlayer.values()))
+}
+
+function normalizeStore(parsed: Partial<LeaderboardStore> | null | undefined): LeaderboardStore {
+  const leaderboard = collapseToBestEntries(Array.isArray(parsed?.leaderboard) ? parsed!.leaderboard : [])
+  const playerBestScores: Record<string, number> = {
+    ...(typeof parsed?.playerBestScores === 'object' && parsed?.playerBestScores !== null ? parsed.playerBestScores : {}),
+  }
+
+  for (const entry of leaderboard) {
+    playerBestScores[entry.playerId] = Math.max(playerBestScores[entry.playerId] ?? 0, entry.score)
+  }
+
+  return {
+    totalRuns: Number(parsed?.totalRuns) || 0,
+    updatedAt: typeof parsed?.updatedAt === 'string' ? parsed.updatedAt : null,
+    scoreCounts: typeof parsed?.scoreCounts === 'object' && parsed?.scoreCounts !== null ? parsed.scoreCounts : {},
+    leaderboard,
+    playerBestScores,
+    playerDisplayNames: typeof parsed?.playerDisplayNames === 'object' && parsed?.playerDisplayNames !== null ? parsed.playerDisplayNames : {},
+  }
+}
+
+async function readStore() {
+  if (hasKvConfig()) {
+    const response = await kvRequest(`/get/${STORE_KEY}`)
+    if (response) {
+      const data = await response.json().catch(() => null) as { result?: string | null } | null
+      const raw = typeof data?.result === 'string' ? data.result : null
+      if (raw) {
+        try {
+          return normalizeStore(JSON.parse(raw) as Partial<LeaderboardStore>)
+        } catch {
+          return createEmptyStore()
+        }
+      }
+    }
+  }
+
+  return normalizeStore(getMemoryStore())
+}
+
+async function writeStore(store: LeaderboardStore) {
+  const normalized = normalizeStore(store)
+
+  if (hasKvConfig()) {
+    const response = await kvRequest('/set', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        key: STORE_KEY,
+        value: JSON.stringify(normalized),
+      }),
+    })
+
+    if (response) {
+      return {
+        storage: 'vercel-kv' satisfies StorageMode,
+        store: normalized,
+      }
+    }
+  }
+
+  const runtime = globalThis as typeof globalThis & { __perfectDropLeaderboard?: LeaderboardStore }
+  runtime.__perfectDropLeaderboard = normalized
+  return {
+    storage: 'memory' satisfies StorageMode,
+    store: normalized,
+  }
+}
+
+function calculateRank(score: number, leaderboard: LeaderboardEntry[], playerId: string) {
+  const playerIndex = leaderboard.findIndex((entry) => entry.playerId === playerId)
+  if (playerIndex >= 0) {
+    return playerIndex + 1
+  }
+
+  let higherScores = 0
+  for (const entry of leaderboard) {
+    if (entry.score > score) {
+      higherScores += 1
     }
   }
 
@@ -230,10 +290,10 @@ function sanitizeProfileSubmission(value: unknown): ProfileSubmissionBody | null
 }
 
 function decorateLeaderboard(store: LeaderboardStore) {
-  return store.leaderboard.map((entry) => ({
+  return sortLeaderboard(store.leaderboard.map((entry) => ({
     ...entry,
     displayName: store.playerDisplayNames[entry.playerId] ?? entry.displayName ?? '',
-  }))
+  })))
 }
 
 function buildResponse(store: LeaderboardStore, playerId: string, storage: StorageMode): LeaderboardResponse {
@@ -280,8 +340,8 @@ export async function PATCH(request: Request) {
     delete store.playerDisplayNames[body.playerId]
   }
 
-  const storage = await writeStore(store)
-  return json(buildResponse(store, body.playerId, storage))
+  const result = await writeStore(store)
+  return json(buildResponse(result.store, body.playerId, result.storage))
 }
 
 export async function POST(request: Request) {
@@ -302,23 +362,30 @@ export async function POST(request: Request) {
   store.scoreCounts[String(body.score)] = (store.scoreCounts[String(body.score)] ?? 0) + 1
   store.playerBestScores[body.playerId] = Math.max(store.playerBestScores[body.playerId] ?? 0, body.score)
 
-  store.leaderboard = sortLeaderboard([
-    ...store.leaderboard,
-    {
-      playerId: body.playerId,
-      displayName: body.displayName ?? '',
-      score: body.score,
-      shotCount: body.shotCount,
-      recordedAt,
-    },
-  ]).slice(0, MAX_LEADERBOARD_SIZE)
+  const nextEntry: LeaderboardEntry = {
+    playerId: body.playerId,
+    displayName: body.displayName ?? '',
+    score: body.score,
+    shotCount: body.shotCount,
+    recordedAt,
+  }
+  const existingIndex = store.leaderboard.findIndex((entry) => entry.playerId === body.playerId)
 
-  const storage = await writeStore(store)
-  const rank = calculateRank(body.score, store.scoreCounts)
-  const topPercent = Math.max(1, Math.ceil((rank / Math.max(store.totalRuns, 1)) * 100))
+  if (existingIndex >= 0) {
+    const existingEntry = store.leaderboard[existingIndex]
+    if (isBetterEntry(nextEntry, existingEntry)) {
+      store.leaderboard[existingIndex] = nextEntry
+    }
+  } else {
+    store.leaderboard.push(nextEntry)
+  }
+
+  const result = await writeStore(store)
+  const rank = calculateRank(body.score, result.store.leaderboard, body.playerId)
+  const topPercent = Math.max(1, Math.ceil((rank / Math.max(result.store.leaderboard.length, 1)) * 100))
 
   return json({
-    ...buildResponse(store, body.playerId, storage),
+    ...buildResponse(result.store, body.playerId, result.storage),
     rank,
     topPercent,
   })
