@@ -750,7 +750,7 @@ export function PlayPage({ navigate }: PlayPageProps) {
               <p>
                 {getFilterCopy(activeFilter)}
                 {leaderboardStatus === "remote"
-                  ? (leaderboardStorage === "vercel-kv" ? " Shared leaderboard is persistent." : " Shared leaderboard is live with temporary server storage.")
+                  ? (leaderboardStorage === "memory" ? " Shared leaderboard is live with temporary server storage." : " Shared leaderboard is persistent.")
                   : " Showing cached local competition data."}
                 {updatedAt ? " Updated " + updatedAt + "." : ""}
               </p>

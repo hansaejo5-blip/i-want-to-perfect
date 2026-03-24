@@ -27,7 +27,13 @@ type ProfileSubmissionBody = {
   displayName?: string
 }
 
-type StorageMode = 'vercel-kv' | 'memory'
+type StorageMode = 'vercel-kv' | 'upstash-redis' | 'memory'
+
+type StorageConfig = {
+  baseUrl: string
+  token: string
+  storage: Exclude<StorageMode, 'memory'>
+}
 
 type LeaderboardResponse = {
   leaderboard: LeaderboardEntry[]
@@ -63,25 +69,43 @@ function getMemoryStore() {
   return runtime.__perfectDropLeaderboard
 }
 
-function hasKvConfig() {
-  return typeof process.env.KV_REST_API_URL === 'string'
+function getStorageConfig(): StorageConfig | null {
+  if (typeof process.env.KV_REST_API_URL === 'string'
     && process.env.KV_REST_API_URL.length > 0
     && typeof process.env.KV_REST_API_TOKEN === 'string'
-    && process.env.KV_REST_API_TOKEN.length > 0
+    && process.env.KV_REST_API_TOKEN.length > 0) {
+    return {
+      baseUrl: process.env.KV_REST_API_URL,
+      token: process.env.KV_REST_API_TOKEN,
+      storage: 'vercel-kv',
+    }
+  }
+
+  if (typeof process.env.UPSTASH_REDIS_REST_URL === 'string'
+    && process.env.UPSTASH_REDIS_REST_URL.length > 0
+    && typeof process.env.UPSTASH_REDIS_REST_TOKEN === 'string'
+    && process.env.UPSTASH_REDIS_REST_TOKEN.length > 0) {
+    return {
+      baseUrl: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      storage: 'upstash-redis',
+    }
+  }
+
+  return null
 }
 
 async function kvRequest(path: string, init?: RequestInit) {
-  const baseUrl = process.env.KV_REST_API_URL
-  const token = process.env.KV_REST_API_TOKEN
-  if (!baseUrl || !token) {
+  const config = getStorageConfig()
+  if (!config) {
     return null
   }
 
   try {
-    const response = await fetch(`${baseUrl}${path}`, {
+    const response = await fetch(`${config.baseUrl}${path}`, {
       ...init,
       headers: {
-        authorization: `Bearer ${token}`,
+        authorization: `Bearer ${config.token}`,
         ...init?.headers,
       },
       cache: 'no-store',
@@ -169,7 +193,7 @@ function normalizeStore(parsed: Partial<LeaderboardStore> | null | undefined): L
 }
 
 async function readStore() {
-  if (hasKvConfig()) {
+  if (getStorageConfig() !== null) {
     const response = await kvRequest(`/get/${STORE_KEY}`)
     if (response) {
       const data = await response.json().catch(() => null) as { result?: string | null } | null
@@ -190,7 +214,7 @@ async function readStore() {
 async function writeStore(store: LeaderboardStore) {
   const normalized = normalizeStore(store)
 
-  if (hasKvConfig()) {
+  if (getStorageConfig() !== null) {
     const response = await kvRequest('/set', {
       method: 'POST',
       headers: {
@@ -204,7 +228,7 @@ async function writeStore(store: LeaderboardStore) {
 
     if (response) {
       return {
-        storage: 'vercel-kv' satisfies StorageMode,
+        storage: getStorageConfig()?.storage ?? 'memory' satisfies StorageMode,
         store: normalized,
       }
     }
@@ -322,7 +346,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url)
   const playerId = url.searchParams.get('playerId') ?? ''
   const store = await readStore()
-  const storage: StorageMode = hasKvConfig() ? 'vercel-kv' : 'memory'
+  const storage: StorageMode = getStorageConfig()?.storage ?? 'memory'
 
   return json(buildResponse(store, playerId, storage))
 }

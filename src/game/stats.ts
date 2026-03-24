@@ -6,7 +6,7 @@ const MAX_STORED_RUNS = 300
 const LEADERBOARD_PREVIEW_SIZE = 8
 const DISPLAY_NAME_LIMIT = 24
 
-export type LeaderboardStorage = "vercel-kv" | "memory"
+export type LeaderboardStorage = "vercel-kv" | "upstash-redis" | "memory"
 
 type LocalRun = {
   score: number
@@ -196,7 +196,7 @@ function readCachedLeaderboard() {
       playerDisplayName: typeof parsed.playerDisplayName === "string" ? parsed.playerDisplayName : "",
       updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : null,
       source: parsed.source === "remote" ? "remote" : "local",
-      storage: parsed.storage === "vercel-kv" ? "vercel-kv" : "memory",
+      storage: parsed.storage === "vercel-kv" || parsed.storage === "upstash-redis" ? parsed.storage : "memory",
     } satisfies CachedLeaderboard
   } catch {
     return null
