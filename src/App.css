@@ -93,8 +93,8 @@ summary:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 16px 0;
+  gap: 14px;
+  padding: 12px 0;
 }
 
 .site-brand {
@@ -291,8 +291,8 @@ summary:focus-visible {
 .hero-section__fact {
   display: inline-flex;
   align-items: center;
-  min-height: 34px;
-  padding: 0 12px;
+  min-height: 30px;
+  padding: 0 10px;
   border-radius: 999px;
   background: rgba(237, 240, 227, 0.9);
   border: 1px solid rgba(85, 105, 74, 0.1);
@@ -320,7 +320,7 @@ summary:focus-visible {
   margin: 0;
   max-width: 50ch;
   color: rgba(85, 105, 74, 0.9);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .hero-preview {
@@ -400,7 +400,7 @@ summary:focus-visible {
 .home-link-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: 14px;
   margin-top: 16px;
 }
 
@@ -473,7 +473,7 @@ summary:focus-visible {
 .update-list,
 .control-stack {
   display: grid;
-  gap: 16px;
+  gap: 14px;
 }
 
 .faq-item summary {
@@ -530,7 +530,7 @@ summary:focus-visible {
 
 .play-layout__game .game-screen {
   width: 100%;
-  min-height: 620px;
+  min-height: 500px;
   aspect-ratio: 1280 / 720;
 }
 
@@ -888,7 +888,7 @@ summary:focus-visible {
   pointer-events: auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   min-width: 300px;
   padding: 24px;
 }
@@ -1447,7 +1447,7 @@ summary:focus-visible {
 
 .rank-summary {
   display: grid;
-  gap: 16px;
+  gap: 14px;
   padding: 22px;
   border-radius: 28px;
   background: linear-gradient(145deg, rgba(255, 252, 247, 0.96), rgba(249, 239, 220, 0.9));
@@ -1458,7 +1458,7 @@ summary:focus-visible {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 14px;
 }
 
 .rank-summary__headline {
@@ -1560,7 +1560,7 @@ summary:focus-visible {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 14px;
   padding: 18px 20px;
   border-radius: 22px;
   background: rgba(255, 252, 247, 0.84);
@@ -1821,7 +1821,7 @@ summary:focus-visible {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   margin-top: 18px;
   padding: 16px 18px;
   border-radius: 22px;
@@ -2153,7 +2153,7 @@ summary:focus-visible {
 .hero-section__stage {
   position: relative;
   overflow: hidden;
-  min-height: 620px;
+  min-height: 500px;
   border-radius: 34px;
   background: #d9d4b2;
 }
@@ -2179,23 +2179,24 @@ summary:focus-visible {
   position: relative;
   z-index: 1;
   max-width: 520px;
-  min-height: 620px;
+  min-height: 500px;
   justify-content: center;
-  padding: 44px 40px;
+  padding: 28px 32px;
   background: transparent;
   box-shadow: none;
 }
 
 .hero-section__copy--overlay h1 {
-  max-width: 8ch;
-  font-size: clamp(3.3rem, 6vw, 5.4rem);
-  line-height: 0.92;
-  letter-spacing: -0.05em;
+  max-width: 9ch;
+  font-size: clamp(2.6rem, 4.8vw, 4.1rem);
+  line-height: 0.94;
+  letter-spacing: -0.04em;
 }
 
 .hero-section__copy--overlay .hero-section__description {
-  max-width: 38ch;
+  max-width: 40ch;
   color: rgba(79, 65, 47, 0.84);
+  font-size: 0.98rem;
 }
 
 .hero-section__copy--overlay .hero-section__eyebrow {
@@ -2303,7 +2304,7 @@ summary:focus-visible {
 @media (max-width: 960px) {
   .hero-section__stage,
   .hero-section__copy--overlay {
-    min-height: 540px;
+    min-height: 440px;
   }
 
   .home-banner-cta {
@@ -2314,15 +2315,15 @@ summary:focus-visible {
 @media (max-width: 720px) {
   .hero-section__stage,
   .hero-section__copy--overlay {
-    min-height: 500px;
+    min-height: 380px;
   }
 
   .hero-section__copy--overlay {
-    padding: 30px 22px;
+    padding: 22px 18px;
   }
 
   .hero-section__copy--overlay h1 {
-    font-size: clamp(2.7rem, 12vw, 4rem);
+    font-size: clamp(2.2rem, 10vw, 3.2rem);
   }
 
   .home-banner-cta {
