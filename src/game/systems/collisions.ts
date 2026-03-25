@@ -39,7 +39,7 @@ interface PairState {
 const getSpeedTowardsContact = (body: MatterBody, normalX: number, normalY: number) =>
   Math.max(0, -(body.velocity.x * normalX + body.velocity.y * normalY))
 
-export function createCollisionHooks(engine: Engine) {
+export function createCollisionHooks(engine: Engine, nowProvider: () => number = () => performance.now()) {
   const pairStates = new Map<string, PairState>()
   const mergeQueue: MergeCandidate[] = []
   const reservedBodies = new Set<number>()
@@ -149,7 +149,7 @@ export function createCollisionHooks(engine: Engine) {
     const minRadius = Math.min(radiusA, radiusB)
     const hasDeepContact = penetrationDepth >= minRadius * 0.075
     const hasStrongPush = maxPushSpeed >= 0.95
-    const now = performance.now()
+    const now = nowProvider()
     const bodyAFallingOnTop = bodyA.velocity.y > 1.6 && bodyA.position.y < bodyB.position.y
     const bodyBFallingOnTop = bodyB.velocity.y > 1.6 && bodyB.position.y < bodyA.position.y
     const hasDropContact =

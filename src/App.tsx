@@ -2,7 +2,14 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import { SiteLayout } from './site/components/SiteLayout'
 import { GuidePage, HomePage, PlayPage, PrivacyPage, SupportPage, UpdatesPage } from './site/pages'
-import { ROUTE_META, SITE_NAME, SITE_URL, normalizeRoute, type Route } from './site/router'
+import {
+  ROUTE_META,
+  SITE_NAME,
+  getAbsoluteSiteUrl,
+  normalizeRoute,
+  routeToHref,
+  type Route,
+} from './site/router'
 
 const ensureMetaTag = (selector: string, create: () => HTMLMetaElement) => {
   const existing = document.head.querySelector<HTMLMetaElement>(selector)
@@ -45,6 +52,9 @@ function App() {
     document.documentElement.lang = 'en'
     document.title = meta.title
 
+    const canonicalUrl = getAbsoluteSiteUrl(meta.canonicalPath)
+    const previewImageUrl = getAbsoluteSiteUrl('/og-image.png')
+
     const descriptionTag = ensureMetaTag('meta[name="description"]', () => {
       const element = document.createElement('meta')
       element.name = 'description'
@@ -85,14 +95,14 @@ function App() {
       element.setAttribute('property', 'og:url')
       return element
     })
-    ogUrlTag.content = SITE_URL + meta.canonicalPath
+    ogUrlTag.content = canonicalUrl
 
     const ogImageTag = ensureMetaTag('meta[property="og:image"]', () => {
       const element = document.createElement('meta')
       element.setAttribute('property', 'og:image')
       return element
     })
-    ogImageTag.content = SITE_URL + '/og-image.png'
+    ogImageTag.content = previewImageUrl
 
     const twitterCardTag = ensureMetaTag('meta[name="twitter:card"]', () => {
       const element = document.createElement('meta')
@@ -120,14 +130,14 @@ function App() {
       element.name = 'twitter:image'
       return element
     })
-    twitterImageTag.content = SITE_URL + '/og-image.png'
+    twitterImageTag.content = previewImageUrl
 
     const canonicalLink = ensureLinkTag('link[rel="canonical"]', () => {
       const element = document.createElement('link')
       element.rel = 'canonical'
       return element
     })
-    canonicalLink.href = SITE_URL + meta.canonicalPath
+    canonicalLink.href = canonicalUrl
   }, [meta])
 
   const navigate = (nextRoute: Route) => {
@@ -136,7 +146,7 @@ function App() {
       return
     }
 
-    window.history.pushState({}, '', nextRoute)
+    window.history.pushState({}, '', routeToHref(nextRoute))
     setRoute(nextRoute)
     window.scrollTo({ top: 0, behavior: 'auto' })
   }

@@ -48,6 +48,11 @@ type LeaderboardResponse = {
 
 const STORE_KEY = 'perfect-drop-leaderboard-v2'
 const DISPLAY_NAME_LIMIT = 24
+const CORS_HEADERS = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-methods': 'GET, POST, PATCH, OPTIONS',
+  'access-control-allow-headers': 'content-type',
+} as const
 
 function createEmptyStore(): LeaderboardStore {
   return {
@@ -337,8 +342,16 @@ function json(data: unknown, init?: ResponseInit) {
     headers: {
       'content-type': 'application/json; charset=utf-8',
       'cache-control': 'no-store',
+      ...CORS_HEADERS,
       ...init?.headers,
     },
+  })
+}
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: CORS_HEADERS,
   })
 }
 

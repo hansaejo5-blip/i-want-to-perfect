@@ -2,11 +2,13 @@ import heroImage from '../../assets/hero-shot.png'
 import { DISCORD_URL, ITCH_URL, NEWSLETTER_URL } from '../router'
 
 export const homeHero = {
-  eyebrow: 'Garden Merge Game',
-  title: 'Perfect Drop',
-  description: 'Drop matching blooms, shape the board carefully, and grow your run one merge at a time.',
+  eyebrow: 'Bloom Cannon Browser Game',
+  title: 'Cultivate your perfect run.',
+  description: 'Play in the browser, place each bloom carefully, and build a calm garden board that survives one more turn.',
   primaryCta: { label: 'Play Now', href: '/play#game' },
   secondaryCta: { label: 'Play on itch.io', href: ITCH_URL },
+  supportNote: 'Zero install, quick to read, and the guide, updates, and support paths stay visible below the hero.',
+  quickFacts: ['Zero install', 'Deep strategy', 'Clear support path'],
   media: {
     src: heroImage,
     alt: 'Perfect Drop gameplay showing the garden board, bowl area, and merge pieces',
@@ -15,16 +17,16 @@ export const homeHero = {
 
 export const featureCards = [
   {
-    title: 'Simple to read',
-    body: 'The board, next piece, and danger state stay visible so first-time players understand the loop quickly.',
+    title: 'Read the board quickly',
+    body: 'The bowl, next bloom, and danger state stay clear so a first-time player can understand the loop without reading a long wall of text.',
   },
   {
-    title: 'Built for replay',
-    body: 'Fast restarts and readable updates make it easy to return for another run without friction.',
+    title: 'Made for one more run',
+    body: 'Short sessions, fast restarts, and a gentle difficulty curve make the browser version easy to try immediately and revisit later.',
   },
   {
-    title: 'Clear support path',
-    body: 'Players can move from browser play to guide reading, updates, and itch.io support in a predictable flow.',
+    title: 'Structured like a real game site',
+    body: 'Guide, updates, support, and screenshots stay visible on the homepage so the play-first layout still feels complete and trustworthy.',
   },
 ]
 
@@ -50,12 +52,33 @@ export const screenshots = [
 ]
 
 export const homeIntro = {
-  title: 'A gentle puzzle loop with clear decisions',
+  title: 'A browser game first, with the rest of the site close behind',
   body: [
-    'Perfect Drop is a browser puzzle game built around quick understanding, careful placement, and repeat play. The site structure keeps the first action obvious: play the game.',
-    'From there, players can move naturally into the guide, recent updates, or itch.io support without losing the core focus on play.',
+    'Perfect Drop is built to let a new visitor start a run quickly, then learn more only if they want extra detail. The homepage leads with the browser game instead of asking players to read through every section first.',
+    'That play-first hierarchy still keeps real supporting content in reach. Players can move into the guide, recent updates, screenshots, and support information without the site feeling thin or misleading.',
   ],
 }
+
+export const homeSupportCards = [
+  {
+    eyebrow: 'Guide',
+    title: 'Rules and strategy stay easy to find',
+    body: 'New players can jump straight into the browser version first, then use the guide for controls, failure conditions, and cleaner long-run habits.',
+    cta: { label: 'Read Guide', href: '/guide' },
+  },
+  {
+    eyebrow: 'Updates',
+    title: 'Recent changes are visible on the homepage',
+    body: 'Returning players can scan recent improvements without the update feed taking attention away from the main play action at the top.',
+    cta: { label: 'View Updates', href: '/updates' },
+  },
+  {
+    eyebrow: 'Support',
+    title: 'Support paths stay clearly separated',
+    body: 'itch.io and future community links remain available as real support options, not as competing first-screen actions or ad-like prompts.',
+    cta: { label: 'Support Page', href: '/support' },
+  },
+]
 
 export const updates = [
   {

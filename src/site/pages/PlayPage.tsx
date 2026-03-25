@@ -17,7 +17,7 @@ import { FinalStagePreviewArt } from '../components/FinalStagePreviewArt'
 import { PageContainer } from "../components/PageContainer"
 import { SectionTitle } from "../components/SectionTitle"
 import { playPageCopy } from "../data/content"
-import { ITCH_URL, SITE_URL, type Route } from "../router"
+import { ITCH_URL, getAbsoluteSiteUrl, type Route } from "../router"
 
 type PlayPageProps = {
   navigate: (route: Route) => void
@@ -469,7 +469,8 @@ export function PlayPage({ navigate }: PlayPageProps) {
 
   const handleShare = async (mode: "default" | "instagram" = "default") => {
     const shareText = getShareText(latestRun, bestScore, totalRuns)
-    const sharePayload = shareText + " " + SITE_URL
+    const shareUrl = getAbsoluteSiteUrl("/play")
+    const sharePayload = shareText + " " + shareUrl
 
     if (mode === "instagram") {
       try {
@@ -492,7 +493,7 @@ export function PlayPage({ navigate }: PlayPageProps) {
         await navigator.share({
           title: "Perfect Drop",
           text: shareText,
-          url: SITE_URL,
+          url: shareUrl,
         })
         return
       }

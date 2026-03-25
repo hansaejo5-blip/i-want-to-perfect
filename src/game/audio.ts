@@ -1,7 +1,8 @@
-const SHOOT_AUDIO_URL = '/audio/shoot.wav'
-const MERGE_AUDIO_URL = '/audio/merge.wav'
-const GAME_OVER_AUDIO_URL = '/audio/game-over.wav'
-const BGM_AUDIO_URL = '/audio/garden-bgm-loop.wav'
+const PUBLIC_BASE_URL = import.meta.env.BASE_URL
+const SHOOT_AUDIO_URL = `${PUBLIC_BASE_URL}audio/shoot.wav`
+const MERGE_AUDIO_URL = `${PUBLIC_BASE_URL}audio/merge.wav`
+const GAME_OVER_AUDIO_URL = `${PUBLIC_BASE_URL}audio/game-over.wav`
+const BGM_AUDIO_URL = `${PUBLIC_BASE_URL}audio/garden-bgm-loop.wav`
 
 const DREAM_CHORDS = [
   [220.0, 277.18, 329.63, 440.0],

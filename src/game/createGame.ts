@@ -139,7 +139,8 @@ export function createGame({
   const storedBestScore = readBestScore()
   const initialSnapshot = createInitialGameSnapshot(storedBestScore)
   const { engine, bowl } = createPhysicsEngine()
-  const collisionHooks = createCollisionHooks(engine)
+  let gameTime = 0
+  const collisionHooks = createCollisionHooks(engine, () => gameTime)
   const cannon = createCannonState(
     initialSnapshot.currentLevel,
     initialSnapshot.nextLevel,
@@ -209,7 +210,7 @@ export function createGame({
         continue
       }
 
-      if (performance.now() - ball.launchTime > 1400) {
+      if (gameTime - ball.launchTime > 1400) {
         ball.wallBounceArmed = false
         continue
       }
@@ -226,7 +227,7 @@ export function createGame({
 
   Events.on(engine, 'collisionStart', onWallBounce)
 
-  const syncSnapshot = (now = performance.now()) => {
+  const syncSnapshot = (now = gameTime) => {
     if (lastMergeAt !== null && now - lastMergeAt > COMBO_WINDOW_MS && comboCount !== 0) {
       comboCount = 0
     }
@@ -532,17 +533,19 @@ export function createGame({
   }
 
   const frame = (time: number) => {
-    const delta = Math.min(time - previousTime, 100)
+    const rawDelta = Math.min(time - previousTime, 100)
     previousTime = time
+    const delta = rawDelta * GAME_SPEED_MULTIPLIER
+    gameTime += delta
     accumulator += delta
 
     let steps = 0
     while (accumulator >= FIXED_TIMESTEP_MS && steps < MAX_PHYSICS_STEPS) {
       if (isGameOver === false) {
         Engine.update(engine, FIXED_TIMESTEP_MS)
-        applyMerges(time)
+        applyMerges(gameTime)
         updateFloorBallState()
-        updateDangerState(time)
+        updateDangerState(gameTime)
       }
       accumulator -= FIXED_TIMESTEP_MS
       steps += 1
@@ -550,25 +553,25 @@ export function createGame({
 
     for (let index = mergeEffects.length - 1; index >= 0; index -= 1) {
       const effect = mergeEffects[index]
-      if (time - effect.startedAt > effect.durationMs) {
+      if (gameTime - effect.startedAt > effect.durationMs) {
         mergeEffects.splice(index, 1)
       }
     }
 
     for (let index = floatingScoreEffects.length - 1; index >= 0; index -= 1) {
       const effect = floatingScoreEffects[index]
-      if (time - effect.startedAt > effect.durationMs) {
+      if (gameTime - effect.startedAt > effect.durationMs) {
         floatingScoreEffects.splice(index, 1)
       }
     }
 
-    syncSnapshot(time)
-    render(time)
+    syncSnapshot(gameTime)
+    render(gameTime)
     animationFrameId = window.requestAnimationFrame(frame)
   }
 
-  syncSnapshot(performance.now())
-  render(performance.now())
+  syncSnapshot(gameTime)
+  render(gameTime)
   animationFrameId = window.requestAnimationFrame(frame)
 
   return {
@@ -588,8 +591,8 @@ export function createGame({
         offsetY: (height - WORLD_HEIGHT * scale) / 2,
       }
 
-      syncSnapshot(performance.now())
-      render(performance.now())
+      syncSnapshot(gameTime)
+      render(gameTime)
     },
     pointerDown(clientX, clientY) {
       const point = screenToWorld(clientX, clientY)
@@ -603,8 +606,8 @@ export function createGame({
 
       startAimDrag(cannon)
       updateAimFromPointer(cannon, point.x, point.y)
-      syncSnapshot()
-      render(performance.now())
+      syncSnapshot(gameTime)
+      render(gameTime)
     },
     pointerMove(clientX, clientY) {
       if (cannon.isDragging === false || isGameOver) {
@@ -613,8 +616,8 @@ export function createGame({
 
       const point = screenToWorld(clientX, clientY)
       updateAimFromPointer(cannon, point.x, point.y)
-      syncSnapshot()
-      render(performance.now())
+      syncSnapshot(gameTime)
+      render(gameTime)
     },
     pointerUp(clientX, clientY) {
       if (cannon.isDragging === false || isGameOver) {
@@ -625,7 +628,7 @@ export function createGame({
       const aimResult = updateAimFromPointer(cannon, point.x, point.y)
 
       if (aimResult.dragDistance >= MIN_DRAG_DISTANCE) {
-        const body = shootBall(cannon, performance.now())
+        const body = shootBall(cannon, gameTime)
         if (body !== null) {
           Composite.add(engine.world, body)
           advanceCannonQueue(cannon, getSpawnBallLevel(getMaxFieldLevel()))
@@ -636,8 +639,8 @@ export function createGame({
       }
 
       stopAimDrag(cannon)
-      syncSnapshot()
-      render(performance.now())
+      syncSnapshot(gameTime)
+      render(gameTime)
     },
     pointerCancel(clientX, clientY) {
       if (cannon.isDragging === false || isGameOver) {
@@ -647,8 +650,8 @@ export function createGame({
       const point = screenToWorld(clientX, clientY)
       updateAimFromPointer(cannon, point.x, point.y)
       stopAimDrag(cannon)
-      syncSnapshot()
-      render(performance.now())
+      syncSnapshot(gameTime)
+      render(gameTime)
     },
     destroy() {
       window.cancelAnimationFrame(animationFrameId)

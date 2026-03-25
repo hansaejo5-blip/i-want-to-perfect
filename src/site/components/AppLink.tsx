@@ -1,5 +1,5 @@
 import type { MouseEvent, ReactNode } from 'react'
-import type { Route } from '../router'
+import { getInternalRoute, routeToHref, toAppHref, type Route } from '../router'
 
 type AppLinkProps = {
   href: string
@@ -11,22 +11,27 @@ type AppLinkProps = {
   ariaLabel?: string
 }
 
-const INTERNAL_ROUTES: Route[] = ['/', '/play', '/guide', '/updates', '/support', '/privacy']
 const PLAY_FULLSCREEN_FLAG = 'perfect-drop-enter-fullscreen'
-
-function getInternalRoute(href: string): Route | null {
-  const [path] = href.split('#')
-  const normalizedPath = (path || '/') as Route
-  return INTERNAL_ROUTES.includes(normalizedPath) ? normalizedPath : null
-}
 
 function shouldPrimeFullscreen(href: string) {
   return href === '/play#game' && window.matchMedia('(max-width: 960px) and (pointer: coarse)').matches
 }
 
+function shouldLetBrowserHandle(event: MouseEvent<HTMLAnchorElement>, target?: string) {
+  return Boolean(
+    event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      target === '_blank',
+  )
+}
+
 export function AppLink({ href, children, className, navigate, target, rel, ariaLabel }: AppLinkProps) {
   const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (target === '_blank') {
+    if (shouldLetBrowserHandle(event, target)) {
       return
     }
 
@@ -36,7 +41,7 @@ export function AppLink({ href, children, className, navigate, target, rel, aria
     }
 
     event.preventDefault()
-    const hash = href.includes('#') ? '#' + href.split('#')[1] : ''
+    const hash = href.includes('#') ? `#${href.split('#')[1]}` : ''
 
     if (shouldPrimeFullscreen(href)) {
       try {
@@ -47,7 +52,7 @@ export function AppLink({ href, children, className, navigate, target, rel, aria
     }
 
     if (hash) {
-      window.history.pushState({}, '', internalRoute + hash)
+      window.history.pushState({}, '', routeToHref(internalRoute, hash))
       window.dispatchEvent(new PopStateEvent('popstate'))
       window.dispatchEvent(new HashChangeEvent('hashchange'))
       return
@@ -57,7 +62,7 @@ export function AppLink({ href, children, className, navigate, target, rel, aria
   }
 
   return (
-    <a href={href} className={className} onClick={onClick} target={target} rel={rel} aria-label={ariaLabel}>
+    <a href={toAppHref(href)} className={className} onClick={onClick} target={target} rel={rel} aria-label={ariaLabel}>
       {children}
     </a>
   )

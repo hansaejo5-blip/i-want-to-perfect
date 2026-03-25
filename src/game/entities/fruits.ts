@@ -1,4 +1,4 @@
-import { Bodies, Body, type Body as MatterBody } from "matter-js"
+import { Bodies, type Body as MatterBody } from "matter-js"
 import {
   BALL_DENSITY,
   BALL_FRICTION_AIR,
@@ -121,8 +121,8 @@ export function getSpawnBallLevel(maxFieldLevel: BallLevel | null = null): BallL
 
 export function createBallBody(x: number, y: number, level: BallLevel): BallBody {
   const definition = getBallDefinition(level)
-  const collisionRadius = level === 7 ? definition.radius * 1.12 : definition.radius
-  const body = Bodies.circle(x, y, level === 7 ? definition.radius * 0.28 : collisionRadius, {
+  const collisionRadius = definition.radius
+  const body = Bodies.circle(x, y, collisionRadius, {
     label: "ball",
     restitution: BALL_RESTITUTION + 0.02,
     friction: 0.026,
@@ -132,50 +132,6 @@ export function createBallBody(x: number, y: number, level: BallLevel): BallBody
     slop: 0.01,
     sleepThreshold: BALL_SLEEP_THRESHOLD,
   }) as BallBody
-
-  if (level === 7) {
-    const createPart = (offsetX: number, offsetY: number, partRadius: number) =>
-      Bodies.circle(x + offsetX, y + offsetY, partRadius, {
-        label: "ball",
-        restitution: BALL_RESTITUTION + 0.02,
-        friction: 0.026,
-        frictionAir: BALL_FRICTION_AIR,
-        density: BALL_DENSITY,
-        frictionStatic: 0.1,
-        slop: 0.01,
-        sleepThreshold: BALL_SLEEP_THRESHOLD,
-      })
-
-    const outerPetalParts = Array.from({ length: 24 }, (_, index) => {
-      const angle = (Math.PI * 2 * index) / 24 - Math.PI / 2
-      return createPart(
-        Math.cos(angle) * definition.radius * 0.8,
-        Math.sin(angle) * definition.radius * 0.8,
-        definition.radius * 0.125,
-      )
-    })
-
-    const middlePetalParts = Array.from({ length: 18 }, (_, index) => {
-      const angle = (Math.PI * 2 * index) / 18 - Math.PI / 2 + Math.PI / 18
-      return createPart(
-        Math.cos(angle) * definition.radius * 0.52,
-        Math.sin(angle) * definition.radius * 0.52,
-        definition.radius * 0.11,
-      )
-    })
-
-    const innerPetalParts = Array.from({ length: 12 }, (_, index) => {
-      const angle = (Math.PI * 2 * index) / 12 - Math.PI / 2
-      return createPart(
-        Math.cos(angle) * definition.radius * 0.29,
-        Math.sin(angle) * definition.radius * 0.29,
-        definition.radius * 0.095,
-      )
-    })
-
-    const corePart = createPart(0, 0, definition.radius * 0.27)
-    Body.setParts(body, [body, corePart, ...outerPetalParts, ...middlePetalParts, ...innerPetalParts])
-  }
 
   body.plugin.ball = {
     id: "ball-" + String(ballId++),

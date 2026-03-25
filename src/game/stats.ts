@@ -1,3 +1,5 @@
+import { getApiUrl } from '../site/router'
+
 const SCORE_HISTORY_STORAGE_KEY = "blip-perfect-score-history"
 const LEADERBOARD_CACHE_STORAGE_KEY = "blip-perfect-leaderboard-cache"
 const PLAYER_ID_STORAGE_KEY = "blip-perfect-player-id"
@@ -289,7 +291,7 @@ export function getCachedLeaderboardSnapshot() {
 
 export async function loadLeaderboard() {
   const playerId = getPlayerId()
-  const remote = await requestLeaderboard<LeaderboardApiResponse>("/api/leaderboard?playerId=" + encodeURIComponent(playerId))
+  const remote = await requestLeaderboard<LeaderboardApiResponse>(getApiUrl("/api/leaderboard?playerId=" + encodeURIComponent(playerId)))
 
   if (remote) {
     writePlayerDisplayName(remote.playerDisplayName)
@@ -325,7 +327,7 @@ export async function savePlayerProfile(name: string) {
   const playerId = getPlayerId()
   const playerDisplayName = writePlayerDisplayName(name)
 
-  const remote = await requestLeaderboard<LeaderboardApiResponse>("/api/leaderboard", {
+  const remote = await requestLeaderboard<LeaderboardApiResponse>(getApiUrl("/api/leaderboard"), {
     method: "PATCH",
     headers: {
       "content-type": "application/json",
@@ -379,7 +381,7 @@ export async function recordRun(summary: RunEndedSummary): Promise<RecordedRunSu
     storage: "memory",
   })
 
-  const remote = await requestLeaderboard<LeaderboardApiResponse>("/api/leaderboard", {
+  const remote = await requestLeaderboard<LeaderboardApiResponse>(getApiUrl("/api/leaderboard"), {
     method: "POST",
     headers: {
       "content-type": "application/json",
