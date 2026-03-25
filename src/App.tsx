@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import { SiteLayout } from './site/components/SiteLayout'
+import { faqs } from './site/data/content'
 import { GuidePage, HomePage, PlayPage, PrivacyPage, SupportPage, UpdatesPage } from './site/pages'
 import {
   ROUTE_META,
@@ -25,6 +26,18 @@ const ensureMetaTag = (selector: string, create: () => HTMLMetaElement) => {
 
 const ensureLinkTag = (selector: string, create: () => HTMLLinkElement) => {
   const existing = document.head.querySelector<HTMLLinkElement>(selector)
+
+  if (existing) {
+    return existing
+  }
+
+  const element = create()
+  document.head.append(element)
+  return element
+}
+
+const ensureScriptTag = (selector: string, create: () => HTMLScriptElement) => {
+  const existing = document.head.querySelector<HTMLScriptElement>(selector)
 
   if (existing) {
     return existing
@@ -138,7 +151,57 @@ function App() {
       return element
     })
     canonicalLink.href = canonicalUrl
-  }, [meta])
+
+    const siteSchemaTag = ensureScriptTag('script[data-schema="site"]', () => {
+      const element = document.createElement('script')
+      element.type = 'application/ld+json'
+      element.dataset.schema = 'site'
+      return element
+    })
+    siteSchemaTag.text = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'VideoGame',
+      name: SITE_NAME,
+      url: canonicalUrl,
+      image: previewImageUrl,
+      description: meta.description,
+      genre: ['Puzzle game', 'Merge game', 'Casual game'],
+      gamePlatform: ['Web browser', 'Mobile web'],
+      applicationCategory: 'Game',
+      operatingSystem: 'Any',
+      playMode: 'SinglePlayer',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+      },
+    })
+
+    const existingFaqTag = document.head.querySelector<HTMLScriptElement>('script[data-schema="faq"]')
+    if (route === '/') {
+      const faqSchemaTag = existingFaqTag ?? ensureScriptTag('script[data-schema="faq"]', () => {
+        const element = document.createElement('script')
+        element.type = 'application/ld+json'
+        element.dataset.schema = 'faq'
+        return element
+      })
+
+      faqSchemaTag.text = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqs.map((item) => ({
+          '@type': 'Question',
+          name: item.question,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: item.answer,
+          },
+        })),
+      })
+    } else {
+      existingFaqTag?.remove()
+    }
+  }, [meta, route])
 
   const navigate = (nextRoute: Route) => {
     if (nextRoute === route) {

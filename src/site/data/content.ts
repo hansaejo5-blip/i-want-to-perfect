@@ -2,13 +2,14 @@ import heroImage from '../../assets/hero-shot.png'
 import { DISCORD_URL, ITCH_URL, NEWSLETTER_URL } from '../router'
 
 export const homeHero = {
-  eyebrow: 'Bloom Cannon Browser Game',
-  title: 'Cultivate your perfect run.',
-  description: 'Play in the browser, place each bloom carefully, and build a calm garden board that survives one more turn.',
+  eyebrow: 'Free Flower Merge Browser Game',
+  title: 'Play Perfect Drop online and chase a cleaner run.',
+  description:
+    'Perfect Drop is a free browser merge game where you drop matching flowers, build chain reactions, and survive one more turn without installing anything.',
   primaryCta: { label: 'Play Now', href: '/play#game' },
   secondaryCta: { label: 'Play on itch.io', href: ITCH_URL },
-  supportNote: 'Zero install, quick to read, and the guide, updates, and support paths stay visible below the hero.',
-  quickFacts: ['Zero install', 'Deep strategy', 'Clear support path'],
+  supportNote: 'No download, fast restarts, and clear guide, update, and support paths for players coming from search or social links.',
+  quickFacts: ['Free to play', 'No download', 'Live leaderboard'],
   media: {
     src: heroImage,
     alt: 'Perfect Drop gameplay showing the garden board, bowl area, and merge pieces',
@@ -17,16 +18,16 @@ export const homeHero = {
 
 export const featureCards = [
   {
-    title: 'Read the board quickly',
-    body: 'The bowl, next bloom, and danger state stay clear so a first-time player can understand the loop without reading a long wall of text.',
+    title: 'Easy to read in seconds',
+    body: 'The board, next flower, and danger state stay clear so a new player can understand the merge loop almost immediately.',
   },
   {
-    title: 'Made for one more run',
-    body: 'Short sessions, fast restarts, and a gentle difficulty curve make the browser version easy to try immediately and revisit later.',
+    title: 'Built for one more run',
+    body: 'Short sessions, fast restarts, and a smooth difficulty curve make the game easy to try once and revisit later for a higher score.',
   },
   {
-    title: 'Structured like a real game site',
-    body: 'Guide, updates, support, and screenshots stay visible on the homepage so the play-first layout still feels complete and trustworthy.',
+    title: 'More than a thin play page',
+    body: 'Guide, updates, support, screenshots, and leaderboard context stay visible so the site feels like a real game home instead of a single empty landing page.',
   },
 ]
 
@@ -52,10 +53,10 @@ export const screenshots = [
 ]
 
 export const homeIntro = {
-  title: 'A browser game first, with the rest of the site close behind',
+  title: 'A free online merge game with enough context to rank and convert',
   body: [
-    'Perfect Drop is built to let a new visitor start a run quickly, then learn more only if they want extra detail. The homepage leads with the browser game instead of asking players to read through every section first.',
-    'That play-first hierarchy still keeps real supporting content in reach. Players can move into the guide, recent updates, screenshots, and support information without the site feeling thin or misleading.',
+    'Perfect Drop is a free flower merge browser game built for fast first-time play. A visitor can start a run quickly, understand the controls, and see what the game is about without downloading anything.',
+    'The site still gives Google and human visitors enough real information to trust the project. Players can move into the guide, recent updates, screenshots, leaderboard details, and support information without the site feeling thin.',
   ],
 }
 
@@ -63,19 +64,19 @@ export const homeSupportCards = [
   {
     eyebrow: 'Guide',
     title: 'Rules and strategy stay easy to find',
-    body: 'New players can jump straight into the browser version first, then use the guide for controls, failure conditions, and cleaner long-run habits.',
+    body: 'New players can jump into the browser game first, then use the guide for controls, failure conditions, scoring habits, and smarter long-run setups.',
     cta: { label: 'Read Guide', href: '/guide' },
   },
   {
     eyebrow: 'Updates',
     title: 'Recent changes are visible on the homepage',
-    body: 'Returning players can scan recent improvements without the update feed taking attention away from the main play action at the top.',
+    body: 'Returning players can scan recent gameplay, physics, and control improvements without the update feed taking attention away from the play button.',
     cta: { label: 'View Updates', href: '/updates' },
   },
   {
     eyebrow: 'Support',
     title: 'Support paths stay clearly separated',
-    body: 'itch.io and future community links remain available as real support options, not as competing first-screen actions or ad-like prompts.',
+    body: 'itch.io and future community links remain available as real support options, not as confusing first-screen detours.',
     cta: { label: 'Support Page', href: '/support' },
   },
 ]
@@ -84,38 +85,42 @@ export const updates = [
   {
     title: 'Update 1.1 – Improved physics',
     date: 'March 19, 2026',
-    summary: 'Adjusted collision handling and settling behavior so shots feel steadier while keeping the score chase readable.',
+    summary: 'Adjusted collision handling and settling behavior so flower drops feel steadier while keeping the score chase readable.',
   },
   {
     title: 'New final stage added',
     date: 'March 12, 2026',
-    summary: 'Added a stronger final merge payoff so late runs feel more memorable and visually distinct.',
+    summary: 'Added a stronger final merge payoff so late runs feel more memorable and visually distinct for high-score players.',
   },
   {
     title: 'UI and controls update',
     date: 'March 4, 2026',
-    summary: 'Refined the HUD, restart flow, and control clarity for both mobile and desktop play sessions.',
+    summary: 'Refined the HUD, restart flow, and control clarity for both mobile and desktop browser play sessions.',
   },
 ]
 
 export const faqs = [
   {
-    question: 'Can I play right away in the browser?',
-    answer: 'Yes. The browser version is the main entry point, and the home page is designed to push visitors directly toward play first.',
+    question: 'Can I play Perfect Drop right away in the browser?',
+    answer: 'Yes. Perfect Drop is a free browser game, and the main play page opens without a download or account requirement.',
   },
   {
     question: 'Do I need to read the guide before playing?',
-    answer: 'No. The guide exists for players who want the rules, failure conditions, and strategy written out more clearly.',
+    answer: 'No. You can start immediately, then use the guide later for rules, failure conditions, and strategy tips.',
+  },
+  {
+    question: 'What kind of game is Perfect Drop?',
+    answer: 'It is a flower merge puzzle game for the browser. You drop matching flowers, make larger forms, and try to survive longer for a better score.',
   },
   {
     question: 'Why include itch.io if the game is playable here?',
-    answer: 'Itch.io supports follow, revisit, and support flows without distracting from the first browser-play experience.',
+    answer: 'Itch.io supports follow, revisit, and support flows without distracting from the main browser-play experience.',
   },
 ]
 
 export const playPageCopy = {
   heading: 'Play Perfect Drop',
-  description: 'The game area stays first, the controls stay close, and the next actions after a run stay obvious.',
+  description: 'Play the free flower merge game in your browser, learn the controls fast, and chase a higher score run after run.',
   controls: [
     'Drag to aim.',
     'Release to drop the current bloom.',
@@ -131,9 +136,9 @@ export const playPageCopy = {
 
 export const guideContent = {
   introduction:
-    'Perfect Drop is a garden-themed merge game about managing space, planning drops, and turning small setups into stable long runs.',
+    'Perfect Drop is a flower merge browser game about managing space, planning drops, and turning small setups into stable long runs.',
   goal:
-    'Merge matching blooms into larger forms, keep the board healthy, and score as much as possible before the work area fills up.',
+    'Merge matching flowers into larger forms, keep the board healthy, and score as much as possible before the work area fills up.',
   controls: [
     {
       title: 'Desktop',
@@ -141,7 +146,7 @@ export const guideContent = {
     },
     {
       title: 'Mobile',
-      body: 'Touch, drag, and release in landscape mode for a wider, more comfortable board view.',
+      body: 'Touch, drag, and release in landscape mode for a wider and more comfortable board view.',
     },
   ],
   basicRules: [
@@ -150,7 +155,7 @@ export const guideContent = {
     'The board shape matters as much as the next immediate score.',
   ],
   failureCondition:
-    'A run ends when the board state becomes unsafe and the work area can no longer be managed cleanly.',
+    'A run ends when the board state becomes unsafe and the work area can no longer be managed cleanly enough to place new flowers.',
   beginnerTips: [
     'Use side space early so the center stays flexible.',
     'Think about the next bloom before taking the current shot.',
@@ -179,7 +184,7 @@ export const guideContent = {
 
 export const supportContent = {
   title: 'Support Perfect Drop',
-  description: 'If you enjoy the browser version, itch.io is the cleanest next step for support, follow, and future project growth.',
+  description: 'If you enjoy the browser version, itch.io is the cleanest next step for support, follow, and future growth for Perfect Drop.',
   itchCta: { label: 'Support on itch.io', href: ITCH_URL },
   futurePlans: [
     'Additional stage polish and stronger endgame reward presentation.',

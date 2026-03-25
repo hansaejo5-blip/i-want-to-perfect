@@ -26,33 +26,33 @@ export const NAV_ITEMS: Array<{ href: Exclude<Route, '/privacy'>; label: string 
 
 export const ROUTE_META: Record<Route, RouteMeta> = {
   '/': {
-    title: 'Perfect Drop | Garden Merge Game for Browser',
+    title: 'Perfect Drop | Free Flower Merge Browser Game',
     description:
-      'Play Perfect Drop, a gentle garden-themed browser merge game. Learn the loop quickly, view screenshots, read updates, and jump straight into play.',
+      'Play Perfect Drop, a free flower merge browser game with quick rounds, simple controls, a live leaderboard, and no download required.',
     canonicalPath: '/',
   },
   '/play': {
-    title: 'Play Perfect Drop | Browser Game',
+    title: 'Play Perfect Drop Online | Free Merge Game',
     description:
-      'Play Perfect Drop in your browser with simple controls, quick restarts, fullscreen support, and a clear path back to the guide or itch.io.',
+      'Play Perfect Drop online in your browser. Merge matching flowers, chase a high score, and restart instantly on desktop or mobile.',
     canonicalPath: '/play',
   },
   '/guide': {
-    title: 'Perfect Drop Guide | Rules, Tips, and Strategy',
+    title: 'Perfect Drop Guide | How to Play, Rules, Tips',
     description:
-      'Read the Perfect Drop guide for goals, controls, basic rules, failure conditions, beginner tips, common mistakes, and advanced strategy.',
+      'Learn how to play Perfect Drop with controls, rules, failure conditions, beginner tips, common mistakes, and merge strategy.',
     canonicalPath: '/guide',
   },
   '/updates': {
-    title: 'Perfect Drop Updates | Patch Notes and Changes',
+    title: 'Perfect Drop Updates | Patch Notes for the Merge Game',
     description:
-      'Follow Perfect Drop updates with recent gameplay, physics, control, and content changes presented in a clear update list.',
+      'Read Perfect Drop patch notes covering gameplay tuning, physics changes, controls, and new content for the flower merge browser game.',
     canonicalPath: '/updates',
   },
   '/support': {
     title: 'Support Perfect Drop | itch.io and Future Plans',
     description:
-      'Support Perfect Drop on itch.io, review future plans, and find placeholder channels for email or Discord community updates.',
+      'Support Perfect Drop on itch.io, follow future updates, and find the next steps for this browser merge game project.',
     canonicalPath: '/support',
   },
   '/privacy': {
