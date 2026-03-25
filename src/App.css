@@ -951,6 +951,11 @@ summary:focus-visible {
 }
 
 @media (max-width: 960px) {
+  .home-challenge-strip,
+  .home-launch-panel {
+    grid-template-columns: 1fr;
+  }
+
   .play-hype-row {
     grid-template-columns: 1fr;
   }
@@ -2365,4 +2370,62 @@ summary:focus-visible {
 .play-hype-card--accent {
   background: linear-gradient(180deg, rgba(236, 244, 219, 0.96), rgba(223, 235, 201, 0.92));
   box-shadow: inset 0 0 0 1px rgba(127, 148, 112, 0.24), 0 14px 30px rgba(127, 148, 112, 0.12);
+}
+
+
+.home-challenge-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.home-challenge-chip,
+.home-launch-panel {
+  border-radius: 24px;
+  background: rgba(255, 252, 247, 0.92);
+  box-shadow: inset 0 0 0 1px rgba(176, 136, 98, 0.16), 0 14px 30px rgba(122, 83, 50, 0.08);
+}
+
+.home-challenge-chip {
+  display: grid;
+  gap: 8px;
+  padding: 16px 18px;
+}
+
+.home-challenge-chip strong {
+  color: #8b5a2b;
+  font-size: 1.2rem;
+}
+
+.home-challenge-chip p,
+.home-launch-panel p {
+  margin: 0;
+  color: rgba(108, 77, 52, 0.76);
+}
+
+.home-challenge-chip--accent {
+  background: linear-gradient(180deg, rgba(236, 244, 219, 0.96), rgba(223, 235, 201, 0.92));
+  box-shadow: inset 0 0 0 1px rgba(127, 148, 112, 0.24), 0 14px 30px rgba(127, 148, 112, 0.12);
+}
+
+.home-launch-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 24px;
+}
+
+.home-launch-panel h2 {
+  margin: 0 0 10px;
+  color: #6c4d34;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  line-height: 1;
+}
+
+.home-launch-panel__actions {
+  display: grid;
+  gap: 10px;
+  min-width: 220px;
 }

@@ -17,7 +17,7 @@ import { FinalStagePreviewArt } from '../components/FinalStagePreviewArt'
 import { PageContainer } from "../components/PageContainer"
 import { SectionTitle } from "../components/SectionTitle"
 import { playPageCopy } from "../data/content"
-import { ITCH_URL, getAbsoluteSiteUrl, type Route } from "../router"
+import { getAbsoluteSiteUrl, type Route } from "../router"
 
 type PlayPageProps = {
   navigate: (route: Route) => void
@@ -388,7 +388,7 @@ export function PlayPage({ navigate }: PlayPageProps) {
   const [instagramLabel, setInstagramLabel] = useState("Copy for Instagram")
   const [playerNameInput, setPlayerNameInput] = useState(() => getPlayerDisplayName())
   const [nameActionLabel, setNameActionLabel] = useState("Save name")
-  const [activeFilter, setActiveFilter] = useState<LeaderboardFilter>("all")
+  const [activeFilter, setActiveFilter] = useState<LeaderboardFilter>("daily")
   const [autoEnterFullscreenSignal] = useState(() => {
     try {
       if (window.sessionStorage.getItem(PLAY_FULLSCREEN_FLAG) === '1') {
@@ -675,7 +675,7 @@ export function PlayPage({ navigate }: PlayPageProps) {
       </section>
 
       <section className="page-section card run-stats-section leaderboard-redesign">
-        <SectionTitle eyebrow="Leaderboard" title="Global bloom race" />
+        <SectionTitle eyebrow="Leaderboard" title="Daily challenge and leaderboard race" />
         <p className="run-stats-copy">
           {currentEntry
             ? (
@@ -943,8 +943,8 @@ export function PlayPage({ navigate }: PlayPageProps) {
         <SectionTitle eyebrow="Next Step" title="After the run" />
         <div className="cta-row">
           <CTAButton label="Play Again" navigate={navigate} onClick={() => setSessionKey((value) => value + 1)} />
-          <CTAButton label="Read Guide" href="/guide" navigate={navigate} variant="secondary" />
-          <CTAButton label="Support on itch.io" href={ITCH_URL} navigate={navigate} variant="ghost" target="_blank" rel="noreferrer" />
+          <CTAButton label="Challenge a Friend" navigate={navigate} variant="secondary" onClick={() => void handleShare()} />
+          <CTAButton label="Read Guide" href="/guide" navigate={navigate} variant="ghost" />
         </div>
       </section>
     </PageContainer>

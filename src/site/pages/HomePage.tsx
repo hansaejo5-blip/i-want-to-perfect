@@ -17,7 +17,42 @@ type HomePageProps = {
 export function HomePage({ navigate }: HomePageProps) {
   return (
     <PageContainer>
+      <section className="home-challenge-strip" aria-label="Challenge highlights">
+        <article className="home-challenge-chip home-challenge-chip--accent">
+          <span className="hud-label">Today</span>
+          <strong>Beat the daily target</strong>
+          <p>Jump into the daily board and post your score before your friends do.</p>
+        </article>
+        <article className="home-challenge-chip">
+          <span className="hud-label">Share</span>
+          <strong>Copy your challenge link</strong>
+          <p>Finish one strong run, then send the score link straight into Instagram or chat.</p>
+        </article>
+        <article className="home-challenge-chip">
+          <span className="hud-label">Climb</span>
+          <strong>Push into the top 10</strong>
+          <p>Every run moves the cutoff. One clean board can put your name on the podium chase.</p>
+        </article>
+      </section>
+
       <HeroSection {...homeHero} navigate={navigate} />
+
+      <section className="page-section">
+        <div className="card home-launch-panel">
+          <div>
+            <p className="section-title__eyebrow">Fastest Way In</p>
+            <h2>Play, post your score, challenge one friend, repeat.</h2>
+            <p>
+              Perfect Drop works best when the loop is simple: open the browser game, post a score, dare somebody to beat it,
+              then come back for another run when they do.
+            </p>
+          </div>
+          <div className="home-launch-panel__actions">
+            <CTAButton label="Beat Today's Target" href="/play#game" navigate={navigate} size="large" />
+            <CTAButton label="See the Guide" href="/guide" navigate={navigate} variant="secondary" />
+          </div>
+        </div>
+      </section>
 
       <section className="page-section">
         <div className="home-entry-grid">
@@ -46,11 +81,11 @@ export function HomePage({ navigate }: HomePageProps) {
           </article>
 
           <aside className="card home-trust-card" aria-label="Site quality and layout notes">
-            <p className="section-title__eyebrow">Site Signals</p>
-            <h2>Built like a real game site, not a thin click shell</h2>
+            <p className="section-title__eyebrow">Why People Revisit</p>
+            <h2>Short runs, fast restarts, and a score that is easy to challenge</h2>
             <ul className="simple-list">
               <li>The main play button stays visually isolated from navigation and future monetization zones.</li>
-              <li>Supporting sections sit below the fold so the homepage still feels substantial and reviewable.</li>
+              <li>Leaderboard and challenge language give players a reason to send the game to one more person.</li>
               <li>Guide, updates, screenshots, and support remain part of the homepage structure instead of being hidden.</li>
             </ul>
           </aside>
