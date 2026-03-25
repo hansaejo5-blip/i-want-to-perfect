@@ -22,10 +22,14 @@ export function HomePage({ navigate }: HomePageProps) {
       <section className="page-section">
         <div className="home-entry-grid">
           <article className="card prose-card home-entry-card">
-            <SectionTitle eyebrow="Start Here" title="Play first, then use the rest of the site when you need it" />
+            <SectionTitle eyebrow="Start Here" title="Play the browser merge game first, then use the rest when you need it" />
             <p>
-              The browser version is the main entry point. If you want context before or after a run, the guide,
-              updates, and support pages stay one tap away without crowding the hero.
+              Perfect Drop is a free flower merge browser game. The main play page is the real entry point, while the guide,
+              updates, and support pages stay close by for players who want rules, strategy, or patch notes after a run.
+            </p>
+            <p>
+              That balance matters for both players and search engines. A first-time visitor can understand that this is an
+              online merge game with real supporting content instead of a thin landing page wrapped around one button.
             </p>
             <div className="home-link-grid">
               {homeSupportCards.map((item) => (
@@ -63,6 +67,20 @@ export function HomePage({ navigate }: HomePageProps) {
       </section>
 
       <section className="page-section">
+        <article className="card prose-card">
+          <SectionTitle eyebrow="Game Overview" title="What kind of game Perfect Drop is" />
+          <p>
+            Perfect Drop is an online flower merge game for desktop and mobile browsers. You drop matching flowers into the
+            board, combine them into larger forms, and manage space carefully enough to keep the run alive.
+          </p>
+          <p>
+            If you have searched for a free merge game online, a browser puzzle game, or a flower merge game with short
+            sessions, this site is built to answer those questions quickly and let you start playing immediately.
+          </p>
+        </article>
+      </section>
+
+      <section className="page-section">
         <SectionTitle eyebrow="Screenshots" title="A quick view of the board before you jump in" />
         <ScreenshotGrid items={screenshots} />
       </section>
@@ -89,7 +107,7 @@ export function HomePage({ navigate }: HomePageProps) {
         <div className="card home-banner-cta">
           <div>
             <p className="section-title__eyebrow">Play Entry</p>
-            <h2>Start your garden run now.</h2>
+            <h2>Start your flower merge run now.</h2>
           </div>
           <CTAButton label="Play Perfect Drop" href="/play#game" navigate={navigate} size="large" />
         </div>

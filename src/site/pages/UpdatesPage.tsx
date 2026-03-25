@@ -9,6 +9,10 @@ export function UpdatesPage() {
       <section className="page-section">
         <div className="card prose-card">
           <h1>Updates</h1>
+          <p>
+            This page tracks Perfect Drop patch notes and gameplay changes for the browser merge game. Returning players can
+            check recent physics tuning, control improvements, and content updates before jumping back into a run.
+          </p>
           <SectionTitle eyebrow="Updates" title="Recent changes" />
           <div className="update-list">
             {updates.map((item) => (

@@ -8,6 +8,11 @@ export function GuidePage() {
       <article className="guide-page">
         <section className="page-section card prose-card">
           <h1>Perfect Drop Guide</h1>
+          <p>
+            This guide explains how to play Perfect Drop, the flower merge browser game. If you want to understand the rules,
+            controls, scoring rhythm, and safer long-run strategy before chasing leaderboard scores, start here.
+          </p>
+
           <SectionTitle eyebrow="Guide" title="Game introduction" />
           <p>{guideContent.introduction}</p>
 
