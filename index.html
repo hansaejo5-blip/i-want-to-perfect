@@ -12,6 +12,24 @@
 
       gtag('config', 'G-1L5RBWW3ES');
     </script>
+    <script>
+      (function () {
+        var search = window.location.search;
+        if (!search || search.indexOf('?/') !== 0) {
+          return;
+        }
+
+        var decoded = search
+          .slice(1)
+          .split('&')
+          .map(function (segment) {
+            return segment.replace(/~and~/g, '&');
+          })
+          .join('?');
+
+        window.history.replaceState(null, '', window.location.pathname.slice(0, -1) + decoded + window.location.hash);
+      })();
+    </script>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
