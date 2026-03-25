@@ -216,7 +216,7 @@ async function readStore() {
   return normalizeStore(getMemoryStore())
 }
 
-async function writeStore(store: LeaderboardStore) {
+async function writeStore(store: LeaderboardStore): Promise<{ storage: StorageMode; store: LeaderboardStore }> {
   const normalized = normalizeStore(store)
 
   if (getStorageConfig() !== null) {
