@@ -120,7 +120,7 @@ export const faqs = [
 
 export const playPageCopy = {
   heading: 'Play Perfect Drop',
-  description: 'Play the free flower merge game in your browser, learn the controls fast, and chase a higher score run after run.',
+  description: 'Play the free flower merge game in your browser, beat the daily target, climb the leaderboard, and challenge a friend with your score.',
   controls: [
     'Drag to aim.',
     'Release to drop the current bloom.',

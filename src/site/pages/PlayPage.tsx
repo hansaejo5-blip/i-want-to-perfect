@@ -76,18 +76,18 @@ const mockNames = [
 
 function getShareText(latestRun: RecordedRunSummary | null, bestScore: number, totalRuns: number) {
   if (latestRun) {
-    return "I scored " + latestRun.score + " in Perfect Drop and landed in the top " + latestRun.topPercent + "% of " + latestRun.totalRuns + " runs. Can you beat it?"
+    return "I just scored " + latestRun.score + " in Perfect Drop and hit the top " + latestRun.topPercent + "% of the leaderboard. Beat my run."
   }
 
   if (bestScore > 0) {
-    return "My best score in Perfect Drop is " + bestScore + ". Jump in and try to beat it."
+    return "My best score in Perfect Drop is " + bestScore + ". See if you can beat it."
   }
 
   if (totalRuns > 0) {
-    return "Perfect Drop already has " + totalRuns + " recorded runs. Jump in and climb the leaderboard."
+    return "Perfect Drop already has " + totalRuns + " recorded runs. Jump in and try to climb the leaderboard."
   }
 
-  return "Play Perfect Drop and climb the shared leaderboard."
+  return "Play Perfect Drop and challenge a friend for the higher score."
 }
 
 function getLeaderboardLabel(entry: LeaderboardEntry, currentPlayerId: string) {
@@ -384,8 +384,8 @@ export function PlayPage({ navigate }: PlayPageProps) {
   const [latestRun, setLatestRun] = useState<RecordedRunSummary | null>(null)
   const [leaderboard, setLeaderboard] = useState<LeaderboardSnapshot | null>(() => getCachedLeaderboardSnapshot())
   const [isLeaderboardReady, setIsLeaderboardReady] = useState(() => getCachedLeaderboardSnapshot() !== null)
-  const [shareLabel, setShareLabel] = useState("Share")
-  const [instagramLabel, setInstagramLabel] = useState("Instagram")
+  const [shareLabel, setShareLabel] = useState("Challenge a Friend")
+  const [instagramLabel, setInstagramLabel] = useState("Copy for Instagram")
   const [playerNameInput, setPlayerNameInput] = useState(() => getPlayerDisplayName())
   const [nameActionLabel, setNameActionLabel] = useState("Save name")
   const [activeFilter, setActiveFilter] = useState<LeaderboardFilter>("all")
@@ -483,7 +483,7 @@ export function PlayPage({ navigate }: PlayPageProps) {
       if (instagramResetRef.current !== null) {
         window.clearTimeout(instagramResetRef.current)
       }
-      instagramResetRef.current = window.setTimeout(() => setInstagramLabel("Instagram"), 2200)
+      instagramResetRef.current = window.setTimeout(() => setInstagramLabel("Copy for Instagram"), 2200)
       window.open("https://www.instagram.com/direct/inbox/", "_blank", "noopener,noreferrer")
       return
     }
@@ -503,7 +503,7 @@ export function PlayPage({ navigate }: PlayPageProps) {
       if (shareResetRef.current !== null) {
         window.clearTimeout(shareResetRef.current)
       }
-      shareResetRef.current = window.setTimeout(() => setShareLabel("Share"), 1800)
+      shareResetRef.current = window.setTimeout(() => setShareLabel("Challenge a Friend"), 1800)
     } catch {
       // Ignore cancelled shares and clipboard failures.
     }
@@ -570,12 +570,35 @@ export function PlayPage({ navigate }: PlayPageProps) {
   const motivationMessages = getMotivationMessages(currentEntry, previousEntry, goals, activeFilter)
   const nextBeatScore = previousEntry && currentEntry ? Math.max(previousEntry.score + 1 - currentEntry.score, 0) : 0
   const finalStageBall = getBallDefinition(7)
+  const topTenCutoff = activeEntries[9]?.score ?? 240
+  const dailyChallengeTarget = Math.max(180, Math.ceil(topTenCutoff / 10) * 10)
+  const shareChallengeCopy = currentEntry
+    ? "Share your score and challenge friends to beat #" + currentEntry.rank + "."
+    : "Post your best run and challenge friends to beat your score."
 
   return (
     <PageContainer>
       <section className="page-section play-page__hero card">
         <SectionTitle eyebrow="Play" title={playPageCopy.heading} />
         <p>{playPageCopy.description}</p>
+      </section>
+
+      <section className="page-section play-hype-row" aria-label="Challenge and sharing prompts">
+        <article className="play-hype-card play-hype-card--accent">
+          <span className="hud-label">Daily Target</span>
+          <strong>{dailyChallengeTarget}</strong>
+          <p>Hit this score today, then send the challenge link to a friend.</p>
+        </article>
+        <article className="play-hype-card">
+          <span className="hud-label">Share Hook</span>
+          <strong>{currentEntry ? "Rank #" + currentEntry.rank : "First Run"}</strong>
+          <p>{shareChallengeCopy}</p>
+        </article>
+        <article className="play-hype-card">
+          <span className="hud-label">Top 10 Cutoff</span>
+          <strong>{topTenCutoff}</strong>
+          <p>{currentEntry ? "Only " + nextBeatScore + " points to the next spot." : "Set one strong run and start the chase."}</p>
+        </article>
       </section>
 
       <section className="page-section play-toolbar">
