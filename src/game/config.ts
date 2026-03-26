@@ -3,7 +3,7 @@ export const WORLD_HEIGHT = 720
 
 export const FIXED_TIMESTEP_MS = 1000 / 60
 export const MAX_PHYSICS_STEPS = 6
-export const GAME_SPEED_MULTIPLIER = 1.2
+export const GAME_SPEED_MULTIPLIER = 2.6364
 
 export const CANNON_X = WORLD_WIDTH * 0.17
 export const CANNON_Y = WORLD_HEIGHT * 0.8
