@@ -834,8 +834,12 @@ function drawAimGuide(
   context.lineCap = 'round'
   context.lineJoin = 'round'
 
-  context.strokeStyle = 'rgba(158, 189, 112, 0.22)'
-  context.lineWidth = 9
+  const penultimate = points[points.length - 2]
+  const last = points[points.length - 1]
+
+  context.strokeStyle = 'rgba(158, 189, 112, 0.24)'
+  context.lineWidth = 6
+  context.setLineDash([3, 10])
   context.beginPath()
   context.moveTo(points[0].x, points[0].y)
   for (let index = 1; index < points.length - 1; index += 1) {
@@ -845,14 +849,12 @@ function drawAimGuide(
     const midY = (current.y + next.y) * 0.5
     context.quadraticCurveTo(current.x, current.y, midX, midY)
   }
-  const penultimate = points[points.length - 2]
-  const last = points[points.length - 1]
   context.quadraticCurveTo(penultimate.x, penultimate.y, last.x, last.y)
   context.stroke()
 
-  context.strokeStyle = '#f7f0df'
-  context.lineWidth = 4
-  context.setLineDash([8, 5])
+  context.strokeStyle = '#fff7eb'
+  context.lineWidth = 3
+  context.setLineDash([2, 9])
   context.beginPath()
   context.moveTo(points[0].x, points[0].y)
   for (let index = 1; index < points.length - 1; index += 1) {
