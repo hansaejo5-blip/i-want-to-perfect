@@ -10,7 +10,7 @@ import { FIXED_TIMESTEP_MS } from '../config'
 import { getNextBallLevel, isBallBody } from '../entities/fruits'
 import type { BallLevel, BallBody } from '../types'
 
-const MERGE_CONTACT_MS = 0.14
+const MERGE_CONTACT_MS = 0.08
 const MAX_RELATIVE_SPEED = 15.2
 const IMMEDIATE_MERGE_SPEED = 14.1
 const MERGE_DISTANCE_TOLERANCE = 50

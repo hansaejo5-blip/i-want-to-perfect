@@ -9,9 +9,7 @@ import {
   FIXED_TIMESTEP_MS,
   GAME_SPEED_MULTIPLIER,
   MAX_PHYSICS_STEPS,
-  MAX_SHOT_POWER,
   MIN_DRAG_DISTANCE,
-  MIN_SHOT_POWER,
   WORLD_HEIGHT,
   WORLD_WIDTH,
 } from './config'
@@ -71,7 +69,6 @@ interface Viewport {
 interface AimGuidePoint {
   x: number
   y: number
-  radius: number
 }
 
 interface MergeEffect {
@@ -321,28 +318,36 @@ export function createGame({
       cannon.shotPower *
       SHOT_SPEED_MULTIPLIER *
       GAME_SPEED_MULTIPLIER
+    const substep = 0.18
     const gravityStep =
       engine.gravity.y *
       engine.gravity.scale *
       FIXED_TIMESTEP_MS *
       FIXED_TIMESTEP_MS *
-      GAME_SPEED_MULTIPLIER
-    const powerRatio = Math.min(
-      Math.max((cannon.shotPower - MIN_SHOT_POWER) / (MAX_SHOT_POWER - MIN_SHOT_POWER), 0),
-      1,
-    )
-    const radius = 1.8 + powerRatio * 2.2
+      GAME_SPEED_MULTIPLIER *
+      substep
+    const simulatedStep = substep * GAME_SPEED_MULTIPLIER
+    const maxSamples = 26
+    const maxTravel = Math.max(cannon.guideLength * 3.8, 150)
+    let traveled = 0
 
-    for (let step = 0; step < 5; step += 1) {
-      px += vx
-      py += vy
+    for (let step = 0; step < maxSamples; step += 1) {
+      const nextX = px + vx * simulatedStep
+      const nextY = py + vy * simulatedStep
+      traveled += Math.hypot(nextX - px, nextY - py)
+      px = nextX
+      py = nextY
       vy += gravityStep
 
       if (px > WORLD_WIDTH || py > WORLD_HEIGHT || py < 0) {
         break
       }
 
-      points.push({ x: px, y: py, radius })
+      points.push({ x: px, y: py })
+
+      if (traveled >= maxTravel) {
+        break
+      }
     }
 
     return points
@@ -821,23 +826,52 @@ function drawAimGuide(
   context: CanvasRenderingContext2D,
   points: AimGuidePoint[],
 ) {
-  for (let index = 0; index < points.length; index += 1) {
-    const point = points[index]
-    const alpha = 1 - index / Math.max(points.length, 1)
-
-    context.globalAlpha = 0.24 + alpha * 0.46
-    context.fillStyle = '#9ebd70'
-    context.beginPath()
-    context.arc(point.x, point.y, point.radius + 1.2, 0, Math.PI * 2)
-    context.fill()
-
-    context.fillStyle = '#fff7eb'
-    context.beginPath()
-    context.arc(point.x, point.y, point.radius * 0.55, 0, Math.PI * 2)
-    context.fill()
+  if (points.length < 2) {
+    return
   }
 
-  context.globalAlpha = 1
+  context.save()
+  context.lineCap = 'round'
+  context.lineJoin = 'round'
+
+  context.strokeStyle = 'rgba(158, 189, 112, 0.22)'
+  context.lineWidth = 9
+  context.beginPath()
+  context.moveTo(points[0].x, points[0].y)
+  for (let index = 1; index < points.length - 1; index += 1) {
+    const current = points[index]
+    const next = points[index + 1]
+    const midX = (current.x + next.x) * 0.5
+    const midY = (current.y + next.y) * 0.5
+    context.quadraticCurveTo(current.x, current.y, midX, midY)
+  }
+  const penultimate = points[points.length - 2]
+  const last = points[points.length - 1]
+  context.quadraticCurveTo(penultimate.x, penultimate.y, last.x, last.y)
+  context.stroke()
+
+  context.strokeStyle = '#f7f0df'
+  context.lineWidth = 4
+  context.setLineDash([12, 10])
+  context.beginPath()
+  context.moveTo(points[0].x, points[0].y)
+  for (let index = 1; index < points.length - 1; index += 1) {
+    const current = points[index]
+    const next = points[index + 1]
+    const midX = (current.x + next.x) * 0.5
+    const midY = (current.y + next.y) * 0.5
+    context.quadraticCurveTo(current.x, current.y, midX, midY)
+  }
+  context.quadraticCurveTo(penultimate.x, penultimate.y, last.x, last.y)
+  context.stroke()
+  context.setLineDash([])
+
+  context.fillStyle = '#fff7eb'
+  context.beginPath()
+  context.arc(last.x, last.y, 4.2, 0, Math.PI * 2)
+  context.fill()
+
+  context.restore()
 }
 
 function drawDangerLine(
