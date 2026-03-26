@@ -350,7 +350,7 @@ export function createGame({
       }
     }
 
-    return points
+    return points.slice(0, Math.max(2, Math.ceil(points.length * 0.5)))
   }
 
   const applyMerges = (time: number) => {
