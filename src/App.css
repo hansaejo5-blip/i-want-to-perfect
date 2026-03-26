@@ -2162,7 +2162,7 @@ summary:focus-visible {
 .hero-section__stage {
   position: relative;
   overflow: hidden;
-  min-height: 500px;
+  min-height: 440px;
   border-radius: 34px;
   background: #d9d4b2;
 }
@@ -2188,7 +2188,7 @@ summary:focus-visible {
   position: relative;
   z-index: 1;
   max-width: 520px;
-  min-height: 500px;
+  min-height: 440px;
   justify-content: center;
   padding: 28px 32px;
   background: transparent;
@@ -2313,7 +2313,7 @@ summary:focus-visible {
 @media (max-width: 960px) {
   .hero-section__stage,
   .hero-section__copy--overlay {
-    min-height: 440px;
+    min-height: 400px;
   }
 
   .home-banner-cta {
@@ -2324,7 +2324,7 @@ summary:focus-visible {
 @media (max-width: 720px) {
   .hero-section__stage,
   .hero-section__copy--overlay {
-    min-height: 380px;
+    min-height: 360px;
   }
 
   .hero-section__copy--overlay {

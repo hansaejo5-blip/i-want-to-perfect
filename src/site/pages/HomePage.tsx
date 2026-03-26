@@ -17,6 +17,8 @@ type HomePageProps = {
 export function HomePage({ navigate }: HomePageProps) {
   return (
     <PageContainer>
+      <HeroSection {...homeHero} navigate={navigate} />
+
       <section className="home-challenge-strip" aria-label="Challenge highlights">
         <article className="home-challenge-chip home-challenge-chip--accent">
           <span className="hud-label">Today</span>
@@ -34,8 +36,6 @@ export function HomePage({ navigate }: HomePageProps) {
           <p>Every run moves the cutoff. One clean board can put your name on the podium chase.</p>
         </article>
       </section>
-
-      <HeroSection {...homeHero} navigate={navigate} />
 
       <section className="page-section">
         <div className="card home-launch-panel">
