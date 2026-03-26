@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import './App.css'
+import { trackPageView } from './site/analytics'
 import { SiteLayout } from './site/components/SiteLayout'
 import { faqs } from './site/data/content'
 import { GuidePage, HomePage, PlayPage, PrivacyPage, SupportPage, UpdatesPage } from './site/pages'
@@ -201,6 +202,8 @@ function App() {
     } else {
       existingFaqTag?.remove()
     }
+
+    trackPageView(meta.title)
   }, [meta, route])
 
   const navigate = (nextRoute: Route) => {

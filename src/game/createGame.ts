@@ -839,7 +839,7 @@ function drawAimGuide(
 
   context.strokeStyle = '#fff7eb'
   context.lineWidth = 3
-  context.setLineDash([4, 8])
+  context.setLineDash([2, 20])
   context.beginPath()
   context.moveTo(points[0].x, points[0].y)
   for (let index = 1; index < points.length - 1; index += 1) {
