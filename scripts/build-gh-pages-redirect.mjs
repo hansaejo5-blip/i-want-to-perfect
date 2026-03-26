@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 const distDir = resolve(process.cwd(), 'dist')
 const siteOrigin = 'https://i-want-to-perfect.vercel.app'
 const repoBase = '/i-want-to-perfect'
+const routePaths = ['play', 'guide', 'updates', 'support', 'privacy']
 
 const redirectHtml = `<!doctype html>
 <html lang="en">
@@ -48,3 +49,9 @@ await mkdir(distDir, { recursive: true })
 await writeFile(resolve(distDir, 'index.html'), redirectHtml)
 await writeFile(resolve(distDir, '404.html'), redirectHtml)
 await writeFile(resolve(distDir, '.nojekyll'), '')
+
+for (const routePath of routePaths) {
+  const routeDir = resolve(distDir, routePath)
+  await mkdir(routeDir, { recursive: true })
+  await writeFile(resolve(routeDir, 'index.html'), redirectHtml)
+}
