@@ -298,7 +298,7 @@ export const MARKET_CATALOG: MarketItemDefinition[] = [
     description: 'Calm moonlight through greenhouse glass for focused runs.',
     supportingLine: 'A cooler garden atmosphere that keeps text and bloom shapes readable during longer sessions.',
     preview: 'Deep sage framing, muted teal depth, warm ivory board light, and soft foliage silhouettes behind the bowl.',
-    price: 136,
+    price: 500,
     unlockLevel: 3,
     accent: '#355f56',
     glow: 'rgba(53, 95, 86, 0.18)',
@@ -793,5 +793,14 @@ export function unequipSkin(state: ProgressionState) {
   return syncProgressionState({
     ...synced,
     equippedSkinId: DEFAULT_SKIN.id,
+  })
+}
+
+export function unequipBackground(state: ProgressionState) {
+  const synced = syncProgressionState(state)
+
+  return syncProgressionState({
+    ...synced,
+    equippedBackgroundId: DEFAULT_BACKGROUND.id,
   })
 }

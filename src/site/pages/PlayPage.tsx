@@ -666,17 +666,6 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
             <p>{levelProgress.remainingXp} XP until the next bloom tier. Daily board: {dailyProgress.completed} / {dailyProgress.total}, refresh in {dailyRefreshLabel}.</p>
           </section>
 
-          <section className="card play-cosmetic-card">
-            <span className="section-title__eyebrow">Run Finish</span>
-            <h3>{equippedSkin.name}</h3>
-            <p>The active skin and board theme are already applied to the live run, without spending extra space on cosmetic labels.</p>
-            <div className={'play-cosmetic-preview ' + equippedBackground.previewClass}>
-              <div className={'play-cosmetic-preview__orb ' + equippedSkin.previewClass} style={{ background: equippedSkin.accent, boxShadow: '0 18px 30px ' + equippedSkin.glow }}>
-                <span className="play-cosmetic-preview__core" />
-              </div>
-            </div>
-          </section>
-
           <section className="card control-card">
             <SectionTitle eyebrow="Controls" title="Game controls" />
             <div className="control-stack">

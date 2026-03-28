@@ -14,6 +14,7 @@ type MarketPageProps = {
   onBuySkin: (itemId: string) => void
   onEquipSkin: (itemId: string) => void
   onUnequipSkin: () => void
+  onUnequipBackground: () => void
 }
 
 type MarketStatus = 'buy' | 'equipped' | 'owned' | 'not-enough'
@@ -53,7 +54,7 @@ function getPrimaryLabel(item: MarketItemDefinition, progression: ProgressionSta
   }
 }
 
-export function MarketPage({ navigate, progression, onBuySkin, onEquipSkin, onUnequipSkin }: MarketPageProps) {
+export function MarketPage({ navigate, progression, onBuySkin, onEquipSkin, onUnequipSkin, onUnequipBackground }: MarketPageProps) {
   const equippedBackground = getEquippedBackground(progression)
   const equippedSkin = getEquippedSkin(progression)
   const affordableCount = MARKET_CATALOG.filter((item) => progression.level >= item.unlockLevel && progression.emeralds >= item.price && !progression.ownedItemIds.includes(item.id)).length
@@ -80,7 +81,7 @@ export function MarketPage({ navigate, progression, onBuySkin, onEquipSkin, onUn
         <article className="card market-overview-card">
           <span className="section-title__eyebrow">Decision Pressure</span>
           <h2>Starter before Rare</h2>
-          <p>Moonlit Greenhouse lands first at 136. Dewdrop Seed Set now sits at 1980, so it behaves like a true long-range skin goal instead of a same-session pickup.</p>
+          <p>Moonlit Greenhouse now asks for 500, so the background is a deliberate spend instead of an early throwaway unlock. Dewdrop Seed Set stays at 1980 as the long-range skin goal.</p>
         </article>
       </section>
 
@@ -141,7 +142,7 @@ export function MarketPage({ navigate, progression, onBuySkin, onEquipSkin, onUn
                 </div>
                 <div className="market-card__status-row">
                   <span className={`market-status-pill market-status-pill--${status}`}>{status === 'buy' ? 'Buy' : status === 'owned' ? 'Owned' : status === 'equipped' ? 'Equipped' : 'Not enough emeralds'}</span>
-                  <span>{isOwned ? 'Purchase saved in local progression.' : 'Daily targets are the fastest emerald source.'}</span>
+                  <span>{isOwned ? item.kind === 'skin' ? 'Use Equip skin or Unequip skin here in Market.' : 'Use Equip or Unequip here in Market.' : 'Daily targets are the fastest emerald source.'}</span>
                 </div>
                 <div className="market-card__actions">
                   <button
@@ -153,12 +154,12 @@ export function MarketPage({ navigate, progression, onBuySkin, onEquipSkin, onUn
                     {getPrimaryLabel(item, progression, status)}
                   </button>
                   <button
-                    className={isOwned && !(isEquipped && item.kind === 'background') ? 'market-card__action market-card__action--secondary' : 'market-card__action market-card__action--secondary is-disabled'}
+                    className={isOwned ? 'market-card__action market-card__action--secondary' : 'market-card__action market-card__action--secondary is-disabled'}
                     type="button"
-                    disabled={!isOwned || (isEquipped && item.kind === 'background')}
-                    onClick={() => isEquipped && item.kind === 'skin' ? onUnequipSkin() : onEquipSkin(item.id)}
+                    disabled={!isOwned}
+                    onClick={() => isEquipped ? item.kind === 'skin' ? onUnequipSkin() : onUnequipBackground() : onEquipSkin(item.id)}
                   >
-                    {isEquipped && item.kind === 'skin' ? 'Unequip' : isEquipped ? 'Equipped' : isOwned ? 'Equip' : 'Owned'}
+                    {isEquipped ? item.kind === 'skin' ? 'Unequip skin' : 'Unequip background' : isOwned ? item.kind === 'skin' ? 'Equip skin' : 'Equip background' : 'Owned'}
                   </button>
                 </div>
               </div>

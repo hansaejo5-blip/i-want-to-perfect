@@ -14,6 +14,7 @@ import {
 } from './site/router'
 import {
   applyRunProgression,
+  unequipBackground,
   equipSkin,
   unequipSkin,
   loadProgressionState,
@@ -259,6 +260,7 @@ function App() {
             onBuySkin={(skinId) => setProgression((current) => purchaseSkin(current, skinId))}
             onEquipSkin={(skinId) => setProgression((current) => equipSkin(current, skinId))}
             onUnequipSkin={() => setProgression((current) => unequipSkin(current))}
+            onUnequipBackground={() => setProgression((current) => unequipBackground(current))}
           />
         )
       case '/rankings':
