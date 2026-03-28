@@ -74,7 +74,6 @@ export function GameScreen({
   const stageRef = useRef<HTMLDivElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const gameRef = useRef<ReturnType<typeof createGame> | null>(null)
-  const audioRef = useRef<ReturnType<typeof createGameAudioController> | null>(null)
   const hasReportedRunEndRef = useRef(false)
   const scheduledLayoutFrameRef = useRef<number | null>(null)
   const delayedLayoutTimeoutRef = useRef<number | null>(null)
@@ -86,12 +85,7 @@ export function GameScreen({
   )
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isMobile, setIsMobile] = useState(() => isMobileDevice())
-
-  if (audioRef.current === null) {
-    audioRef.current = createGameAudioController()
-  }
-
-  const audio = audioRef.current
+  const [audio] = useState(() => createGameAudioController())
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 960px) and (pointer: coarse)')

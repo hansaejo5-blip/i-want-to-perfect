@@ -11,10 +11,10 @@ import { getNextBallLevel, isBallBody } from '../entities/fruits'
 import type { BallLevel, BallBody } from '../types'
 
 const MERGE_CONTACT_MS = 0.0001
-const MAX_RELATIVE_SPEED = 17.6
-const IMMEDIATE_MERGE_SPEED = 16.4
-const MERGE_DISTANCE_TOLERANCE = 64
-const LAUNCHED_MERGE_WINDOW_MS = 2600
+const MAX_RELATIVE_SPEED = 19.2
+const IMMEDIATE_MERGE_SPEED = 17.8
+const MERGE_DISTANCE_TOLERANCE = 72
+const LAUNCHED_MERGE_WINDOW_MS = 3000
 
 export interface MergeCandidate {
   bodyAId: number
@@ -147,23 +147,23 @@ export function createCollisionHooks(engine: Engine, nowProvider: () => number =
     const isCloseEnough =
       centerDistance <= radiusA + radiusB + MERGE_DISTANCE_TOLERANCE
     const minRadius = Math.min(radiusA, radiusB)
-    const hasDeepContact = penetrationDepth >= minRadius * 0.055
-    const hasStrongPush = maxPushSpeed >= 0.8
+    const hasDeepContact = penetrationDepth >= minRadius * 0.045
+    const hasStrongPush = maxPushSpeed >= 0.65
     const now = nowProvider()
     const bodyAFallingOnTop = bodyA.velocity.y > 1.6 && bodyA.position.y < bodyB.position.y
     const bodyBFallingOnTop = bodyB.velocity.y > 1.6 && bodyB.position.y < bodyA.position.y
     const hasDropContact =
-      penetrationDepth >= minRadius * 0.02 &&
+      penetrationDepth >= minRadius * 0.015 &&
       (bodyAFallingOnTop || bodyBFallingOnTop)
     const bodyALaunchedRecently = now - ballA.launchTime <= LAUNCHED_MERGE_WINDOW_MS
     const bodyBLaunchedRecently = now - ballB.launchTime <= LAUNCHED_MERGE_WINDOW_MS
     const launchedBodyTouchesSettledBall =
-      (bodyALaunchedRecently && (bodyB.speed <= 2.5 || bodyB.isSleeping)) ||
-      (bodyBLaunchedRecently && (bodyA.speed <= 2.5 || bodyA.isSleeping))
+      (bodyALaunchedRecently && (bodyB.speed <= 3.0 || bodyB.isSleeping)) ||
+      (bodyBLaunchedRecently && (bodyA.speed <= 3.0 || bodyA.isSleeping))
     const hasLaunchHit =
       launchedBodyTouchesSettledBall &&
-      penetrationDepth >= minRadius * 0.018 &&
-      relativeSpeed <= 16.8
+      penetrationDepth >= minRadius * 0.012 &&
+      relativeSpeed <= 18.4
 
     state.hadDeepContact = state.hadDeepContact || hasDeepContact
     state.hadStrongPush = state.hadStrongPush || hasStrongPush
@@ -176,7 +176,7 @@ export function createCollisionHooks(engine: Engine, nowProvider: () => number =
 
     const sustainedContact = state.contactMs >= MERGE_CONTACT_MS
     const immediateMerge = allowImmediate && relativeSpeed <= IMMEDIATE_MERGE_SPEED
-    const restingContact = bodyA.speed <= 2.1 || bodyB.speed <= 2.1 || bodyA.isSleeping || bodyB.isSleeping
+    const restingContact = bodyA.speed <= 2.6 || bodyB.speed <= 2.6 || bodyA.isSleeping || bodyB.isSleeping
     const fallingIntoRestingMerge =
       (state.hadDeepContact || state.hadStrongPush || state.hadDropContact) &&
       relativeSpeed <= MAX_RELATIVE_SPEED &&
@@ -184,15 +184,15 @@ export function createCollisionHooks(engine: Engine, nowProvider: () => number =
     const pushedMerge =
       state.hadStrongPush &&
       relativeSpeed <= MAX_RELATIVE_SPEED &&
-      penetrationDepth >= minRadius * 0.022
+      penetrationDepth >= minRadius * 0.018
     const dropMerge =
       state.hadDropContact &&
       relativeSpeed <= MAX_RELATIVE_SPEED &&
-      penetrationDepth >= minRadius * 0.024
+      penetrationDepth >= minRadius * 0.02
     const launchedMerge =
       state.hadLaunchHit &&
-      relativeSpeed <= 16.8 &&
-      penetrationDepth >= minRadius * 0.018
+      relativeSpeed <= 18.4 &&
+      penetrationDepth >= minRadius * 0.012
 
     if (sustainedContact === false && immediateMerge === false && fallingIntoRestingMerge === false && pushedMerge === false && dropMerge === false && launchedMerge === false) {
       return

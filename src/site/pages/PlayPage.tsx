@@ -531,9 +531,10 @@ export function PlayPage({ navigate }: PlayPageProps) {
     nameResetRef.current = window.setTimeout(() => setNameActionLabel("Save name"), 1800)
   }
 
-  const displayedLeaderboard = latestRun?.leaderboard.length
-    ? latestRun.leaderboard
-    : leaderboard?.leaderboard ?? []
+  const displayedLeaderboard = useMemo(
+    () => (latestRun?.leaderboard.length ? latestRun.leaderboard : leaderboard?.leaderboard ?? []),
+    [latestRun, leaderboard],
+  )
   const leaderboardStatus = latestRun?.source ?? leaderboard?.source ?? "local"
   const leaderboardStorage = latestRun?.storage ?? leaderboard?.storage ?? "memory"
   const updatedAt = isReliableTimestamp(leaderboard?.updatedAt ?? null)

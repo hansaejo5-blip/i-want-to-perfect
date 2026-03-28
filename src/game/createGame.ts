@@ -308,7 +308,7 @@ export function createGame({
       cannon.x + Math.cos(angleRad) * (CANNON_BARREL_LENGTH + muzzleRadius + 8)
     let py =
       cannon.y + Math.sin(angleRad) * (CANNON_BARREL_LENGTH + muzzleRadius + 8)
-    let vx =
+    const vx =
       Math.cos(angleRad) *
       cannon.shotPower *
       SHOT_SPEED_MULTIPLIER *
