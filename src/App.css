@@ -4015,3 +4015,97 @@ summary:focus-visible {
     gap: 8px;
   }
 }
+@media (max-width: 640px) {
+  .garden-dashboard__topbar .section-title__eyebrow,
+  .garden-sidebar__mini-card p,
+  .home-hero-copy p,
+  .home-loop-card .section-title__eyebrow,
+  .home-progress-card .section-title__eyebrow,
+  .home-daily-card .section-title__eyebrow,
+  .home-event-compact .section-title__eyebrow,
+  .home-reward-card .section-title__eyebrow,
+  .market-overview-card p,
+  .market-card__preview-copy,
+  .market-card p,
+  .rankings-overview-card p,
+  .rankings-table-card .section-title__eyebrow {
+    display: none;
+  }
+
+  .home-hero-card {
+    gap: 12px;
+  }
+
+  .home-mini-card,
+  .home-loop-card,
+  .home-progress-card,
+  .home-event-compact,
+  .home-reward-card,
+  .market-overview-card,
+  .market-affordability-card,
+  .market-card {
+    padding: 14px;
+  }
+
+  .home-mini-card strong,
+  .home-event-compact strong,
+  .home-reward-card strong,
+  .home-progress-card strong {
+    font-size: 1.45rem;
+  }
+
+  .home-mini-card span:last-child,
+  .home-progress-card__stats span,
+  .home-reward-card__stats span,
+  .home-reward-card__footer span,
+  .market-card__meta,
+  .market-card__status-row span:last-child {
+    font-size: 0.8rem;
+  }
+
+  .home-loop-diagram__step span {
+    min-height: 48px;
+    padding: 8px;
+    font-size: 0.84rem;
+  }
+
+  .home-loop-diagram__step i {
+    display: none;
+  }
+
+  .home-daily-stack {
+    gap: 10px;
+  }
+
+  .home-daily-stack__item {
+    gap: 6px;
+  }
+
+  .home-daily-stack__label strong,
+  .market-card__header h3 {
+    font-size: 1.05rem;
+  }
+
+  .home-daily-stack__label span,
+  .market-card__price {
+    font-size: 0.95rem;
+  }
+
+  .market-overview-card h2 {
+    margin: 4px 0 0;
+    font-size: 1.2rem;
+  }
+
+  .market-affordability-card p {
+    margin: 0;
+    font-size: 0.82rem;
+  }
+
+  .market-card__meta {
+    gap: 6px 10px;
+  }
+
+  .market-card__status-row {
+    gap: 8px;
+  }
+}
