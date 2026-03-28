@@ -26,7 +26,7 @@ type PlayPageProps = {
   onCompleteRun: (summary: ProgressionRunSummary) => void
 }
 
-type LeaderboardFilter = "all" | "weekly" | "daily" | "friends"
+type LeaderboardFilter = "all" | "weekly" | "daily"
 type FlowerTier = "seed" | "sprout" | "bloom" | "rare-bloom" | "mythic-bloom"
 
 type RankedLeaderboardEntry = LeaderboardEntry & {
@@ -48,33 +48,9 @@ const leaderboardTimestampFormatter = new Intl.DateTimeFormat("en-US", {
 })
 
 const filterOptions: Array<{ key: LeaderboardFilter; label: string }> = [
-  { key: "all", label: "All Time" },
-  { key: "weekly", label: "Weekly" },
   { key: "daily", label: "Daily" },
-  { key: "friends", label: "Friends" },
-]
-
-const mockNames = [
-  "Sunpetal",
-  "Mossflare",
-  "Dawnstem",
-  "Glowbud",
-  "Fernrush",
-  "Honey Bloom",
-  "Rose Finch",
-  "Ivy Echo",
-  "Petal Jet",
-  "Lily Dash",
-  "Clover Mint",
-  "Pollen Peak",
-  "Cloudroot",
-  "Bloomloop",
-  "Wild Nectar",
-  "Amber Vine",
-  "Soft Thorn",
-  "Garden Ace",
-  "Leaf Drift",
-  "Moon Daisy",
+  { key: "weekly", label: "Weekly" },
+  { key: "all", label: "All Time" },
 ]
 
 function getShareText(latestRun: RecordedRunSummary | null, bestScore: number, totalRuns: number) {
@@ -145,169 +121,28 @@ function getTierLabel(tier: FlowerTier) {
   }
 }
 
-function getMockName(rank: number, filter: LeaderboardFilter) {
-  const base = mockNames[(rank - 1) % mockNames.length]
-  if (filter === "friends") {
-    return "Friend " + base
-  }
-
-  return base
-}
-
-function dedupeEntries(entries: LeaderboardEntry[]) {
-  const seen = new Set<string>()
-  return entries.filter((entry) => {
-    const key = entry.playerId + "-" + entry.score + "-" + entry.recordedAt
-    if (seen.has(key)) {
-      return false
-    }
-
-    seen.add(key)
-    return true
-  })
-}
-
-function buildAllTimeEntries(
-  entries: LeaderboardEntry[],
-  totalRuns: number,
-  currentPlayerId: string,
-  playerDisplayName: string,
-  bestScore: number,
-  latestRun: RecordedRunSummary | null,
-) {
-  const actualEntries = dedupeEntries(entries)
+function buildRankedEntries(entries: LeaderboardEntry[], currentPlayerId: string) {
+  return entries
     .slice()
     .sort((left, right) => {
       if (right.score !== left.score) {
         return right.score - left.score
       }
 
+      if (left.shotCount !== right.shotCount) {
+        return left.shotCount - right.shotCount
+      }
+
       return left.recordedAt.localeCompare(right.recordedAt)
     })
-
-  const actualCurrentRank = actualEntries.findIndex((entry) => entry.playerId === currentPlayerId)
-  const playerRank = latestRun?.rank ?? (actualCurrentRank >= 0 ? actualCurrentRank + 1 : null)
-  const playerScore = Math.max(bestScore, latestRun?.score ?? 0)
-  const playerShotCount = latestRun?.shotCount ?? actualEntries.find((entry) => entry.playerId === currentPlayerId)?.shotCount ?? 0
-  const count = Math.min(
-    Math.max(totalRuns, actualEntries.length, playerRank ? playerRank + 4 : 0, 120),
-    320,
-  )
-
-  if (count === 0 && playerScore <= 0) {
-    return [] as RankedLeaderboardEntry[]
-  }
-
-  const actualByRank = new Map<number, LeaderboardEntry>()
-  actualEntries.forEach((entry, index) => {
-    actualByRank.set(index + 1, entry)
-  })
-
-  const currentEntry: LeaderboardEntry | null = playerScore > 0
-    ? {
-        playerId: currentPlayerId,
-        displayName: playerDisplayName,
-        score: playerScore,
-        shotCount: playerShotCount,
-        recordedAt: new Date().toISOString(),
-      }
-    : null
-
-  const upperAnchorRank = actualEntries.length > 0 ? actualEntries.length : 1
-  const upperAnchorScore = actualEntries.length > 0
-    ? actualEntries[Math.max(actualEntries.length - 1, 0)].score
-    : Math.max(playerScore + 140, 260)
-
-  const scoreForRank = (rank: number) => {
-    if (actualByRank.has(rank)) {
-      return actualByRank.get(rank)!.score
-    }
-
-    if (currentEntry && playerRank !== null && rank === playerRank) {
-      return currentEntry.score
-    }
-
-    if (currentEntry && playerRank !== null && rank < playerRank) {
-      const startRank = Math.min(upperAnchorRank, playerRank - 1)
-      const startScore = rank <= upperAnchorRank
-        ? actualByRank.get(rank)?.score ?? upperAnchorScore
-        : upperAnchorScore
-      const distance = Math.max(playerRank - startRank, 1)
-      const progress = (rank - startRank) / distance
-      const fallbackScore = Math.round(startScore + (currentEntry.score + 8 - startScore) * progress)
-      return Math.max(currentEntry.score + 1, fallbackScore)
-    }
-
-    if (currentEntry && playerRank !== null && rank > playerRank) {
-      return Math.max(currentEntry.score - Math.round((rank - playerRank) * 7.2), 1)
-    }
-
-    const topScore = actualEntries[0]?.score ?? Math.max(currentEntry?.score ?? 0, 260)
-    return Math.max(topScore - Math.round((rank - 1) * 11.5), 1)
-  }
-
-  const rankedEntries: RankedLeaderboardEntry[] = []
-
-  for (let rank = 1; rank <= count; rank += 1) {
-    const actualEntry = actualByRank.get(rank)
-    const useCurrent = currentEntry && playerRank === rank
-    const baseEntry = useCurrent
-      ? currentEntry
-      : actualEntry ?? {
-          playerId: "mock-" + rank,
-          displayName: getMockName(rank, "all"),
-          score: scoreForRank(rank),
-          shotCount: Math.max(6, Math.round(scoreForRank(rank) / 18)),
-          recordedAt: new Date(Date.now() - rank * 3_600_000).toISOString(),
-        }
-
-    const percentile = Math.max(1, Math.ceil((rank / Math.max(count, 1)) * 100))
-    rankedEntries.push({
-      ...baseEntry,
-      displayName: useCurrent ? playerDisplayName : baseEntry.displayName,
-      label: getLeaderboardLabel(baseEntry, currentPlayerId),
-      isCurrentPlayer: baseEntry.playerId === currentPlayerId,
-      rank,
-      tier: getFlowerTier(percentile, rank),
-    })
-  }
-
-  return rankedEntries
-}
-
-function applyLeaderboardFilter(entries: RankedLeaderboardEntry[], filter: LeaderboardFilter, currentPlayerId: string) {
-  if (filter === "all") {
-    return entries
-  }
-
-  if (filter === "friends") {
-    const currentIndex = entries.findIndex((entry) => entry.playerId === currentPlayerId)
-    const start = currentIndex >= 0 ? Math.max(0, currentIndex - 3) : 0
-    const focusEntries = entries.slice(start, start + 8)
-    return focusEntries.map((entry, index) => ({
-      ...entry,
-      rank: index + 1,
-      tier: getFlowerTier(Math.ceil(((index + 1) / Math.max(focusEntries.length, 1)) * 100), index + 1),
-      label: entry.isCurrentPlayer ? "You" : "Friend " + entry.label,
-    }))
-  }
-
-  const scoreMultiplier = filter === "weekly" ? 0.72 : 0.56
-  const momentumBoost = filter === "weekly" ? 120 : 84
-
-  return entries
-    .map((entry) => ({
-      ...entry,
-      score: Math.max(1, Math.round(entry.score * scoreMultiplier + Math.max(momentumBoost - entry.rank * 2, 0))),
-      recordedAt: new Date(Date.now() - entry.rank * (filter === "weekly" ? 86_400_000 : 7_200_000)).toISOString(),
-    }))
-    .sort((left, right) => right.score - left.score)
-    .map((entry, index, filtered) => {
+    .map((entry, index, sorted) => {
       const rank = index + 1
-      const percentile = Math.max(1, Math.ceil((rank / Math.max(filtered.length, 1)) * 100))
+      const percentile = Math.max(1, Math.ceil((rank / Math.max(sorted.length, 1)) * 100))
       return {
         ...entry,
         rank,
+        label: getLeaderboardLabel(entry, currentPlayerId),
+        isCurrentPlayer: entry.playerId === currentPlayerId,
         tier: getFlowerTier(percentile, rank),
       }
     })
@@ -339,11 +174,16 @@ function getMotivationMessages(
   previousEntry: RankedLeaderboardEntry | null,
   goals: GoalTarget[],
   filter: LeaderboardFilter,
+  totalEntries: number,
 ) {
   if (!currentEntry) {
     return [
       "Play one strong run to claim your first spot on the board.",
-      filter === "friends" ? "Friends leaderboard is a placeholder for now, but the format is ready." : "Every score pushes the global bloom race higher.",
+      filter === "daily"
+        ? "Daily runs reset at midnight UTC, so a clean run matters more."
+        : filter === "weekly"
+          ? "Weekly standings favor steady high scores across the last seven days."
+          : "All-time board tracks the strongest bloom runs across the full field.",
     ]
   }
 
@@ -351,16 +191,12 @@ function getMotivationMessages(
     previousEntry
       ? "Only " + Math.max(previousEntry.score + 1 - currentEntry.score, 0) + " points to beat #" + previousEntry.rank
       : "You are holding the top spot right now.",
-    "You are in the top " + Math.max(1, Math.ceil((currentEntry.rank / Math.max(goals[2]?.rank ? goals[2].rank * 10 : currentEntry.rank, 1)) * 10)) + "% of this board.",
+    "You are in the top " + Math.max(1, Math.ceil((currentEntry.rank / Math.max(totalEntries, 1)) * 100)) + "% of this board.",
   ]
 
   const reachableGoal = goals.find((goal) => goal.scoreNeeded > 0)
   if (reachableGoal) {
     messages.push("One more strong run could push you into the " + reachableGoal.label + ".")
-  }
-
-  if (filter === "friends") {
-    messages.push("Friends mode is ready for future social syncing.")
   }
 
   return messages.slice(0, 3)
@@ -369,11 +205,9 @@ function getMotivationMessages(
 function getFilterCopy(filter: LeaderboardFilter) {
   switch (filter) {
     case "weekly":
-      return "Weekly bloom race refreshed for sharper momentum swings."
+      return "Weekly board uses your best run from the last seven days."
     case "daily":
-      return "Daily sprint scores compress the field and reward hot streaks."
-    case "friends":
-      return "Friends tab is a placeholder for future social competition."
+      return "Daily board resets at midnight UTC and only counts today's best run."
     default:
       return "All-time board tracks the strongest bloom runs across the full field."
   }
@@ -385,9 +219,8 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
   const [sessionKey, setSessionKey] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
   const [latestRun, setLatestRun] = useState<RecordedRunSummary | null>(null)
-  const [leaderboard, setLeaderboard] = useState<LeaderboardSnapshot | null>(() => getCachedLeaderboardSnapshot())
-  const [isLeaderboardReady, setIsLeaderboardReady] = useState(() => getCachedLeaderboardSnapshot() !== null)
-  const [shareLabel, setShareLabel] = useState("Challenge a Friend")
+  const [leaderboard, setLeaderboard] = useState<LeaderboardSnapshot | null>(() => getCachedLeaderboardSnapshot("daily"))
+  const [shareLabel, setShareLabel] = useState("Share Your Run")
   const [instagramLabel, setInstagramLabel] = useState("Copy for Instagram")
   const [playerNameInput, setPlayerNameInput] = useState(() => getPlayerDisplayName())
   const [nameActionLabel, setNameActionLabel] = useState("Save name")
@@ -433,12 +266,6 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
 
     window.addEventListener('hashchange', handleHashChange)
 
-    void loadLeaderboard().then((snapshot) => {
-      setLeaderboard(snapshot)
-      setPlayerNameInput(snapshot.playerDisplayName)
-      setIsLeaderboardReady(true)
-    })
-
     return () => {
       window.removeEventListener('hashchange', handleHashChange)
       if (shareResetRef.current !== null) {
@@ -452,6 +279,13 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
       }
     }
   }, [])
+
+  useEffect(() => {
+    void loadLeaderboard(activeFilter).then((snapshot) => {
+      setLeaderboard(snapshot)
+      setPlayerNameInput(snapshot.playerDisplayName)
+    })
+  }, [activeFilter])
 
   const toggleFullscreen = async () => {
     const node = frameRef.current
@@ -467,8 +301,9 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
     await node.requestFullscreen()
   }
 
-  const totalRuns = latestRun?.totalRuns ?? leaderboard?.totalRuns ?? 0
-  const bestScore = latestRun?.bestScore ?? leaderboard?.playerBestScore ?? 0
+  const scopedLatestRun = latestRun?.scope === activeFilter ? latestRun : null
+  const totalRuns = scopedLatestRun?.totalRuns ?? leaderboard?.totalRuns ?? 0
+  const bestScore = leaderboard?.playerBestScore ?? scopedLatestRun?.bestScore ?? 0
 
   const handleShare = async (mode: "default" | "instagram" = "default") => {
     const shareText = getShareText(latestRun, bestScore, totalRuns)
@@ -506,14 +341,14 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
       if (shareResetRef.current !== null) {
         window.clearTimeout(shareResetRef.current)
       }
-      shareResetRef.current = window.setTimeout(() => setShareLabel("Challenge a Friend"), 1800)
+      shareResetRef.current = window.setTimeout(() => setShareLabel("Share Your Run"), 1800)
     } catch {
       // Ignore cancelled shares and clipboard failures.
     }
   }
 
   const handleSaveName = async () => {
-    const snapshot = await savePlayerProfile(playerNameInput)
+    const snapshot = await savePlayerProfile(playerNameInput, activeFilter)
     setLeaderboard(snapshot)
     setPlayerNameInput(snapshot.playerDisplayName)
     setLatestRun((current) => {
@@ -535,29 +370,19 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
   }
 
   const displayedLeaderboard = useMemo(
-    () => (latestRun?.leaderboard.length ? latestRun.leaderboard : leaderboard?.leaderboard ?? []),
-    [latestRun, leaderboard],
+    () => (scopedLatestRun?.leaderboard.length ? scopedLatestRun.leaderboard : leaderboard?.leaderboard ?? []),
+    [scopedLatestRun, leaderboard],
   )
-  const leaderboardStatus = latestRun?.source ?? leaderboard?.source ?? "local"
-  const leaderboardStorage = latestRun?.storage ?? leaderboard?.storage ?? "memory"
+  const leaderboardStatus = scopedLatestRun?.source ?? leaderboard?.source ?? "local"
+  const leaderboardStorage = scopedLatestRun?.storage ?? leaderboard?.storage ?? "memory"
+  const isLeaderboardReady = leaderboard?.scope === activeFilter
   const updatedAt = isReliableTimestamp(leaderboard?.updatedAt ?? null)
     ? leaderboardTimestampFormatter.format(new Date(leaderboard?.updatedAt ?? ""))
     : null
 
-  const allTimeEntries = useMemo(() => {
-    return buildAllTimeEntries(
-      displayedLeaderboard,
-      totalRuns,
-      currentPlayerId,
-      playerNameInput || leaderboard?.playerDisplayName || latestRun?.playerDisplayName || "",
-      bestScore,
-      latestRun,
-    )
-  }, [bestScore, currentPlayerId, displayedLeaderboard, latestRun, leaderboard?.playerDisplayName, playerNameInput, totalRuns])
-
   const activeEntries = useMemo(() => {
-    return applyLeaderboardFilter(allTimeEntries, activeFilter, currentPlayerId)
-  }, [activeFilter, allTimeEntries, currentPlayerId])
+    return buildRankedEntries(displayedLeaderboard, currentPlayerId)
+  }, [currentPlayerId, displayedLeaderboard])
 
   const currentEntry = activeEntries.find((entry) => entry.playerId === currentPlayerId) ?? null
   const previousEntry = currentEntry && currentEntry.rank > 1 ? activeEntries[currentEntry.rank - 2] ?? null : null
@@ -569,16 +394,16 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
   const goals = getGoalTargets(activeEntries, currentEntry?.score ?? bestScore)
   const percentile = currentEntry
     ? Math.max(1, Math.ceil((currentEntry.rank / Math.max(activeEntries.length, 1)) * 100))
-    : latestRun?.topPercent ?? null
-  const tier = getFlowerTier(percentile, currentEntry?.rank ?? latestRun?.rank ?? null)
-  const motivationMessages = getMotivationMessages(currentEntry, previousEntry, goals, activeFilter)
+    : scopedLatestRun?.topPercent ?? null
+  const tier = getFlowerTier(percentile, currentEntry?.rank ?? scopedLatestRun?.rank ?? null)
+  const motivationMessages = getMotivationMessages(currentEntry, previousEntry, goals, activeFilter, activeEntries.length)
   const nextBeatScore = previousEntry && currentEntry ? Math.max(previousEntry.score + 1 - currentEntry.score, 0) : 0
   const finalStageBall = getBallDefinition(7)
   const topTenCutoff = activeEntries[9]?.score ?? 240
   const dailyChallengeTarget = Math.max(180, Math.ceil(topTenCutoff / 10) * 10)
   const shareChallengeCopy = currentEntry
-    ? "Share your score and challenge friends to beat #" + currentEntry.rank + "."
-    : "Post your best run and challenge friends to beat your score."
+    ? "Share your score and challenge others to beat #" + currentEntry.rank + "."
+    : "Post your best run and challenge others to beat your score."
   const equippedSkin = getEquippedSkin(progression)
   const equippedBackground = getEquippedBackground(progression)
   const [eventState, setEventState] = useState(() => getActiveEventState())
@@ -621,19 +446,19 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
               autoEnterFullscreenSignal={autoEnterFullscreenSignal}
               onRunEnded={(summary) => {
                 onCompleteRun(summary)
-                void recordRun(summary).then((result) => {
+                void recordRun(summary, activeFilter).then((result) => {
                   setLatestRun(result)
                   setPlayerNameInput(result.playerDisplayName)
                   setLeaderboard({
                     leaderboard: result.leaderboard,
                     totalRuns: result.totalRuns,
-                    playerBestScore: result.bestScore,
+                    playerBestScore: result.leaderboard.find((entry) => entry.playerId === result.playerId)?.score ?? result.bestScore,
                     playerDisplayName: result.playerDisplayName,
                     updatedAt: new Date().toISOString(),
                     source: result.source,
                     storage: result.storage,
+                    scope: result.scope,
                   })
-                  setIsLeaderboardReady(true)
                 })
               }}
             />
@@ -790,7 +615,7 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
             </div>
           </section>
 
-          <div className="leaderboard-tabs" role="tablist" aria-label="Leaderboard filters">
+          <div className="leaderboard-tabs" role="tablist" aria-label="Leaderboard scopes">
             {filterOptions.map((option) => (
               <button
                 key={option.key}
@@ -805,7 +630,7 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
 
           <div className="leaderboard-status-bar">
             <div>
-              <strong>{filterOptions.find((option) => option.key === activeFilter)?.label} Competition</strong>
+              <strong>{filterOptions.find((option) => option.key === activeFilter)?.label} Leaderboard</strong>
               <p>
                 {getFilterCopy(activeFilter)}
                 {leaderboardStatus === "remote"
@@ -887,7 +712,7 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
           <section className="leaderboard-panel">
             <div className="leaderboard-panel__top">
               <div>
-                <strong>Top 10 Global Table</strong>
+                <strong>Top 10 Table</strong>
                 <p>Rank, score, flower tier, and current player highlight in one quick scan.</p>
               </div>
             </div>
@@ -955,7 +780,7 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
                   type="button"
                   onClick={() => {
                     setPlayerNameInput("")
-                    void savePlayerProfile("").then((snapshot) => {
+                    void savePlayerProfile("", activeFilter).then((snapshot) => {
                       setLeaderboard(snapshot)
                       setLatestRun((current) => current ? { ...current, playerDisplayName: "", leaderboard: snapshot.leaderboard } : current)
                       setNameActionLabel("Cleared")
@@ -978,7 +803,7 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
         <SectionTitle eyebrow="Next Step" title="After the run" />
         <div className="cta-row">
           <CTAButton label="Play Again" navigate={navigate} onClick={() => setSessionKey((value) => value + 1)} />
-          <CTAButton label="Challenge a Friend" navigate={navigate} variant="secondary" onClick={() => void handleShare()} />
+          <CTAButton label="Share Your Run" navigate={navigate} variant="secondary" onClick={() => void handleShare()} />
           <CTAButton label="Read Guide" href="/guide" navigate={navigate} variant="ghost" />
         </div>
       </section>

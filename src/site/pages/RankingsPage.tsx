@@ -9,19 +9,31 @@ type RankingsPageProps = {
   progression: ProgressionState
 }
 
+type LeaderboardScope = 'daily' | 'weekly' | 'all'
+
+const scopeOptions: Array<{ key: LeaderboardScope; label: string; description: string }> = [
+  { key: 'daily', label: 'Daily', description: 'Today\'s best runs, reset at midnight UTC.' },
+  { key: 'weekly', label: 'Weekly', description: 'Best runs from the last seven days.' },
+  { key: 'all', label: 'All Time', description: 'The strongest runs across the full history.' },
+]
+
 export function RankingsPage({ navigate, progression }: RankingsPageProps) {
-  const [snapshot, setSnapshot] = useState<LeaderboardSnapshot | null>(() => getCachedLeaderboardSnapshot())
+  const [activeScope, setActiveScope] = useState<LeaderboardScope>('daily')
+  const [snapshot, setSnapshot] = useState<LeaderboardSnapshot | null>(() => getCachedLeaderboardSnapshot('daily'))
   const playerId = useMemo(() => getPlayerId(), [])
 
   useEffect(() => {
-    void loadLeaderboard().then((next) => {
+    void loadLeaderboard(activeScope).then((next) => {
       setSnapshot(next)
     })
-  }, [])
+  }, [activeScope])
 
-  const entries = snapshot?.leaderboard ?? []
+  const isLoading = snapshot?.scope !== activeScope
+  const entries = snapshot?.scope === activeScope ? snapshot.leaderboard : []
   const podium = entries.slice(0, 3)
-  const personalEntry = entries.find((entry) => entry.playerId === playerId) ?? null
+  const personalIndex = entries.findIndex((entry) => entry.playerId === playerId)
+  const personalEntry = personalIndex >= 0 ? entries[personalIndex] : null
+  const activeScopeCopy = scopeOptions.find((option) => option.key === activeScope) ?? scopeOptions[0]
 
   return (
     <DashboardShell
@@ -29,7 +41,7 @@ export function RankingsPage({ navigate, progression }: RankingsPageProps) {
       navigate={navigate}
       progression={progression}
       title="Rankings"
-      description="A cleaner look at your best score, the live board, and how your growth loop translates into competitive pressure."
+      description="A cleaner look at your live board position, current competition window, and how each run converts into rank pressure."
     >
       <section className="rankings-page-grid">
         <article className="card rankings-overview-card">
@@ -54,8 +66,8 @@ export function RankingsPage({ navigate, progression }: RankingsPageProps) {
 
         <article className="card rankings-overview-card rankings-overview-card--soft">
           <span className="section-title__eyebrow">Board Status</span>
-          <h2>{personalEntry ? `#${entries.findIndex((entry) => entry.playerId === playerId) + 1}` : 'Unranked'}</h2>
-          <p>{personalEntry ? 'Your last recorded position is live in the current cached board.' : 'Play one more run to stamp a fresh leaderboard position.'}</p>
+          <h2>{personalEntry ? `#${personalIndex + 1}` : 'Unranked'}</h2>
+          <p>{personalEntry ? `Your current ${activeScopeCopy.label.toLowerCase()} position is live on the shared board.` : `Play one more run to stamp a ${activeScopeCopy.label.toLowerCase()} position.`}</p>
           <div className="rankings-overview-card__stats">
             <div>
               <span className="hud-label">Entries</span>
@@ -68,6 +80,29 @@ export function RankingsPage({ navigate, progression }: RankingsPageProps) {
             <div>
               <span className="hud-label">Updated</span>
               <strong>{snapshot?.updatedAt ? new Date(snapshot.updatedAt).toLocaleDateString() : 'Today'}</strong>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section className="page-section">
+        <div className="leaderboard-tabs" role="tablist" aria-label="Leaderboard scopes">
+          {scopeOptions.map((option) => (
+            <button
+              key={option.key}
+              className={'leaderboard-tab ' + (activeScope === option.key ? 'is-active' : '')}
+              type="button"
+              onClick={() => setActiveScope(option.key)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <article className="card rankings-table-card rankings-table-card--scoped">
+          <div className="rankings-table-card__header">
+            <div>
+              <span className="section-title__eyebrow">{activeScopeCopy.label} Board</span>
+              <h2>{activeScopeCopy.description}</h2>
             </div>
           </div>
         </article>
@@ -88,11 +123,11 @@ export function RankingsPage({ navigate, progression }: RankingsPageProps) {
         <div className="rankings-table-card__header">
           <div>
             <span className="section-title__eyebrow">Top Keepers</span>
-            <h2>Current board snapshot</h2>
+            <h2>{activeScopeCopy.label} board snapshot</h2>
           </div>
         </div>
         <div className="rankings-table">
-          {entries.slice(0, 8).map((entry, index) => (
+          {entries.slice(0, 12).map((entry, index) => (
             <div className={entry.playerId === playerId ? 'rankings-table__row is-player' : 'rankings-table__row'} key={entry.playerId + entry.recordedAt}>
               <span className="rankings-table__rank">{index + 1}</span>
               <div>
@@ -102,6 +137,7 @@ export function RankingsPage({ navigate, progression }: RankingsPageProps) {
               <strong>{entry.score}</strong>
             </div>
           ))}
+          {entries.length === 0 ? <p className="leaderboard-empty">{isLoading ? 'Loading leaderboard...' : 'No runs have been recorded in this window yet.'}</p> : null}
         </div>
       </section>
     </DashboardShell>

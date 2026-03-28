@@ -1,3 +1,5 @@
+type LeaderboardScope = 'all' | 'daily' | 'weekly'
+
 type LeaderboardEntry = {
   playerId: string
   displayName: string
@@ -11,6 +13,7 @@ type LeaderboardStore = {
   updatedAt: string | null
   scoreCounts: Record<string, number>
   leaderboard: LeaderboardEntry[]
+  runHistory: LeaderboardEntry[]
   playerBestScores: Record<string, number>
   playerDisplayNames: Record<string, string>
 }
@@ -42,12 +45,14 @@ type LeaderboardResponse = {
   playerDisplayName: string
   updatedAt: string | null
   storage: StorageMode
+  scope: LeaderboardScope
   rank?: number
   topPercent?: number
 }
 
-const STORE_KEY = 'perfect-drop-leaderboard-v2'
+const STORE_KEY = 'perfect-drop-leaderboard-v3'
 const DISPLAY_NAME_LIMIT = 24
+const MAX_RUN_HISTORY = 2000
 const CORS_HEADERS = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, PATCH, OPTIONS',
@@ -60,6 +65,7 @@ function createEmptyStore(): LeaderboardStore {
     updatedAt: null,
     scoreCounts: {},
     leaderboard: [],
+    runHistory: [],
     playerBestScores: {},
     playerDisplayNames: {},
   }
@@ -152,33 +158,85 @@ function isBetterEntry(candidate: LeaderboardEntry, current: LeaderboardEntry) {
   return candidate.recordedAt < current.recordedAt
 }
 
+function normalizeEntry(entry: unknown): LeaderboardEntry | null {
+  if (typeof entry !== 'object' || entry === null) {
+    return null
+  }
+
+  const candidate = entry as Partial<LeaderboardEntry>
+  const playerId = typeof candidate.playerId === 'string' ? candidate.playerId.trim() : ''
+  const score = Number(candidate.score)
+  const shotCount = Number(candidate.shotCount)
+
+  if (playerId.length === 0 || Number.isFinite(score) === false || score < 0 || Number.isFinite(shotCount) === false || shotCount < 0) {
+    return null
+  }
+
+  return {
+    playerId,
+    displayName: typeof candidate.displayName === 'string' ? candidate.displayName : '',
+    score,
+    shotCount,
+    recordedAt: typeof candidate.recordedAt === 'string' ? candidate.recordedAt : new Date().toISOString(),
+  }
+}
+
 function collapseToBestEntries(entries: LeaderboardEntry[]) {
   const bestByPlayer = new Map<string, LeaderboardEntry>()
 
   for (const entry of entries) {
-    if (!entry || typeof entry.playerId !== 'string' || entry.playerId.length === 0) {
-      continue
-    }
-
-    const normalized: LeaderboardEntry = {
-      playerId: entry.playerId,
-      displayName: typeof entry.displayName === 'string' ? entry.displayName : '',
-      score: Number(entry.score) || 0,
-      shotCount: Number(entry.shotCount) || 0,
-      recordedAt: typeof entry.recordedAt === 'string' ? entry.recordedAt : new Date().toISOString(),
-    }
-
-    const existing = bestByPlayer.get(normalized.playerId)
-    if (!existing || isBetterEntry(normalized, existing)) {
-      bestByPlayer.set(normalized.playerId, normalized)
+    const existing = bestByPlayer.get(entry.playerId)
+    if (!existing || isBetterEntry(entry, existing)) {
+      bestByPlayer.set(entry.playerId, entry)
     }
   }
 
   return sortLeaderboard(Array.from(bestByPlayer.values()))
 }
 
+function normalizeScope(value: string | null): LeaderboardScope {
+  if (value === 'daily' || value === 'weekly') {
+    return value
+  }
+
+  return 'all'
+}
+
+function getScopeStart(scope: LeaderboardScope, now = Date.now()) {
+  if (scope === 'all') {
+    return null
+  }
+
+  const date = new Date(now)
+  if (scope === 'daily') {
+    date.setUTCHours(0, 0, 0, 0)
+    return date.getTime()
+  }
+
+  return now - 7 * 24 * 60 * 60 * 1000
+}
+
+function filterEntriesByScope(entries: LeaderboardEntry[], scope: LeaderboardScope) {
+  const start = getScopeStart(scope)
+  if (start === null) {
+    return entries
+  }
+
+  return entries.filter((entry) => new Date(entry.recordedAt).getTime() >= start)
+}
+
 function normalizeStore(parsed: Partial<LeaderboardStore> | null | undefined): LeaderboardStore {
-  const leaderboard = collapseToBestEntries(Array.isArray(parsed?.leaderboard) ? parsed!.leaderboard : [])
+  const leaderboard = collapseToBestEntries(
+    (Array.isArray(parsed?.leaderboard) ? parsed!.leaderboard : [])
+      .map(normalizeEntry)
+      .filter((entry): entry is LeaderboardEntry => entry !== null),
+  )
+  const rawRunHistory = Array.isArray(parsed?.runHistory) ? parsed!.runHistory : []
+  const runHistory = sortLeaderboard(
+    (rawRunHistory.length > 0 ? rawRunHistory : leaderboard)
+      .map(normalizeEntry)
+      .filter((entry): entry is LeaderboardEntry => entry !== null),
+  ).slice(0, MAX_RUN_HISTORY)
   const playerBestScores: Record<string, number> = {
     ...(typeof parsed?.playerBestScores === 'object' && parsed?.playerBestScores !== null ? parsed.playerBestScores : {}),
   }
@@ -188,10 +246,11 @@ function normalizeStore(parsed: Partial<LeaderboardStore> | null | undefined): L
   }
 
   return {
-    totalRuns: Number(parsed?.totalRuns) || 0,
-    updatedAt: typeof parsed?.updatedAt === 'string' ? parsed.updatedAt : null,
+    totalRuns: Number(parsed?.totalRuns) || runHistory.length,
+    updatedAt: typeof parsed?.updatedAt === 'string' ? parsed.updatedAt : (runHistory[0]?.recordedAt ?? null),
     scoreCounts: typeof parsed?.scoreCounts === 'object' && parsed?.scoreCounts !== null ? parsed.scoreCounts : {},
     leaderboard,
+    runHistory,
     playerBestScores,
     playerDisplayNames: typeof parsed?.playerDisplayNames === 'object' && parsed?.playerDisplayNames !== null ? parsed.playerDisplayNames : {},
   }
@@ -247,20 +306,45 @@ async function writeStore(store: LeaderboardStore): Promise<{ storage: StorageMo
   }
 }
 
-function calculateRank(score: number, leaderboard: LeaderboardEntry[], playerId: string) {
+function getScopedLeaderboard(store: LeaderboardStore, scope: LeaderboardScope) {
+  if (scope === 'all') {
+    return decorateLeaderboard(store.leaderboard, store.playerDisplayNames)
+  }
+
+  return decorateLeaderboard(collapseToBestEntries(filterEntriesByScope(store.runHistory, scope)), store.playerDisplayNames)
+}
+
+function decorateLeaderboard(entries: LeaderboardEntry[], playerDisplayNames: Record<string, string>) {
+  return sortLeaderboard(entries.map((entry) => ({
+    ...entry,
+    displayName: playerDisplayNames[entry.playerId] ?? entry.displayName ?? '',
+  })))
+}
+
+function calculateRank(score: number, shotCount: number, recordedAt: string, leaderboard: LeaderboardEntry[], playerId: string) {
   const playerIndex = leaderboard.findIndex((entry) => entry.playerId === playerId)
   if (playerIndex >= 0) {
     return playerIndex + 1
   }
 
-  let higherScores = 0
+  let higherEntries = 0
   for (const entry of leaderboard) {
     if (entry.score > score) {
-      higherScores += 1
+      higherEntries += 1
+      continue
+    }
+
+    if (entry.score === score && entry.shotCount < shotCount) {
+      higherEntries += 1
+      continue
+    }
+
+    if (entry.score === score && entry.shotCount === shotCount && entry.recordedAt < recordedAt) {
+      higherEntries += 1
     }
   }
 
-  return higherScores + 1
+  return higherEntries + 1
 }
 
 function normalizeDisplayName(value: unknown) {
@@ -318,21 +402,18 @@ function sanitizeProfileSubmission(value: unknown): ProfileSubmissionBody | null
   }
 }
 
-function decorateLeaderboard(store: LeaderboardStore) {
-  return sortLeaderboard(store.leaderboard.map((entry) => ({
-    ...entry,
-    displayName: store.playerDisplayNames[entry.playerId] ?? entry.displayName ?? '',
-  })))
-}
+function buildResponse(store: LeaderboardStore, playerId: string, scope: LeaderboardScope, storage: StorageMode): LeaderboardResponse {
+  const leaderboard = getScopedLeaderboard(store, scope)
+  const playerEntry = playerId ? leaderboard.find((entry) => entry.playerId === playerId) ?? null : null
 
-function buildResponse(store: LeaderboardStore, playerId: string, storage: StorageMode): LeaderboardResponse {
   return {
-    leaderboard: decorateLeaderboard(store),
-    totalRuns: store.totalRuns,
-    playerBestScore: playerId ? store.playerBestScores[playerId] ?? null : null,
+    leaderboard,
+    totalRuns: scope === 'all' ? store.totalRuns : filterEntriesByScope(store.runHistory, scope).length,
+    playerBestScore: playerEntry?.score ?? null,
     playerDisplayName: playerId ? store.playerDisplayNames[playerId] ?? '' : '',
-    updatedAt: store.updatedAt,
+    updatedAt: leaderboard[0]?.recordedAt ?? store.updatedAt,
     storage,
+    scope,
   }
 }
 
@@ -358,13 +439,16 @@ export async function OPTIONS() {
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const playerId = url.searchParams.get('playerId') ?? ''
+  const scope = normalizeScope(url.searchParams.get('scope'))
   const store = await readStore()
   const storage: StorageMode = getStorageConfig()?.storage ?? 'memory'
 
-  return json(buildResponse(store, playerId, storage))
+  return json(buildResponse(store, playerId, scope, storage))
 }
 
 export async function PATCH(request: Request) {
+  const url = new URL(request.url)
+  const scope = normalizeScope(url.searchParams.get('scope'))
   const body = sanitizeProfileSubmission(await request.json().catch(() => null))
   if (body === null) {
     return json({ error: 'Invalid profile payload.' }, { status: 400 })
@@ -378,10 +462,12 @@ export async function PATCH(request: Request) {
   }
 
   const result = await writeStore(store)
-  return json(buildResponse(result.store, body.playerId, result.storage))
+  return json(buildResponse(result.store, body.playerId, scope, result.storage))
 }
 
 export async function POST(request: Request) {
+  const url = new URL(request.url)
+  const scope = normalizeScope(url.searchParams.get('scope'))
   const body = sanitizeScoreSubmission(await request.json().catch(() => null))
   if (body === null) {
     return json({ error: 'Invalid score payload.' }, { status: 400 })
@@ -397,7 +483,6 @@ export async function POST(request: Request) {
   store.totalRuns += 1
   store.updatedAt = recordedAt
   store.scoreCounts[String(body.score)] = (store.scoreCounts[String(body.score)] ?? 0) + 1
-  store.playerBestScores[body.playerId] = Math.max(store.playerBestScores[body.playerId] ?? 0, body.score)
 
   const nextEntry: LeaderboardEntry = {
     playerId: body.playerId,
@@ -406,23 +491,18 @@ export async function POST(request: Request) {
     shotCount: body.shotCount,
     recordedAt,
   }
-  const existingIndex = store.leaderboard.findIndex((entry) => entry.playerId === body.playerId)
 
-  if (existingIndex >= 0) {
-    const existingEntry = store.leaderboard[existingIndex]
-    if (isBetterEntry(nextEntry, existingEntry)) {
-      store.leaderboard[existingIndex] = nextEntry
-    }
-  } else {
-    store.leaderboard.push(nextEntry)
-  }
+  store.runHistory = [nextEntry, ...store.runHistory].slice(0, MAX_RUN_HISTORY)
+  store.playerBestScores[body.playerId] = Math.max(store.playerBestScores[body.playerId] ?? 0, body.score)
+  store.leaderboard = collapseToBestEntries([nextEntry, ...store.leaderboard])
 
   const result = await writeStore(store)
-  const rank = calculateRank(body.score, result.store.leaderboard, body.playerId)
-  const topPercent = Math.max(1, Math.ceil((rank / Math.max(result.store.leaderboard.length, 1)) * 100))
+  const scopedLeaderboard = getScopedLeaderboard(result.store, scope)
+  const rank = calculateRank(body.score, body.shotCount, recordedAt, scopedLeaderboard, body.playerId)
+  const topPercent = Math.max(1, Math.ceil((rank / Math.max(scopedLeaderboard.length, 1)) * 100))
 
   return json({
-    ...buildResponse(result.store, body.playerId, result.storage),
+    ...buildResponse(result.store, body.playerId, scope, result.storage),
     rank,
     topPercent,
   })
