@@ -13,6 +13,7 @@ type MarketPageProps = {
   progression: ProgressionState
   onBuySkin: (itemId: string) => void
   onEquipSkin: (itemId: string) => void
+  onUnequipSkin: () => void
 }
 
 type MarketStatus = 'buy' | 'equipped' | 'owned' | 'not-enough'
@@ -52,7 +53,7 @@ function getPrimaryLabel(item: MarketItemDefinition, progression: ProgressionSta
   }
 }
 
-export function MarketPage({ navigate, progression, onBuySkin, onEquipSkin }: MarketPageProps) {
+export function MarketPage({ navigate, progression, onBuySkin, onEquipSkin, onUnequipSkin }: MarketPageProps) {
   const equippedBackground = getEquippedBackground(progression)
   const equippedSkin = getEquippedSkin(progression)
   const affordableCount = MARKET_CATALOG.filter((item) => progression.level >= item.unlockLevel && progression.emeralds >= item.price && !progression.ownedItemIds.includes(item.id)).length
@@ -79,7 +80,7 @@ export function MarketPage({ navigate, progression, onBuySkin, onEquipSkin }: Ma
         <article className="card market-overview-card">
           <span className="section-title__eyebrow">Decision Pressure</span>
           <h2>Starter before Rare</h2>
-          <p>Moonlit Greenhouse lands first at 136. Dewdrop Seed Set asks for a rarer spend at 198, so a single daily sweep will not trivialize both purchases.</p>
+          <p>Moonlit Greenhouse lands first at 136. Dewdrop Seed Set now sits at 1980, so it behaves like a true long-range skin goal instead of a same-session pickup.</p>
         </article>
       </section>
 
@@ -152,12 +153,12 @@ export function MarketPage({ navigate, progression, onBuySkin, onEquipSkin }: Ma
                     {getPrimaryLabel(item, progression, status)}
                   </button>
                   <button
-                    className={isOwned && !isEquipped ? 'market-card__action market-card__action--secondary' : 'market-card__action market-card__action--secondary is-disabled'}
+                    className={isOwned && !(isEquipped && item.kind === 'background') ? 'market-card__action market-card__action--secondary' : 'market-card__action market-card__action--secondary is-disabled'}
                     type="button"
-                    disabled={!isOwned || isEquipped}
-                    onClick={() => onEquipSkin(item.id)}
+                    disabled={!isOwned || (isEquipped && item.kind === 'background')}
+                    onClick={() => isEquipped && item.kind === 'skin' ? onUnequipSkin() : onEquipSkin(item.id)}
                   >
-                    {isEquipped ? 'Equipped' : isOwned ? 'Equip' : 'Owned'}
+                    {isEquipped && item.kind === 'skin' ? 'Unequip' : isEquipped ? 'Equipped' : isOwned ? 'Equip' : 'Owned'}
                   </button>
                 </div>
               </div>

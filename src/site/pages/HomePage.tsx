@@ -199,7 +199,7 @@ export function HomePage({ navigate, progression }: HomePageProps) {
           <article className="card hub-side-card">
             <span className="section-title__eyebrow">Spend Path</span>
             <h3>Starter market pressure</h3>
-            <p>Moonlit Greenhouse opens at 136 emeralds, while Dewdrop Seed Set waits at 198. Daily target clears are the fastest route to your first meaningful cosmetic choice.</p>
+            <p>Moonlit Greenhouse opens at 136 emeralds, while Dewdrop Seed Set now sits at 1980 as a long-range skin goal. Daily target clears and event boosts matter much more once you start saving for it.</p>
             <CTAButton label="Open Market" href="/market" navigate={navigate} variant="secondary" block />
           </article>
         </div>

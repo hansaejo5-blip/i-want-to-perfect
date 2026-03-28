@@ -238,7 +238,7 @@ export const MARKET_CATALOG: MarketItemDefinition[] = [
     description: 'A soft seed-core drop with gentle dew highlights.',
     supportingLine: 'A calmer, more premium look for focused bloom runs that feels earned without breaking readability.',
     preview: 'Seed-centered early forms, cleaner dew highlights in mid tiers, and a faint growth ring in larger blooms.',
-    price: 198,
+    price: 1980,
     unlockLevel: 4,
     accent: '#74cfbe',
     glow: 'rgba(116, 207, 190, 0.26)',
@@ -691,5 +691,14 @@ export function equipSkin(state: ProgressionState, itemId: string) {
   return syncProgressionState({
     ...synced,
     equippedSkinId: itemId,
+  })
+}
+
+export function unequipSkin(state: ProgressionState) {
+  const synced = syncProgressionState(state)
+
+  return syncProgressionState({
+    ...synced,
+    equippedSkinId: DEFAULT_SKIN.id,
   })
 }

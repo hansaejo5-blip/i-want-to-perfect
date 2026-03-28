@@ -15,6 +15,7 @@ import {
 import {
   applyRunProgression,
   equipSkin,
+  unequipSkin,
   loadProgressionState,
   purchaseSkin,
   saveProgressionState,
@@ -257,6 +258,7 @@ function App() {
             progression={progression}
             onBuySkin={(skinId) => setProgression((current) => purchaseSkin(current, skinId))}
             onEquipSkin={(skinId) => setProgression((current) => equipSkin(current, skinId))}
+            onUnequipSkin={() => setProgression((current) => unequipSkin(current))}
           />
         )
       case '/rankings':
