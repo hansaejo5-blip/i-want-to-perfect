@@ -27,7 +27,7 @@ export const featureCards = [
   },
   {
     title: 'More than a thin play page',
-    body: 'Guide, updates, support, screenshots, and leaderboard context stay visible so the site feels like a real game home instead of a single empty landing page.',
+    body: 'Guide, updates, support, screenshots, leaderboard context, and progression details stay visible so the site feels like a real game home instead of a single empty landing page.',
   },
 ]
 
@@ -64,13 +64,13 @@ export const homeSupportCards = [
   {
     eyebrow: 'Guide',
     title: 'Rules and strategy stay easy to find',
-    body: 'New players can jump into the browser game first, then use the guide for controls, failure conditions, scoring habits, and smarter long-run setups.',
+    body: 'New players can jump into the browser game first, then use the guide for controls, failure conditions, scoring habits, reward flow, and smarter long-run setups.',
     cta: { label: 'Read Guide', href: '/guide' },
   },
   {
     eyebrow: 'Updates',
     title: 'Recent changes are visible on the homepage',
-    body: 'Returning players can scan recent gameplay, physics, and control improvements without the update feed taking attention away from the play button.',
+    body: 'Returning players can scan recent gameplay, physics, progression, and interface improvements without the update feed taking attention away from the play button.',
     cta: { label: 'View Updates', href: '/updates' },
   },
   {
@@ -83,19 +83,24 @@ export const homeSupportCards = [
 
 export const updates = [
   {
-    title: 'Update 1.1 – Improved physics',
+    title: 'Update 1.4 – Growth hub and live event timer',
+    date: 'March 28, 2026',
+    summary: 'Rebuilt the home hub around level growth, daily targets, emerald income, and a real countdown event with active reward bonuses.',
+  },
+  {
+    title: 'Update 1.3 – Market balance and first cosmetic path',
+    date: 'March 24, 2026',
+    summary: 'Adjusted emerald pacing so the first purchase feels reachable, then added Moonlit Greenhouse and Dewdrop Seed Set as meaningful spend choices.',
+  },
+  {
+    title: 'Update 1.2 – Improved physics and play flow',
     date: 'March 19, 2026',
     summary: 'Adjusted collision handling and settling behavior so flower drops feel steadier while keeping the score chase readable.',
   },
   {
-    title: 'New final stage added',
-    date: 'March 12, 2026',
-    summary: 'Added a stronger final merge payoff so late runs feel more memorable and visually distinct for high-score players.',
-  },
-  {
-    title: 'UI and controls update',
+    title: 'Update 1.1 – UI and controls update',
     date: 'March 4, 2026',
-    summary: 'Refined the HUD, restart flow, and control clarity for both mobile and desktop browser play sessions.',
+    summary: 'Refined the HUD, restart flow, mobile control clarity, and leaderboard framing for both desktop and handheld browser sessions.',
   },
 ]
 
@@ -106,7 +111,7 @@ export const faqs = [
   },
   {
     question: 'Do I need to read the guide before playing?',
-    answer: 'No. You can start immediately, then use the guide later for rules, failure conditions, and strategy tips.',
+    answer: 'No. You can start immediately, then use the guide later for rules, failure conditions, scoring, rewards, and strategy tips.',
   },
   {
     question: 'What kind of game is Perfect Drop?',
@@ -120,7 +125,7 @@ export const faqs = [
 
 export const playPageCopy = {
   heading: 'Play Perfect Drop',
-  description: 'Play the free flower merge game in your browser, beat the daily target, climb the leaderboard, and challenge a friend with your score.',
+  description: 'Play the free flower merge game in your browser, beat the daily target, climb the leaderboard, and push your growth loop in the same session.',
   controls: [
     'Drag to aim.',
     'Release to drop the current bloom.',
@@ -156,6 +161,16 @@ export const guideContent = {
   ],
   failureCondition:
     'A run ends when the board state becomes unsafe and the work area can no longer be managed cleanly enough to place new flowers.',
+  scoring: [
+    'Every merge gives score based on the resulting bloom tier.',
+    'Cleaner chains create stronger combo pressure and better run pacing.',
+    'Higher scores also increase XP gains after the run ends.',
+  ],
+  rewards: [
+    'Each completed run grants XP based on score, merges, and combo quality.',
+    'Daily targets pay emeralds and are the fastest route to early cosmetic purchases.',
+    'Level ups also award emeralds, so long-term play keeps feeding the market loop.',
+  ],
   beginnerTips: [
     'Use side space early so the center stays flexible.',
     'Think about the next bloom before taking the current shot.',
@@ -184,12 +199,12 @@ export const guideContent = {
 
 export const supportContent = {
   title: 'Support Perfect Drop',
-  description: 'If you enjoy the browser version, itch.io is the cleanest next step for support, follow, and future growth for Perfect Drop.',
+  description: 'If you enjoy the browser version, itch.io is the cleanest next step for support, follow, and future growth for Perfect Drop. This page also explains where project updates and contact paths live.',
   itchCta: { label: 'Support on itch.io', href: ITCH_URL },
   futurePlans: [
     'Additional stage polish and stronger endgame reward presentation.',
-    'Expanded audio settings and more refined feedback systems.',
-    'Better revisit hooks through events, updates, and community touchpoints.',
+    'Expanded reward hooks, market content, and event rotation.',
+    'Better revisit hooks through updates, support channels, and community touchpoints.',
   ],
   channels: [
     { label: 'Email updates placeholder', href: NEWSLETTER_URL },
@@ -199,9 +214,9 @@ export const supportContent = {
 
 export const privacyContent = {
   notice:
-    'This site may collect limited operational information needed to run, improve, and maintain the web game experience.',
+    'This site stores limited local information such as run history, progression, and cosmetic state so the game hub can remember your level, daily progress, and owned items between sessions.',
   cookies:
-    'The structure is ready for cookies, analytics, or similar tools later. If those are added, this page should describe what is used and why.',
+    'The structure is ready for cookies, analytics, or similar tools later. If those are added, this page should describe what is used, why it is needed, and how to opt out where possible.',
   contact:
     'For now, contact can be handled through the project email placeholder until a dedicated support address is finalized.',
 }

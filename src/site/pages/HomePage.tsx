@@ -1,7 +1,16 @@
+import { useEffect, useState } from 'react'
 import { CTAButton } from '../components/CTAButton'
 import { DashboardShell } from '../components/DashboardShell'
 import { AppLink } from '../components/AppLink'
-import { getDailyCompletion, getEquippedSkin, getLevelProgress, type ProgressionState } from '../progression'
+import {
+  getActiveEventState,
+  getDailyCompletion,
+  getEquippedBackground,
+  getEquippedSkin,
+  getLevelProgress,
+  getTargetRewardAmount,
+  type ProgressionState,
+} from '../progression'
 import type { Route } from '../router'
 
 type HomePageProps = {
@@ -13,8 +22,18 @@ export function HomePage({ navigate, progression }: HomePageProps) {
   const level = getLevelProgress(progression)
   const daily = getDailyCompletion(progression)
   const skin = getEquippedSkin(progression)
+  const background = getEquippedBackground(progression)
   const recentRewards = progression.recentRewards
   const featuredTargets = progression.daily.targets.slice(0, 3)
+  const [eventState, setEventState] = useState(() => getActiveEventState())
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setEventState(getActiveEventState())
+    }, 1000)
+
+    return () => window.clearInterval(intervalId)
+  }, [])
 
   return (
     <DashboardShell
@@ -22,7 +41,7 @@ export function HomePage({ navigate, progression }: HomePageProps) {
       navigate={navigate}
       progression={progression}
       title="Perfect Drop"
-      description="A softer garden hub where every run now grows your level, daily board, emerald stash, and skin collection."
+      description="A softer garden hub where every run now feeds level growth, daily rewards, emerald income, and practical market choices."
       actions={
         <div className="dashboard-hero-actions">
           <CTAButton label="Play a Run" href="/play#game" navigate={navigate} />
@@ -32,15 +51,24 @@ export function HomePage({ navigate, progression }: HomePageProps) {
     >
       <section className="hub-home-grid">
         <div className="hub-home-grid__main">
-          <article className="card growth-event-banner">
+          <article className={`card growth-event-banner ${eventState.cardClassName}`}>
             <div>
-              <span className="growth-event-banner__tag">Limited Time</span>
-              <h2>Double Bloom Weekend</h2>
-              <p>Every strong run this weekend feels more meaningful because XP, emeralds, and rank pressure now connect into one growth loop.</p>
+              <span className="growth-event-banner__tag">{eventState.tagLabel}</span>
+              <h2>{eventState.event.title}</h2>
+              <p>{eventState.event.description}</p>
+              <p className="growth-event-banner__bonus">{eventState.event.bonusSummary}</p>
             </div>
             <div className="growth-event-banner__timer">
-              <strong>22:45:12</strong>
-              <span>remaining</span>
+              <strong>{eventState.countdownLabel}</strong>
+              <span>{eventState.isActive ? 'remaining' : 'event closed'}</span>
+              <button
+                className="growth-event-banner__cta"
+                type="button"
+                disabled={!eventState.isActive}
+                onClick={() => navigate('/play')}
+              >
+                {eventState.ctaLabel}
+              </button>
             </div>
           </article>
 
@@ -49,7 +77,7 @@ export function HomePage({ navigate, progression }: HomePageProps) {
               <div>
                 <span className="section-title__eyebrow">Ready to Drop</span>
                 <h2>One more bloom run now feeds your whole garden.</h2>
-                <p>Score converts into XP, daily target progress, emerald rewards, and new skin unlocks without leaving the same calm Perfect Drop world.</p>
+                <p>Score turns into XP, daily progress, emerald rewards, and cleaner market decisions without breaking the calm Perfect Drop mood.</p>
               </div>
               <div className="home-play-entry-card__meta">
                 <div>
@@ -57,23 +85,33 @@ export function HomePage({ navigate, progression }: HomePageProps) {
                   <strong>{progression.stats.bestScore}</strong>
                 </div>
                 <div>
-                  <span className="hud-label">Total Runs</span>
-                  <strong>{progression.stats.totalRuns}</strong>
+                  <span className="hud-label">Recent Run</span>
+                  <strong>{recentRewards?.run.score ?? 0}</strong>
                 </div>
               </div>
             </div>
 
-            <div className="home-play-stage-preview">
-              <div className="home-play-stage-preview__board">
-                <span className="home-play-stage-preview__pill">Ready to Drop</span>
+            <div className={`home-play-stage-preview ${background.previewClass}`}>
+              <div
+                className="home-play-stage-preview__board"
+                style={{ background: `linear-gradient(180deg, ${background.boardGradient[0]} 0%, ${background.boardGradient[1]} 100%)` }}
+              >
+                <span className="home-play-stage-preview__pill">{background.name}</span>
+                <div className="home-play-stage-preview__glass" />
+                <div className="home-play-stage-preview__foliage" />
                 <div className="home-orb home-orb--rose" />
-                <div className="home-orb home-orb--mint" style={{ background: skin.accent, boxShadow: `0 18px 30px ${skin.glow}` }} />
+                <div
+                  className={`home-orb home-orb--mint ${skin.previewClass}`}
+                  style={{ background: skin.accent, boxShadow: `0 18px 30px ${skin.glow}` }}
+                >
+                  <span className="home-orb__core" />
+                </div>
                 <div className="home-orb home-orb--seed" />
               </div>
             </div>
 
             <div className="home-play-entry-card__footer">
-              <div className="home-highlight-pill home-highlight-pill--combo">x{Math.max(progression.stats.bestCombo, 5)} combo</div>
+              <div className="home-highlight-pill home-highlight-pill--combo">x{Math.max(progression.stats.bestCombo, 4)} combo ceiling</div>
               <div className="home-highlight-pill">{Math.round(level.progress * 100)}% to Lv.{progression.level + 1}</div>
             </div>
           </article>
@@ -85,7 +123,7 @@ export function HomePage({ navigate, progression }: HomePageProps) {
               <div className="garden-progress garden-progress--large">
                 <div className="garden-progress__fill" style={{ width: Math.max(level.progress * 100, 6) + '%' }} />
               </div>
-              <p>{level.xpIntoLevel} / {level.nextLevelXp} XP in this level. {level.remainingXp} XP left to bloom upward.</p>
+              <p>{level.xpIntoLevel} / {level.nextLevelXp} XP in this level. {level.remainingXp} XP left until the next reward lane opens.</p>
             </article>
 
             <article className="card hub-stat-card">
@@ -94,15 +132,15 @@ export function HomePage({ navigate, progression }: HomePageProps) {
               <p>
                 {recentRewards
                   ? `${recentRewards.emeraldsGained} emeralds earned${recentRewards.reasonLabels.length ? ` from ${recentRewards.reasonLabels.join(', ')}` : ''}.`
-                  : 'The loop is now simple: play, earn XP, finish targets, and spend emeralds on garden skins.'}
+                  : 'Play, level up, clear daily targets, and choose what to buy first instead of letting emeralds sit unused.'}
               </p>
             </article>
 
             <article className="card hub-stat-card">
               <span className="section-title__eyebrow">Market Hook</span>
-              <h3>{skin.name} is equipped</h3>
+              <h3>{skin.name} with {background.name}</h3>
               <p>{skin.preview}</p>
-              <AppLink href="/market" navigate={navigate} className="hub-inline-link">Browse skin market</AppLink>
+              <AppLink href="/market" navigate={navigate} className="hub-inline-link">Browse market choices</AppLink>
             </article>
           </div>
         </div>
@@ -122,6 +160,7 @@ export function HomePage({ navigate, progression }: HomePageProps) {
             <div className="daily-target-list">
               {featuredTargets.map((target) => {
                 const percent = target.goal > 0 ? Math.min((target.progress / target.goal) * 100, 100) : 0
+                const reward = getTargetRewardAmount(target.rewardEmeralds, eventState.dailyEmeraldMultiplier)
                 return (
                   <div className="daily-target-list__item" key={target.id}>
                     <div className="daily-target-list__copy">
@@ -131,7 +170,7 @@ export function HomePage({ navigate, progression }: HomePageProps) {
                     <div className="garden-progress">
                       <div className="garden-progress__fill" style={{ width: Math.max(percent, target.progress > 0 ? 8 : 0) + '%' }} />
                     </div>
-                    <p>{target.description} Reward: {target.rewardEmeralds} emeralds.</p>
+                    <p>{target.description} Reward: {reward} emeralds{eventState.isActive ? ' with event boost.' : '.'}</p>
                   </div>
                 )
               })}
@@ -158,10 +197,10 @@ export function HomePage({ navigate, progression }: HomePageProps) {
           </article>
 
           <article className="card hub-side-card">
-            <span className="section-title__eyebrow">Rankings</span>
-            <h3>Best run and repeat pressure</h3>
-            <p>Your current best is <strong>{progression.stats.bestScore}</strong>. Return to Rankings for a full board view and a cleaner chase target.</p>
-            <CTAButton label="Open Rankings" href="/rankings" navigate={navigate} variant="secondary" block />
+            <span className="section-title__eyebrow">Spend Path</span>
+            <h3>Starter market pressure</h3>
+            <p>Moonlit Greenhouse opens at 96 emeralds, while Dewdrop Seed Set waits at 148. Daily target clears are the fastest way to reach your first real cosmetic choice.</p>
+            <CTAButton label="Open Market" href="/market" navigate={navigate} variant="secondary" block />
           </article>
         </div>
       </section>

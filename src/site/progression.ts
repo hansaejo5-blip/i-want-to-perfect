@@ -2,24 +2,47 @@ import type { RunEndedSummary } from '../game/stats'
 
 const PROGRESSION_STORAGE_KEY = 'blip-perfect-growth-v1'
 const CURRENT_DATE_KEY = () => new Date().toISOString().slice(0, 10)
+const PROGRESSION_SCHEMA_VERSION = 2
 
 export type DailyTargetKind = 'runs' | 'score' | 'merges' | 'combo'
+export type MarketItemTier = 'starter' | 'rare' | 'prestige'
+export type MarketItemKind = 'background' | 'skin'
 
 export interface ProgressionRunSummary extends RunEndedSummary {
   mergeCount: number
   maxCombo: number
 }
 
-export interface SkinDefinition {
+export interface BaseCosmeticDefinition {
   id: string
   name: string
   description: string
-  price: number
-  unlockLevel: number
+  preview: string
   accent: string
   glow: string
-  preview: string
-  category: 'orb' | 'trail' | 'theme'
+  previewClass: string
+}
+
+export interface BackgroundDefinition extends BaseCosmeticDefinition {
+  kind: 'background'
+  boardGradient: [string, string]
+  surfaceTint: string
+}
+
+export interface SkinDefinition extends BaseCosmeticDefinition {
+  kind: 'skin'
+  visualRules: string[]
+}
+
+export interface MarketItemDefinition extends BaseCosmeticDefinition {
+  kind: MarketItemKind
+  tier: MarketItemTier
+  price: number
+  unlockLevel: number
+  supportingLine: string
+  boardGradient?: [string, string]
+  surfaceTint?: string
+  visualRules?: string[]
 }
 
 export interface DailyTargetProgress {
@@ -47,6 +70,7 @@ export interface RecentRewardSummary {
   reasonLabels: string[]
   leveledUp: boolean
   newLevel: number
+  eventApplied: boolean
   run: ProgressionRunSummary
   receivedAt: string
 }
@@ -60,10 +84,12 @@ export interface GrowthStats {
 }
 
 export interface ProgressionState {
+  schemaVersion: number
   totalXp: number
   level: number
   emeralds: number
-  ownedSkinIds: string[]
+  ownedItemIds: string[]
+  equippedBackgroundId: string
   equippedSkinId: string
   daily: {
     dateKey: string
@@ -74,98 +100,164 @@ export interface ProgressionState {
   recentRewards: RecentRewardSummary | null
 }
 
+export interface EventDefinition {
+  id: string
+  title: string
+  description: string
+  bonusSummary: string
+  ctaActive: string
+  ctaEnded: string
+  tagActive: string
+  tagEnded: string
+  endAt: string
+}
+
+export interface EventState {
+  event: EventDefinition
+  isActive: boolean
+  remainingMs: number
+  countdownLabel: string
+  xpMultiplier: number
+  dailyEmeraldMultiplier: number
+  cardClassName: string
+  tagLabel: string
+  ctaLabel: string
+}
+
+export const ECONOMY_BALANCE_TABLE = {
+  xp: {
+    baseRun: 26,
+    scoreRate: '1 XP per 24 score',
+    mergeBonus: '4 XP per merge',
+    comboBonus: '8 XP per max combo tier',
+    eventBoost: '+20% XP during events',
+  },
+  emeralds: {
+    personalBest: 12,
+    levelRewardBase: '16 + level x 3',
+    dailyTargetRange: '18 to 46 emeralds',
+    eventDailyBoost: '+10% daily target emeralds during events',
+  },
+  pricing: {
+    starter: '80 to 120 emeralds',
+    rare: '140 to 240 emeralds',
+    prestige: '320 to 520 emeralds',
+  },
+} as const
+
 const DAILY_TARGET_BLUEPRINTS: Array<Omit<DailyTargetProgress, 'progress' | 'completed' | 'rewarded'>> = [
   {
     id: 'daily-runs',
     title: 'Morning Watering',
-    description: 'Play 4 bloom runs today.',
+    description: 'Play 3 calm runs to keep the garden active.',
     kind: 'runs',
-    goal: 4,
-    rewardEmeralds: 24,
+    goal: 3,
+    rewardEmeralds: 18,
   },
   {
     id: 'daily-score',
     title: 'Petal Score Push',
-    description: "Collect 900 score across today's runs.",
+    description: "Collect 720 score across today's sessions.",
     kind: 'score',
-    goal: 900,
-    rewardEmeralds: 42,
+    goal: 720,
+    rewardEmeralds: 34,
   },
   {
     id: 'daily-merges',
     title: 'Merge Tending',
-    description: 'Trigger 18 merges in total today.',
+    description: 'Create 14 merges in total today.',
     kind: 'merges',
-    goal: 18,
-    rewardEmeralds: 36,
+    goal: 14,
+    rewardEmeralds: 28,
   },
   {
     id: 'daily-combo',
     title: 'Combo Bloom',
-    description: 'Reach a combo of 4 or more.',
+    description: 'Reach a combo chain of 4 in one run.',
     kind: 'combo',
     goal: 4,
-    rewardEmeralds: 28,
+    rewardEmeralds: 46,
   },
 ]
 
-export const SKIN_CATALOG: SkinDefinition[] = [
+export const DEFAULT_BACKGROUND: BackgroundDefinition = {
+  id: 'sunlit-workbench',
+  kind: 'background',
+  name: 'Sunlit Workbench',
+  description: 'The familiar warm ivory board with soft greenhouse calm.',
+  preview: 'Warm ivory light with the original Perfect Drop workbench clarity.',
+  accent: '#0f7a5a',
+  glow: 'rgba(15, 122, 90, 0.16)',
+  previewClass: 'theme-preview--sunlit-workbench',
+  boardGradient: ['#fff8ef', '#efe3cf'],
+  surfaceTint: 'rgba(255, 252, 246, 0.88)',
+}
+
+export const DEFAULT_SKIN: SkinDefinition = {
+  id: 'garden-classic',
+  kind: 'skin',
+  name: 'Garden Classic',
+  description: 'The original bloom finish with soft petals and familiar warmth.',
+  preview: 'Warm cream and sage orbs with the original flower detail language.',
+  accent: '#4ea57f',
+  glow: 'rgba(78, 165, 127, 0.18)',
+  previewClass: 'theme-preview--garden-classic',
+  visualRules: [
+    'Small stages stay seed-like and warm.',
+    'Mid stages keep the familiar petal ring.',
+    'Large stages remain readable with the classic flower silhouette.',
+  ],
+}
+
+export const MARKET_CATALOG: MarketItemDefinition[] = [
   {
-    id: 'classic-garden',
-    name: 'Classic Garden',
-    description: 'The original warm cream and sage garden finish.',
-    price: 0,
-    unlockLevel: 1,
-    accent: '#0f7a5a',
-    glow: 'rgba(15, 122, 90, 0.14)',
-    preview: 'Cream bloom orbs with the familiar garden calm.',
-    category: 'theme',
-  },
-  {
-    id: 'mint-sprout',
-    name: 'Mint Sprout',
-    description: 'Fresh mint highlights for orb trims and drop trails.',
-    price: 80,
+    id: 'moonlit-greenhouse',
+    kind: 'background',
+    tier: 'starter',
+    name: 'Moonlit Greenhouse',
+    description: 'Calm moonlight through greenhouse glass for focused runs.',
+    supportingLine: 'A cooler garden atmosphere that keeps text and bloom shapes readable.',
+    preview: 'Deep sage glass framing, muted teal depth, warm ivory play surface, and soft plant silhouettes behind the board.',
+    price: 96,
     unlockLevel: 2,
-    accent: '#4ea57f',
-    glow: 'rgba(78, 165, 127, 0.18)',
-    preview: 'Bright mint orb shell and soft greenhouse trail.',
-    category: 'trail',
+    accent: '#355f56',
+    glow: 'rgba(53, 95, 86, 0.18)',
+    previewClass: 'theme-preview--moonlit-greenhouse',
+    boardGradient: ['#d8e6dd', '#eff0e6'],
+    surfaceTint: 'rgba(245, 244, 236, 0.84)',
   },
   {
-    id: 'rose-dawn',
-    name: 'Rose Dawn',
-    description: 'Blush petal lighting for calmer morning garden boards.',
-    price: 120,
-    unlockLevel: 3,
-    accent: '#d8828f',
-    glow: 'rgba(216, 130, 143, 0.18)',
-    preview: 'Rosy orb bloom with a warmer score flash.',
-    category: 'orb',
-  },
-  {
-    id: 'emerald-mist',
-    name: 'Emerald Mist',
-    description: 'Deeper green energy wash for late-run focus.',
-    price: 160,
+    id: 'dewdrop-seed-set',
+    kind: 'skin',
+    tier: 'rare',
+    name: 'Dewdrop Seed Set',
+    description: 'A reward-feeling drop skin with dewdrop translucency and a seed core.',
+    supportingLine: 'Made for players who want a cooler, cleaner object finish without breaking the current board readability.',
+    preview: 'Seed-centered early forms, brighter dew highlights in mid stages, and a subtle sprout edge in larger merges.',
+    price: 148,
     unlockLevel: 4,
-    accent: '#2f8f78',
-    glow: 'rgba(47, 143, 120, 0.22)',
-    preview: 'Richer green gradients and a denser landing glow.',
-    category: 'theme',
-  },
-  {
-    id: 'moon-petal',
-    name: 'Moon Petal',
-    description: 'Luminous ivory petals with a moonlit drop shimmer.',
-    price: 220,
-    unlockLevel: 5,
-    accent: '#9f8cc7',
-    glow: 'rgba(159, 140, 199, 0.18)',
-    preview: 'Soft moon-petal finish with cool combo sparkles.',
-    category: 'orb',
+    accent: '#6ccfbb',
+    glow: 'rgba(108, 207, 187, 0.24)',
+    previewClass: 'theme-preview--dewdrop-seed-set',
+    visualRules: [
+      'Small stages: a compact seed core with a soft droplet shell.',
+      'Mid stages: stronger dew highlight and mint-teal translucency.',
+      'Large stages: subtle sprout-edge energy while keeping silhouettes clean.',
+    ],
   },
 ]
+
+export const FEATURED_EVENT: EventDefinition = {
+  id: 'double-bloom-weekend',
+  title: 'Double Bloom Weekend',
+  description: 'This weekend, every run converts faster into growth. XP gains are boosted and completed daily targets pay extra emeralds.',
+  bonusSummary: 'XP +20% and daily target emerald rewards +10% while the boost is active.',
+  ctaActive: 'Play under bonus',
+  ctaEnded: 'Weekend boost ended',
+  tagActive: 'Weekend Boost Active',
+  tagEnded: 'Boost Ended',
+  endAt: '2026-03-30T23:59:59Z',
+}
 
 function getMetricValue(kind: DailyTargetKind, metrics: DailyMetrics) {
   switch (kind) {
@@ -203,11 +295,13 @@ function createDefaultState(): ProgressionState {
   }
 
   return syncProgressionState({
+    schemaVersion: PROGRESSION_SCHEMA_VERSION,
     totalXp: 0,
     level: 1,
-    emeralds: 140,
-    ownedSkinIds: ['classic-garden'],
-    equippedSkinId: 'classic-garden',
+    emeralds: 52,
+    ownedItemIds: [],
+    equippedBackgroundId: DEFAULT_BACKGROUND.id,
+    equippedSkinId: DEFAULT_SKIN.id,
     daily: {
       dateKey: CURRENT_DATE_KEY(),
       metrics,
@@ -226,7 +320,7 @@ function createDefaultState(): ProgressionState {
 
 export function getXpForNextLevel(level: number) {
   const clampedLevel = Math.max(level, 1)
-  return 120 + (clampedLevel - 1) * 48 + Math.floor(Math.pow(clampedLevel - 1, 1.35) * 18)
+  return 108 + (clampedLevel - 1) * 42 + Math.floor(Math.pow(clampedLevel - 1, 1.28) * 18)
 }
 
 export function getLevelFromXp(totalXp: number) {
@@ -253,16 +347,82 @@ export function getLevelProgress(state: ProgressionState) {
   return getLevelFromXp(state.totalXp)
 }
 
-export function getEquippedSkin(state: ProgressionState) {
-  return SKIN_CATALOG.find((skin) => skin.id === state.equippedSkinId) ?? SKIN_CATALOG[0]
+export function formatCountdown(remainingMs: number) {
+  const clamped = Math.max(0, Math.floor(remainingMs / 1000))
+  const hours = Math.floor(clamped / 3600)
+  const minutes = Math.floor((clamped % 3600) / 60)
+  const seconds = clamped % 60
+  return [hours, minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':')
 }
 
-export function getSkinById(skinId: string) {
-  return SKIN_CATALOG.find((skin) => skin.id === skinId) ?? null
+export function getActiveEventState(now = Date.now()): EventState {
+  const endAtMs = new Date(FEATURED_EVENT.endAt).getTime()
+  const remainingMs = Math.max(endAtMs - now, 0)
+  const isActive = remainingMs > 0
+
+  return {
+    event: FEATURED_EVENT,
+    isActive,
+    remainingMs,
+    countdownLabel: formatCountdown(remainingMs),
+    xpMultiplier: isActive ? 1.2 : 1,
+    dailyEmeraldMultiplier: isActive ? 1.1 : 1,
+    cardClassName: isActive ? 'is-active' : 'is-ended',
+    tagLabel: isActive ? FEATURED_EVENT.tagActive : FEATURED_EVENT.tagEnded,
+    ctaLabel: isActive ? FEATURED_EVENT.ctaActive : FEATURED_EVENT.ctaEnded,
+  }
 }
 
-export function getOwnedSkins(state: ProgressionState) {
-  return SKIN_CATALOG.filter((skin) => state.ownedSkinIds.includes(skin.id))
+export function getTargetRewardAmount(baseReward: number, multiplier = getActiveEventState().dailyEmeraldMultiplier) {
+  return Math.round(baseReward * multiplier)
+}
+
+export function getEquippedBackground(state: ProgressionState): BackgroundDefinition {
+  const item = MARKET_CATALOG.find((entry): entry is MarketItemDefinition & { kind: 'background' } => entry.kind === 'background' && entry.id === state.equippedBackgroundId)
+  if (!item) {
+    return DEFAULT_BACKGROUND
+  }
+
+  return {
+    id: item.id,
+    kind: 'background',
+    name: item.name,
+    description: item.description,
+    preview: item.preview,
+    accent: item.accent,
+    glow: item.glow,
+    previewClass: item.previewClass,
+    boardGradient: item.boardGradient ?? DEFAULT_BACKGROUND.boardGradient,
+    surfaceTint: item.surfaceTint ?? DEFAULT_BACKGROUND.surfaceTint,
+  }
+}
+
+export function getEquippedSkin(state: ProgressionState): SkinDefinition {
+  const item = MARKET_CATALOG.find((entry): entry is MarketItemDefinition & { kind: 'skin' } => entry.kind === 'skin' && entry.id === state.equippedSkinId)
+  if (!item) {
+    return DEFAULT_SKIN
+  }
+
+  return {
+    id: item.id,
+    kind: 'skin',
+    name: item.name,
+    description: item.description,
+    preview: item.preview,
+    accent: item.accent,
+    glow: item.glow,
+    previewClass: item.previewClass,
+    visualRules: item.visualRules ?? DEFAULT_SKIN.visualRules,
+  }
+}
+
+export function getMarketItemById(itemId: string) {
+  return MARKET_CATALOG.find((item) => item.id === itemId) ?? null
+}
+
+export function getOwnedCosmetics(state: ProgressionState) {
+  const entries: Array<BackgroundDefinition | SkinDefinition | MarketItemDefinition> = [DEFAULT_BACKGROUND, DEFAULT_SKIN]
+  return entries.concat(MARKET_CATALOG.filter((item) => state.ownedItemIds.includes(item.id)))
 }
 
 export function getDailyCompletion(state: ProgressionState) {
@@ -291,22 +451,34 @@ function normalizeState(input: unknown): ProgressionState {
     return fallback
   }
 
-  const candidate = input as Partial<ProgressionState>
+  const candidate = input as Partial<ProgressionState> & {
+    ownedSkinIds?: string[]
+    schemaVersion?: number
+  }
   const dailyMetrics = normalizeDailyMetrics(candidate.daily?.metrics)
-  const ownedSkinIds = Array.isArray(candidate.ownedSkinIds)
-    ? candidate.ownedSkinIds.filter((skinId): skinId is string => typeof skinId === 'string' && SKIN_CATALOG.some((skin) => skin.id === skinId))
-    : fallback.ownedSkinIds
+  const marketIds = new Set(MARKET_CATALOG.map((item) => item.id))
+  const ownedItemIds = Array.isArray(candidate.ownedItemIds)
+    ? candidate.ownedItemIds.filter((itemId): itemId is string => typeof itemId === 'string' && marketIds.has(itemId))
+    : []
+
+  const legacyOwnedSkinIds = Array.isArray(candidate.ownedSkinIds)
+    ? candidate.ownedSkinIds.filter((itemId): itemId is string => typeof itemId === 'string')
+    : []
+  const legacyPaidCount = legacyOwnedSkinIds.filter((itemId) => itemId !== 'classic-garden').length
+  const migrationBonus = candidate.schemaVersion === PROGRESSION_SCHEMA_VERSION ? 0 : legacyPaidCount * 70
 
   const next: ProgressionState = {
+    schemaVersion: PROGRESSION_SCHEMA_VERSION,
     totalXp: Number(candidate.totalXp) || 0,
     level: Number(candidate.level) || 1,
-    emeralds: Number(candidate.emeralds) || 0,
-    ownedSkinIds: ownedSkinIds.length ? Array.from(new Set(['classic-garden', ...ownedSkinIds])) : fallback.ownedSkinIds,
-    equippedSkinId: typeof candidate.equippedSkinId === 'string' ? candidate.equippedSkinId : fallback.equippedSkinId,
+    emeralds: (Number(candidate.emeralds) || 0) + migrationBonus,
+    ownedItemIds,
+    equippedBackgroundId: typeof candidate.equippedBackgroundId === 'string' ? candidate.equippedBackgroundId : DEFAULT_BACKGROUND.id,
+    equippedSkinId: typeof candidate.equippedSkinId === 'string' ? candidate.equippedSkinId : DEFAULT_SKIN.id,
     daily: {
       dateKey: typeof candidate.daily?.dateKey === 'string' ? candidate.daily.dateKey : CURRENT_DATE_KEY(),
       metrics: dailyMetrics,
-      targets: Array.isArray(candidate.daily?.targets) && candidate.daily?.targets.length
+      targets: Array.isArray(candidate.daily?.targets) && candidate.daily.targets.length
         ? candidate.daily.targets.map((target) => ({
             ...target,
             progress: Number(target.progress) || 0,
@@ -352,13 +524,22 @@ export function syncProgressionState(state: ProgressionState): ProgressionState 
     }
   })
 
-  const equippedSkin = state.ownedSkinIds.includes(state.equippedSkinId) ? state.equippedSkinId : 'classic-garden'
+  const ownedItemIds = Array.from(new Set(state.ownedItemIds.filter((itemId) => getMarketItemById(itemId) !== null)))
+  const equippedBackgroundId = state.equippedBackgroundId === DEFAULT_BACKGROUND.id || ownedItemIds.includes(state.equippedBackgroundId)
+    ? state.equippedBackgroundId
+    : DEFAULT_BACKGROUND.id
+  const equippedSkinId = state.equippedSkinId === DEFAULT_SKIN.id || ownedItemIds.includes(state.equippedSkinId)
+    ? state.equippedSkinId
+    : DEFAULT_SKIN.id
 
   return {
     ...state,
+    schemaVersion: PROGRESSION_SCHEMA_VERSION,
     level: levelState.level,
     emeralds: Math.max(0, Math.floor(state.emeralds)),
-    equippedSkinId: equippedSkin,
+    ownedItemIds,
+    equippedBackgroundId,
+    equippedSkinId,
     daily: {
       dateKey: todayKey,
       metrics,
@@ -390,7 +571,9 @@ export function saveProgressionState(state: ProgressionState) {
 
 export function applyRunProgression(current: ProgressionState, summary: ProgressionRunSummary): ProgressionState {
   const state = syncProgressionState(current)
-  const xpGained = 36 + Math.floor(summary.score / 18) + summary.mergeCount * 6 + summary.maxCombo * 10
+  const eventState = getActiveEventState()
+  const baseXp = ECONOMY_BALANCE_TABLE.xp.baseRun + Math.floor(summary.score / 24) + summary.mergeCount * 4 + summary.maxCombo * 8
+  const xpGained = Math.max(12, Math.round(baseXp * eventState.xpMultiplier))
   const previousLevel = state.level
   const wasPersonalBest = summary.score > state.stats.bestScore
 
@@ -405,8 +588,8 @@ export function applyRunProgression(current: ProgressionState, summary: Progress
   const reasonLabels: string[] = []
 
   if (wasPersonalBest) {
-    emeraldsGained += 14
-    reasonLabels.push('New best +14')
+    emeraldsGained += ECONOMY_BALANCE_TABLE.emeralds.personalBest
+    reasonLabels.push('New best +' + ECONOMY_BALANCE_TABLE.emeralds.personalBest)
   }
 
   const totalXp = state.totalXp + xpGained
@@ -414,7 +597,7 @@ export function applyRunProgression(current: ProgressionState, summary: Progress
 
   if (levelState.level > previousLevel) {
     for (let level = previousLevel + 1; level <= levelState.level; level += 1) {
-      const levelReward = 18 + level * 4
+      const levelReward = 16 + level * 3
       emeraldsGained += levelReward
       reasonLabels.push('Level ' + level + ' +' + levelReward)
     }
@@ -426,8 +609,9 @@ export function applyRunProgression(current: ProgressionState, summary: Progress
     const hasJustCompleted = target.completed && rewarded === false
 
     if (hasJustCompleted) {
-      emeraldsGained += target.rewardEmeralds
-      reasonLabels.push(target.title + ' +' + target.rewardEmeralds)
+      const reward = getTargetRewardAmount(target.rewardEmeralds, eventState.dailyEmeraldMultiplier)
+      emeraldsGained += reward
+      reasonLabels.push(target.title + ' +' + reward)
     }
 
     return {
@@ -435,6 +619,10 @@ export function applyRunProgression(current: ProgressionState, summary: Progress
       rewarded: rewarded || hasJustCompleted,
     }
   })
+
+  if (eventState.isActive) {
+    reasonLabels.unshift('Weekend XP +20%')
+  }
 
   return syncProgressionState({
     ...state,
@@ -459,34 +647,43 @@ export function applyRunProgression(current: ProgressionState, summary: Progress
       reasonLabels,
       leveledUp: levelState.level > previousLevel,
       newLevel: levelState.level,
+      eventApplied: eventState.isActive,
       run: summary,
       receivedAt: new Date().toISOString(),
     },
   })
 }
 
-export function purchaseSkin(state: ProgressionState, skinId: string) {
+export function purchaseSkin(state: ProgressionState, itemId: string) {
   const synced = syncProgressionState(state)
-  const skin = getSkinById(skinId)
-  if (!skin || synced.ownedSkinIds.includes(skinId) || synced.level < skin.unlockLevel || synced.emeralds < skin.price) {
+  const item = getMarketItemById(itemId)
+  if (!item || synced.ownedItemIds.includes(itemId) || synced.level < item.unlockLevel || synced.emeralds < item.price) {
     return synced
   }
 
-  return {
+  return syncProgressionState({
     ...synced,
-    emeralds: synced.emeralds - skin.price,
-    ownedSkinIds: [...synced.ownedSkinIds, skinId],
-  }
+    emeralds: synced.emeralds - item.price,
+    ownedItemIds: [...synced.ownedItemIds, itemId],
+  })
 }
 
-export function equipSkin(state: ProgressionState, skinId: string) {
+export function equipSkin(state: ProgressionState, itemId: string) {
   const synced = syncProgressionState(state)
-  if (!synced.ownedSkinIds.includes(skinId)) {
+  const item = getMarketItemById(itemId)
+  if (!item || !synced.ownedItemIds.includes(itemId)) {
     return synced
   }
 
-  return {
-    ...synced,
-    equippedSkinId: skinId,
+  if (item.kind === 'background') {
+    return syncProgressionState({
+      ...synced,
+      equippedBackgroundId: itemId,
+    })
   }
+
+  return syncProgressionState({
+    ...synced,
+    equippedSkinId: itemId,
+  })
 }

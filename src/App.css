@@ -3051,3 +3051,366 @@ summary:focus-visible {
     left: 96px;
   }
 }
+
+.garden-sidebar__link-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 4px 0 14px;
+}
+
+.garden-sidebar__text-link {
+  color: var(--muted);
+  font-size: 0.86rem;
+  text-decoration: none;
+}
+
+.garden-sidebar__text-link:hover {
+  color: var(--ink);
+}
+
+.growth-event-banner.is-active {
+  background: linear-gradient(135deg, #0f7a5a 0%, #0c6a4e 100%);
+}
+
+.growth-event-banner.is-ended {
+  background: linear-gradient(135deg, #64746a 0%, #55645a 100%);
+}
+
+.growth-event-banner__bonus {
+  margin: 10px 0 0;
+  color: rgba(255, 247, 239, 0.88);
+  font-weight: 600;
+}
+
+.growth-event-banner__cta {
+  margin-top: 12px;
+  min-height: 42px;
+  min-width: 164px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #0b6d4f;
+  font-weight: 700;
+}
+
+.growth-event-banner__cta:disabled {
+  background: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 247, 239, 0.74);
+}
+
+.home-play-stage-preview__glass,
+.home-play-stage-preview__foliage {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.home-play-stage-preview__glass {
+  background:
+    linear-gradient(90deg, transparent 0 10%, rgba(255, 255, 255, 0.22) 10% 11%, transparent 11% 32%, rgba(255, 255, 255, 0.16) 32% 33%, transparent 33% 66%, rgba(255, 255, 255, 0.16) 66% 67%, transparent 67% 90%, rgba(255, 255, 255, 0.22) 90% 91%, transparent 91% 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0 12%, transparent 12% 100%);
+}
+
+.home-play-stage-preview__foliage {
+  background:
+    radial-gradient(circle at 18% 86%, rgba(96, 131, 114, 0.18), transparent 24%),
+    radial-gradient(circle at 82% 78%, rgba(74, 110, 98, 0.16), transparent 22%),
+    radial-gradient(circle at 72% 28%, rgba(115, 153, 140, 0.12), transparent 18%);
+}
+
+.home-orb__core {
+  position: absolute;
+  inset: 34% 34%;
+  border-radius: 50%;
+  background: rgba(34, 84, 74, 0.7);
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.18);
+}
+
+.theme-preview--moonlit-greenhouse .home-orb--rose {
+  background: #d8b8bf;
+}
+
+.theme-preview--dewdrop-seed-set,
+.theme-preview--dewdrop-seed-set .home-orb__core,
+.play-cosmetic-preview__orb.theme-preview--dewdrop-seed-set,
+.home-orb--mint.theme-preview--dewdrop-seed-set {
+  position: relative;
+}
+
+.theme-preview--dewdrop-seed-set::after,
+.play-cosmetic-preview__orb.theme-preview--dewdrop-seed-set::after,
+.home-orb--mint.theme-preview--dewdrop-seed-set::after {
+  content: '';
+  position: absolute;
+  inset: 14% 18% auto auto;
+  width: 34%;
+  height: 28%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.42);
+  transform: rotate(-18deg);
+}
+
+.market-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.market-overview-card h2 {
+  margin: 8px 0;
+}
+
+.market-card__status-row,
+.market-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.market-card__actions {
+  margin-top: 4px;
+}
+
+.market-status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.84rem;
+}
+
+.market-status-pill--buy {
+  background: rgba(231, 246, 237, 0.95);
+  color: #0b6d4f;
+}
+
+.market-status-pill--equipped {
+  background: rgba(15, 122, 90, 0.16);
+  color: #0b6d4f;
+}
+
+.market-status-pill--owned {
+  background: rgba(255, 230, 184, 0.72);
+  color: #82520a;
+}
+
+.market-status-pill--locked,
+.market-status-pill--not-enough {
+  background: rgba(223, 214, 198, 0.9);
+  color: var(--muted);
+}
+
+.market-card__action--secondary {
+  background: rgba(255, 248, 239, 0.92);
+  color: var(--ink);
+  border: 1px solid rgba(120, 102, 79, 0.12);
+}
+
+.market-card__action--secondary.is-disabled {
+  color: var(--muted);
+  background: rgba(223, 214, 198, 0.68);
+}
+
+.market-card__preview.theme-preview--moonlit-greenhouse {
+  background:
+    linear-gradient(180deg, rgba(214, 231, 223, 0.94) 0%, rgba(236, 239, 230, 0.96) 100%),
+    radial-gradient(circle at 14% 85%, rgba(81, 118, 103, 0.16), transparent 20%),
+    radial-gradient(circle at 82% 32%, rgba(113, 145, 134, 0.14), transparent 18%);
+}
+
+.market-card__greenhouse-frame,
+.market-card__greenhouse-foliage,
+.market-card__greenhouse-stage {
+  position: absolute;
+}
+
+.market-card__greenhouse-frame {
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent 0 8%, rgba(255, 255, 255, 0.28) 8% 9%, transparent 9% 31%, rgba(255, 255, 255, 0.2) 31% 32%, transparent 32% 68%, rgba(255, 255, 255, 0.2) 68% 69%, transparent 69% 91%, rgba(255, 255, 255, 0.28) 91% 92%, transparent 92% 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0 14%, transparent 14% 100%);
+}
+
+.market-card__greenhouse-foliage {
+  inset: auto 0 0;
+  height: 62%;
+  background:
+    radial-gradient(circle at 16% 94%, rgba(79, 111, 97, 0.18), transparent 24%),
+    radial-gradient(circle at 82% 88%, rgba(79, 111, 97, 0.14), transparent 22%),
+    radial-gradient(circle at 68% 26%, rgba(126, 154, 144, 0.16), transparent 16%);
+}
+
+.market-card__greenhouse-stage {
+  left: 20px;
+  right: 20px;
+  bottom: 22px;
+  height: 54px;
+  border-radius: 20px;
+  background: rgba(247, 244, 236, 0.88);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.market-card__orb--dewdrop {
+  background: linear-gradient(180deg, rgba(187, 250, 240, 0.96) 0%, rgba(106, 204, 186, 0.9) 100%);
+}
+
+.market-card__seed-core {
+  position: absolute;
+  inset: 34% 34%;
+  border-radius: 50%;
+  background: rgba(35, 90, 80, 0.74);
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.2);
+}
+
+.play-live-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(290px, 0.72fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.play-live-grid__board {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.play-live-grid__board-topbar,
+.play-live-grid__board-badges,
+.play-mini-hud-card__row,
+.play-event-card__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.play-live-grid__board-badges {
+  flex-wrap: wrap;
+}
+
+.play-mini-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 248, 239, 0.92);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.play-mini-badge.is-active {
+  background: rgba(231, 246, 237, 0.95);
+  color: #0b6d4f;
+}
+
+.play-mini-badge.is-ended {
+  background: rgba(223, 214, 198, 0.9);
+  color: var(--muted);
+}
+
+.play-live-grid__board-stage {
+  min-height: 660px;
+}
+
+.play-live-grid__board .game-screen,
+.play-live-grid__board .game-frame {
+  min-height: 620px;
+}
+
+.play-live-grid__side {
+  display: grid;
+  gap: 18px;
+}
+
+.play-event-card.is-active {
+  background: linear-gradient(180deg, rgba(231, 246, 237, 0.95) 0%, rgba(244, 251, 245, 0.98) 100%);
+}
+
+.play-event-card.is-ended {
+  background: rgba(245, 239, 229, 0.92);
+}
+
+.play-cosmetic-preview {
+  position: relative;
+  min-height: 152px;
+  margin-top: 12px;
+  border-radius: 24px;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(255, 250, 244, 0.92) 0%, rgba(239, 231, 220, 0.9) 100%);
+}
+
+.play-cosmetic-preview__orb {
+  position: absolute;
+  width: 92px;
+  height: 92px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -42%);
+  border-radius: 50%;
+}
+
+.play-cosmetic-preview__core {
+  position: absolute;
+  inset: 34% 34%;
+  border-radius: 50%;
+  background: rgba(34, 84, 74, 0.74);
+}
+
+.play-layout--supporting {
+  display: grid;
+}
+
+.play-layout--supporting .play-layout__side {
+  grid-template-columns: 1fr;
+}
+
+.theme-preview--moonlit-greenhouse.play-live-grid__board,
+.theme-preview--moonlit-greenhouse .play-cosmetic-preview,
+.theme-preview--moonlit-greenhouse.market-card__preview {
+  background:
+    linear-gradient(180deg, rgba(217, 231, 223, 0.96) 0%, rgba(240, 241, 231, 0.98) 100%),
+    radial-gradient(circle at 14% 88%, rgba(71, 107, 94, 0.16), transparent 24%),
+    radial-gradient(circle at 84% 26%, rgba(98, 131, 120, 0.12), transparent 18%);
+}
+
+@media (max-width: 1180px) {
+  .market-overview-grid,
+  .play-live-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .play-live-grid__board-stage,
+  .play-live-grid__board .game-screen,
+  .play-live-grid__board .game-frame {
+    min-height: 540px;
+  }
+}
+
+@media (max-width: 720px) {
+  .growth-event-banner__timer,
+  .play-live-grid__board-topbar,
+  .play-mini-hud-card__row,
+  .play-event-card__row,
+  .market-card__status-row,
+  .market-card__actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .play-live-grid__board {
+    padding: 14px;
+  }
+
+  .play-live-grid__board-stage,
+  .play-live-grid__board .game-screen,
+  .play-live-grid__board .game-frame {
+    min-height: 420px;
+  }
+}

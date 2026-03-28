@@ -1,6 +1,13 @@
 import { DashboardShell } from '../components/DashboardShell'
 import { CTAButton } from '../components/CTAButton'
-import { getDailyCompletion, getLevelProgress, getOwnedSkins, type ProgressionState } from '../progression'
+import {
+  getActiveEventState,
+  getDailyCompletion,
+  getLevelProgress,
+  getOwnedCosmetics,
+  getTargetRewardAmount,
+  type ProgressionState,
+} from '../progression'
 import type { Route } from '../router'
 
 type GardenPageProps = {
@@ -40,8 +47,9 @@ function buildMilestones(progression: ProgressionState) {
 export function GardenPage({ navigate, progression }: GardenPageProps) {
   const level = getLevelProgress(progression)
   const daily = getDailyCompletion(progression)
-  const ownedSkins = getOwnedSkins(progression)
+  const ownedCosmetics = getOwnedCosmetics(progression)
   const milestones = buildMilestones(progression)
+  const eventState = getActiveEventState()
 
   return (
     <DashboardShell
@@ -65,8 +73,8 @@ export function GardenPage({ navigate, progression }: GardenPageProps) {
               <strong>{progression.totalXp}</strong>
             </div>
             <div>
-              <span className="hud-label">Owned Skins</span>
-              <strong>{ownedSkins.length}</strong>
+              <span className="hud-label">Owned Cosmetics</span>
+              <strong>{ownedCosmetics.length}</strong>
             </div>
             <div>
               <span className="hud-label">Daily Done</span>
@@ -79,12 +87,12 @@ export function GardenPage({ navigate, progression }: GardenPageProps) {
           <span className="section-title__eyebrow">Collection</span>
           <h2>Unlocked garden finishes</h2>
           <div className="garden-collection-grid">
-            {ownedSkins.map((skin) => (
-              <div className="garden-collection-chip" key={skin.id}>
-                <span className="garden-collection-chip__swatch" style={{ background: skin.accent, boxShadow: `0 10px 22px ${skin.glow}` }} />
+            {ownedCosmetics.map((item) => (
+              <div className="garden-collection-chip" key={item.id}>
+                <span className="garden-collection-chip__swatch" style={{ background: item.accent, boxShadow: `0 10px 22px ${item.glow}` }} />
                 <div>
-                  <strong>{skin.name}</strong>
-                  <p>{skin.preview}</p>
+                  <strong>{item.name}</strong>
+                  <p>{item.preview}</p>
                 </div>
               </div>
             ))}
@@ -118,6 +126,7 @@ export function GardenPage({ navigate, progression }: GardenPageProps) {
           <div className="daily-target-list">
             {progression.daily.targets.map((target) => {
               const percent = Math.min((target.progress / target.goal) * 100, 100)
+              const reward = getTargetRewardAmount(target.rewardEmeralds, eventState.dailyEmeraldMultiplier)
               return (
                 <div className="daily-target-list__item" key={target.id}>
                   <div className="daily-target-list__copy">
@@ -127,7 +136,7 @@ export function GardenPage({ navigate, progression }: GardenPageProps) {
                   <div className="garden-progress">
                     <div className="garden-progress__fill" style={{ width: Math.max(percent, target.progress > 0 ? 8 : 0) + '%' }} />
                   </div>
-                  <p>{target.description} {target.rewarded ? 'Reward paid.' : `Reward: ${target.rewardEmeralds} emeralds.`}</p>
+                  <p>{target.description} {target.rewarded ? 'Reward paid.' : `Reward: ${reward} emeralds${eventState.isActive ? ' during the current event.' : '.'}`}</p>
                 </div>
               )
             })}

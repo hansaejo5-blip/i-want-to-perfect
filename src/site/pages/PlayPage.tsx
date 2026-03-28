@@ -18,7 +18,7 @@ import { DashboardShell } from "../components/DashboardShell"
 import { SectionTitle } from "../components/SectionTitle"
 import { playPageCopy } from "../data/content"
 import { getAbsoluteSiteUrl, type Route } from "../router"
-import { getDailyCompletion, getEquippedSkin, getLevelProgress, type ProgressionRunSummary, type ProgressionState } from "../progression"
+import { getActiveEventState, getDailyCompletion, getEquippedBackground, getEquippedSkin, getLevelProgress, type ProgressionRunSummary, type ProgressionState } from "../progression"
 
 type PlayPageProps = {
   navigate: (route: Route) => void
@@ -582,6 +582,16 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
   const levelProgress = getLevelProgress(progression)
   const dailyProgress = getDailyCompletion(progression)
   const equippedSkin = getEquippedSkin(progression)
+  const equippedBackground = getEquippedBackground(progression)
+  const [eventState, setEventState] = useState(() => getActiveEventState())
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setEventState(getActiveEventState())
+    }, 1000)
+
+    return () => window.clearInterval(intervalId)
+  }, [])
 
   return (
     <DashboardShell
@@ -591,23 +601,103 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
       title="Play"
       description="Stay in the focused game view, but keep your level, dailies, emeralds, and equipped skin visible while you play."
     >
-      <section className="page-section growth-play-strip" aria-label="Growth summary">
-        <article className="card growth-play-card">
-          <span className="hud-label">Level</span>
-          <strong>Level {progression.level}</strong>
-          <p>{levelProgress.remainingXp} XP until the next bloom tier.</p>
-        </article>
-        <article className="card growth-play-card">
-          <span className="hud-label">Daily Targets</span>
-          <strong>{dailyProgress.completed} / {dailyProgress.total}</strong>
-          <p>{Math.round(dailyProgress.percent * 100)}% of today's board is complete.</p>
-        </article>
-        <article className="card growth-play-card">
-          <span className="hud-label">Emeralds</span>
-          <strong>{progression.emeralds}</strong>
-          <p>{equippedSkin.name} is currently equipped.</p>
-        </article>
+      <section className="page-section play-live-grid" aria-label="Live play view">
+        <div className={'play-live-grid__board card ' + equippedBackground.previewClass} ref={frameRef} id="game">
+          <div className="play-live-grid__board-topbar">
+            <div>
+              <span className="hud-label">Live Board</span>
+              <strong>{playPageCopy.heading}</strong>
+            </div>
+            <div className="play-live-grid__board-badges">
+              <span className="play-mini-badge">Lv.{progression.level}</span>
+              <span className="play-mini-badge">{progression.emeralds}◆</span>
+              <span className={'play-mini-badge ' + eventState.cardClassName}>{eventState.isActive ? 'XP +20%' : 'Standard rewards'}</span>
+            </div>
+          </div>
+          <div className="play-live-grid__board-stage">
+            <GameScreen
+              key={sessionKey}
+              isMuted={isMuted}
+              autoEnterFullscreenSignal={autoEnterFullscreenSignal}
+              onRunEnded={(summary) => {
+                onCompleteRun(summary)
+                void recordRun(summary).then((result) => {
+                  setLatestRun(result)
+                  setPlayerNameInput(result.playerDisplayName)
+                  setLeaderboard({
+                    leaderboard: result.leaderboard,
+                    totalRuns: result.totalRuns,
+                    playerBestScore: result.bestScore,
+                    playerDisplayName: result.playerDisplayName,
+                    updatedAt: new Date().toISOString(),
+                    source: result.source,
+                    storage: result.storage,
+                  })
+                  setIsLeaderboardReady(true)
+                })
+              }}
+            />
+          </div>
+        </div>
+        <div className="play-live-grid__side">
+          <section className={'card play-event-card ' + eventState.cardClassName}>
+            <span className="section-title__eyebrow">Current Event</span>
+            <h3>{eventState.event.title}</h3>
+            <p>{eventState.event.bonusSummary}</p>
+            <div className="play-event-card__row">
+              <strong>{eventState.countdownLabel}</strong>
+              <span>{eventState.isActive ? 'bonus window' : 'ended'}</span>
+            </div>
+          </section>
+
+          <section className="card play-mini-hud-card">
+            <div className="play-mini-hud-card__row">
+              <span className="hud-label">Level</span>
+              <strong>Level {progression.level}</strong>
+            </div>
+            <div className="garden-progress">
+              <div className="garden-progress__fill" style={{ width: Math.max(levelProgress.progress * 100, 6) + '%' }} />
+            </div>
+            <p>{levelProgress.remainingXp} XP until the next bloom tier. Daily board: {dailyProgress.completed} / {dailyProgress.total}.</p>
+          </section>
+
+          <section className="card play-cosmetic-card">
+            <span className="section-title__eyebrow">Equipped Look</span>
+            <h3>{equippedBackground.name}</h3>
+            <p>{equippedSkin.name} is active for this run.</p>
+            <div className={'play-cosmetic-preview ' + equippedBackground.previewClass}>
+              <div className={'play-cosmetic-preview__orb ' + equippedSkin.previewClass} style={{ background: equippedSkin.accent, boxShadow: '0 18px 30px ' + equippedSkin.glow }}>
+                <span className="play-cosmetic-preview__core" />
+              </div>
+            </div>
+          </section>
+
+          <section className="card control-card">
+            <SectionTitle eyebrow="Controls" title="Game controls" />
+            <div className="control-stack">
+              <CTAButton label="Restart" navigate={navigate} onClick={() => setSessionKey((value) => value + 1)} block />
+              <CTAButton label="Fullscreen" navigate={navigate} variant="secondary" onClick={() => void toggleFullscreen()} block />
+              <CTAButton label={isMuted ? "Unmute" : "Mute"} navigate={navigate} variant="ghost" onClick={() => setIsMuted((value) => !value)} block />
+            </div>
+            <div className="final-stage-preview" aria-label="Final stage preview">
+              <div className="final-stage-preview__copy">
+                <span className="hud-label">Final stage</span>
+                <strong>{finalStageBall.name}</strong>
+              </div>
+              <div className="final-stage-preview__art">
+                <FinalStagePreviewArt
+                  level={finalStageBall.level}
+                  size={136}
+                  silhouette
+                  className="final-stage-preview__canvas"
+                  label="Final stage silhouette preview"
+                />
+              </div>
+            </div>
+          </section>
+        </div>
       </section>
+
       <section className="page-section play-page__hero card">
         <SectionTitle eyebrow="Play" title={playPageCopy.heading} />
         <p>{playPageCopy.description}</p>
@@ -633,67 +723,13 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
 
       <section className="page-section play-toolbar">
         <div className="play-toolbar__actions">
-          <CTAButton
-            label={isMuted ? "Unmute" : "Mute"}
-            navigate={navigate}
-            variant="ghost"
-            onClick={() => setIsMuted((value) => !value)}
-          />
           <CTAButton label={instagramLabel} navigate={navigate} variant="ghost" onClick={() => void handleShare("instagram")} />
           <CTAButton label={shareLabel} navigate={navigate} variant="secondary" onClick={() => void handleShare()} />
         </div>
       </section>
 
-      <section className="page-section play-layout">
-        <div className="play-layout__game card" ref={frameRef} id="game">
-          <GameScreen
-            key={sessionKey}
-            isMuted={isMuted}
-            autoEnterFullscreenSignal={autoEnterFullscreenSignal}
-            onRunEnded={(summary) => {
-              onCompleteRun(summary)
-              void recordRun(summary).then((result) => {
-                setLatestRun(result)
-                setPlayerNameInput(result.playerDisplayName)
-                setLeaderboard({
-                  leaderboard: result.leaderboard,
-                  totalRuns: result.totalRuns,
-                  playerBestScore: result.bestScore,
-                  playerDisplayName: result.playerDisplayName,
-                  updatedAt: new Date().toISOString(),
-                  source: result.source,
-                  storage: result.storage,
-                })
-                setIsLeaderboardReady(true)
-              })
-            }}
-          />
-        </div>
+      <section className="page-section play-layout play-layout--supporting">
         <div className="play-layout__side">
-          <section className="card control-card">
-            <SectionTitle eyebrow="Controls" title="Game controls" />
-            <div className="control-stack">
-              <CTAButton label="Restart" navigate={navigate} onClick={() => setSessionKey((value) => value + 1)} block />
-              <CTAButton label="Fullscreen" navigate={navigate} variant="secondary" onClick={() => void toggleFullscreen()} block />
-            </div>
-            <div className="final-stage-preview" aria-label="Final stage preview">
-              <div className="final-stage-preview__copy">
-                <span className="hud-label">Final stage</span>
-                <strong>{finalStageBall.name}</strong>
-              </div>
-              <div className="final-stage-preview__art">
-                <FinalStagePreviewArt
-                  level={finalStageBall.level}
-                  size={136}
-                  silhouette
-                  className="final-stage-preview__canvas"
-                  label="Final stage silhouette preview"
-                />
-              </div>
-            </div>
-          </section>
-
-
           <section className="card prose-card">
             <SectionTitle eyebrow="How to Play" title="Short control guide" />
             <ul className="simple-list">

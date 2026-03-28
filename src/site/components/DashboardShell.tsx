@@ -15,6 +15,13 @@ type DashboardShellProps = {
   actions?: ReactNode
 }
 
+const SUPPORT_LINKS: Array<{ href: Route; label: string }> = [
+  { href: '/guide', label: 'Guide' },
+  { href: '/updates', label: 'Updates' },
+  { href: '/support', label: 'Support' },
+  { href: '/privacy', label: 'Privacy' },
+]
+
 function SidebarIcon({ route }: { route: string }) {
   switch (route) {
     case '/play':
@@ -74,6 +81,13 @@ export function DashboardShell({ route, navigate, progression, title, descriptio
             <span className="hud-label">Daily Bloom</span>
             <strong>{daily.completed} / {daily.total}</strong>
             <p>{skin.name} is currently equipped.</p>
+          </div>
+          <div className="garden-sidebar__link-row">
+            {SUPPORT_LINKS.map((item) => (
+              <AppLink key={item.href} href={item.href} navigate={navigate} className="garden-sidebar__text-link">
+                {item.label}
+              </AppLink>
+            ))}
           </div>
           <CTAButton label="Play Now" href="/play#game" navigate={navigate} size="large" block />
         </div>

@@ -10,7 +10,7 @@ export function GuidePage() {
           <h1>Perfect Drop Guide</h1>
           <p>
             This guide explains how to play Perfect Drop, the flower merge browser game. If you want to understand the rules,
-            controls, scoring rhythm, and safer long-run strategy before chasing leaderboard scores, start here.
+            controls, scoring rhythm, reward loop, and safer long-run strategy before chasing leaderboard scores, start here.
           </p>
 
           <SectionTitle eyebrow="Guide" title="Game introduction" />
@@ -36,6 +36,20 @@ export function GuidePage() {
 
           <SectionTitle title="Failure condition" />
           <p>{guideContent.failureCondition}</p>
+
+          <SectionTitle title="Scoring" />
+          <ul className="simple-list">
+            {guideContent.scoring.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+
+          <SectionTitle title="Reward structure" />
+          <ul className="simple-list">
+            {guideContent.rewards.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
 
           <SectionTitle title="Beginner tips" />
           <ul className="simple-list">
