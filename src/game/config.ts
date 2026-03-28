@@ -14,7 +14,7 @@ export const AIM_GUIDE_MAX_LENGTH = 140
 export const CANNON_MIN_ANGLE_DEG = -90
 export const CANNON_MAX_ANGLE_DEG = 90
 
-export const MIN_SHOT_POWER = 12.9
+export const MIN_SHOT_POWER = 9.6
 export const MAX_SHOT_POWER = 33.0
 export const MIN_DRAG_DISTANCE = 20
 export const MAX_DRAG_DISTANCE = 180

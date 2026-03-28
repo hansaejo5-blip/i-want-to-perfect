@@ -3713,3 +3713,305 @@ summary:focus-visible {
   object-fit: cover;
   object-position: center top;
 }
+@media (max-width: 960px) {
+  .garden-dashboard {
+    width: min(100%, calc(100% - 20px));
+    gap: 16px;
+    padding: 16px 0 28px;
+  }
+
+  .garden-dashboard__sidebar {
+    gap: 14px;
+    padding: 18px 14px;
+    border-radius: 24px;
+  }
+
+  .garden-sidebar__brand strong {
+    font-size: 1.45rem;
+  }
+
+  .garden-sidebar__brand p {
+    font-size: 0.92rem;
+  }
+
+  .garden-sidebar__level,
+  .garden-sidebar__mini-card,
+  .growth-play-card,
+  .hub-stat-card,
+  .hub-side-card,
+  .garden-level-card,
+  .garden-collection-card,
+  .garden-milestone-card,
+  .rankings-overview-card,
+  .podium-card,
+  .market-card {
+    padding: 18px;
+  }
+
+  .garden-sidebar__nav {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .garden-sidebar__nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .garden-sidebar__link {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 11px 14px;
+    white-space: nowrap;
+  }
+
+  .garden-sidebar__link:hover,
+  .garden-sidebar__link.is-active {
+    transform: none;
+  }
+
+  .garden-sidebar__footer {
+    grid-template-columns: 1fr;
+  }
+
+  .garden-sidebar__mini-card {
+    gap: 6px;
+  }
+
+  .garden-sidebar__link-row {
+    gap: 8px 12px;
+    justify-content: flex-start;
+  }
+
+  .garden-dashboard__topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 0 2px;
+  }
+
+  .garden-dashboard__topbar h1 {
+    font-size: clamp(1.8rem, 8vw, 2.4rem);
+    margin-bottom: 4px;
+  }
+
+  .garden-dashboard__topbar p {
+    font-size: 0.95rem;
+  }
+
+  .garden-topbar__actions {
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .garden-currency-pill {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: center;
+  }
+
+  .garden-topbar__icon-row {
+    flex: 0 0 auto;
+  }
+
+  .garden-dashboard__actions,
+  .dashboard-hero-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .dashboard-hero-actions .cta-button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .garden-dashboard__content {
+    gap: 18px;
+  }
+
+  .home-hero-card {
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .home-hero-visual {
+    min-height: 168px;
+    border-radius: 24px;
+  }
+
+  .home-hero-copy h2 {
+    font-size: clamp(2rem, 10vw, 2.8rem);
+  }
+
+  .home-mini-card,
+  .home-loop-card,
+  .home-progress-card,
+  .home-event-compact,
+  .home-reward-card,
+  .market-overview-card,
+  .market-affordability-card {
+    padding: 16px;
+  }
+
+  .home-loop-diagram__step span {
+    min-height: 58px;
+    border-radius: 18px;
+    font-size: 0.92rem;
+  }
+
+  .market-card {
+    gap: 16px;
+    border-radius: 24px;
+  }
+
+  .market-card__preview {
+    min-height: 180px;
+    border-radius: 20px;
+  }
+
+  .market-card__body {
+    gap: 10px;
+  }
+
+  .market-card__meta {
+    flex-wrap: wrap;
+    font-size: 0.88rem;
+  }
+
+  .market-card__status-row,
+  .market-card__actions {
+    align-items: stretch;
+  }
+
+  .market-card__actions .market-card__action {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .garden-dashboard {
+    width: min(100%, calc(100% - 14px));
+    gap: 12px;
+    padding: 12px 0 22px;
+  }
+
+  .garden-dashboard__sidebar {
+    padding: 14px 12px;
+    border-radius: 20px;
+  }
+
+  .garden-sidebar__brand {
+    gap: 2px;
+  }
+
+  .garden-sidebar__brand strong {
+    font-size: 1.22rem;
+  }
+
+  .garden-sidebar__eyebrow {
+    font-size: 0.7rem;
+  }
+
+  .garden-sidebar__level {
+    padding: 14px;
+  }
+
+  .garden-sidebar__level-copy p,
+  .garden-sidebar__mini-card p {
+    font-size: 0.88rem;
+  }
+
+  .garden-dashboard__topbar p {
+    display: none;
+  }
+
+  .garden-topbar__actions {
+    gap: 10px;
+  }
+
+  .garden-topbar__icon-row {
+    gap: 8px;
+  }
+
+  .garden-icon-button,
+  .garden-profile-pill {
+    min-width: 42px;
+    min-height: 42px;
+  }
+
+  .dashboard-hero-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .hub-home-grid__main,
+  .hub-home-grid__side,
+  .home-dashboard-grid__main,
+  .home-dashboard-grid__side {
+    gap: 14px;
+  }
+
+  .home-hero-visual {
+    min-height: 148px;
+  }
+
+  .home-hero-copy p {
+    font-size: 0.96rem;
+  }
+
+  .home-loop-diagram {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .home-loop-diagram__step {
+    gap: 8px;
+  }
+
+  .home-event-compact__chips span,
+  .home-reward-card__footer span,
+  .play-mini-badge,
+  .market-status-pill {
+    font-size: 0.78rem;
+  }
+
+  .market-overview-grid,
+  .market-affordability-grid,
+  .market-grid {
+    gap: 14px;
+  }
+
+  .market-card__preview {
+    min-height: 160px;
+  }
+
+  .market-card__preview.theme-preview--dewdrop-seed-set .market-card__orb--dewdrop,
+  .market-card__orb {
+    width: 84px;
+    height: 92px;
+    top: 34px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .market-card__preview.theme-preview--moonlit-greenhouse .market-card__greenhouse-stage {
+    left: 14px;
+    right: 14px;
+    bottom: 16px;
+    height: 44px;
+  }
+
+  .market-card__header {
+    gap: 10px;
+  }
+
+  .market-card__header h3 {
+    font-size: 1.2rem;
+  }
+
+  .market-card__actions {
+    gap: 8px;
+  }
+}
