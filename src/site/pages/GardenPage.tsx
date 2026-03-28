@@ -18,30 +18,10 @@ type GardenPageProps = {
 
 function buildMilestones(progression: ProgressionState) {
   return [
-    {
-      label: 'Run Keeper',
-      description: 'Play 12 runs to settle into the garden loop.',
-      progress: progression.stats.totalRuns,
-      goal: 12,
-    },
-    {
-      label: 'Merge Gardener',
-      description: 'Reach 60 total merges across all sessions.',
-      progress: progression.stats.totalMerges,
-      goal: 60,
-    },
-    {
-      label: 'High Bloom',
-      description: 'Post a best score of 800 or higher.',
-      progress: progression.stats.bestScore,
-      goal: 800,
-    },
-    {
-      label: 'Combo Tender',
-      description: 'Hit a combo chain of 6 in one run.',
-      progress: progression.stats.bestCombo,
-      goal: 6,
-    },
+    { label: 'Run Keeper', icon: '◎', progress: progression.stats.totalRuns, goal: 12 },
+    { label: 'Merge Gardener', icon: '◌', progress: progression.stats.totalMerges, goal: 60 },
+    { label: 'High Bloom', icon: '✦', progress: progression.stats.bestScore, goal: 800 },
+    { label: 'Combo Tender', icon: '×', progress: progression.stats.bestCombo, goal: 6 },
   ]
 }
 
@@ -59,47 +39,47 @@ export function GardenPage({ navigate, progression }: GardenPageProps) {
       navigate={navigate}
       progression={progression}
       title="Garden"
-      description="Your calmer progress room: level pace, unlocked cosmetics, daily cultivation, and long-term milestones all in one place."
+      description="Progress room"
     >
       <section className="garden-page-grid">
         <article className="card garden-level-card">
           <span className="section-title__eyebrow">Growth Track</span>
-          <h2>Level {progression.level} keeper path</h2>
+          <h2>Level {progression.level}</h2>
           <div className="garden-progress garden-progress--large">
             <div className="garden-progress__fill" style={{ width: Math.max(level.progress * 100, 6) + '%' }} />
           </div>
-          <p>{level.xpIntoLevel} XP banked in this tier, with {level.remainingXp} XP remaining before the next unlock lane opens.</p>
-          <div className="garden-level-card__stats">
+          <div className="garden-level-card__stats garden-level-card__stats--visual">
             <div>
-              <span className="hud-label">Total XP</span>
-              <strong>{progression.totalXp}</strong>
+              <span className="hud-label">XP</span>
+              <strong>{level.remainingXp}</strong>
             </div>
             <div>
-              <span className="hud-label">Owned Cosmetics</span>
+              <span className="hud-label">Owned</span>
               <strong>{ownedCosmetics.length}</strong>
             </div>
             <div>
-              <span className="hud-label">Daily Done</span>
+              <span className="hud-label">Daily</span>
               <strong>{daily.completed} / {daily.total}</strong>
             </div>
           </div>
         </article>
 
         <article className="card garden-collection-card">
-          <span className="section-title__eyebrow">Collection</span>
-          <h2>Unlocked garden finishes</h2>
-          <div className="garden-collection-grid">
+          <div className="garden-collection-card__top">
+            <span className="section-title__eyebrow">Collection</span>
+            <CTAButton label="Market" href="/market" navigate={navigate} variant="secondary" />
+          </div>
+          <div className="garden-collection-grid garden-collection-grid--visual">
             {ownedCosmetics.map((item) => (
               <div className="garden-collection-chip" key={item.id}>
                 <span className="garden-collection-chip__swatch" style={{ background: item.accent, boxShadow: `0 10px 22px ${item.glow}` }} />
                 <div>
                   <strong>{item.name}</strong>
-                  <p>{item.preview}</p>
+                  <p>{item.kind === 'skin' ? 'Skin' : 'Board'}</p>
                 </div>
               </div>
             ))}
           </div>
-          <CTAButton label="Visit Market" href="/market" navigate={navigate} variant="secondary" />
         </article>
       </section>
 
@@ -109,9 +89,8 @@ export function GardenPage({ navigate, progression }: GardenPageProps) {
           const completed = milestone.progress >= milestone.goal
           return (
             <article className={completed ? 'card garden-milestone-card is-complete' : 'card garden-milestone-card'} key={milestone.label}>
-              <span className="section-title__eyebrow">{completed ? 'Complete' : 'Growing'}</span>
+              <span className="garden-milestone-card__icon">{milestone.icon}</span>
               <h3>{milestone.label}</h3>
-              <p>{milestone.description}</p>
               <div className="garden-progress">
                 <div className="garden-progress__fill" style={{ width: Math.max(percent, milestone.progress > 0 ? 8 : 0) + '%' }} />
               </div>
@@ -122,11 +101,12 @@ export function GardenPage({ navigate, progression }: GardenPageProps) {
       </section>
 
       <section className="garden-daily-board">
-        <article className="card garden-daily-board__card">
-          <span className="section-title__eyebrow">Daily Cultivation</span>
-          <h2>Targets that feed the emerald loop</h2>
-          <p>Refresh in {dailyRefreshLabel}. Each day rotates the score, merge, combo, and run pressure so the payout path stays useful.</p>
-          <div className="daily-target-list">
+        <article className="card garden-daily-board__card garden-daily-board__card--visual">
+          <div className="garden-daily-board__top">
+            <span className="section-title__eyebrow">Daily Cultivation</span>
+            <strong>{dailyRefreshLabel}</strong>
+          </div>
+          <div className="daily-target-list daily-target-list--visual">
             {progression.daily.targets.map((target) => {
               const percent = Math.min((target.progress / target.goal) * 100, 100)
               const reward = getTargetRewardAmount(target.rewardEmeralds, eventState.dailyEmeraldMultiplier)
@@ -134,12 +114,15 @@ export function GardenPage({ navigate, progression }: GardenPageProps) {
                 <div className="daily-target-list__item" key={target.id}>
                   <div className="daily-target-list__copy">
                     <strong>{target.title}</strong>
-                    <span>{target.progress} / {target.goal}</span>
+                    <span>{reward}◆</span>
                   </div>
                   <div className="garden-progress">
                     <div className="garden-progress__fill" style={{ width: Math.max(percent, target.progress > 0 ? 8 : 0) + '%' }} />
                   </div>
-                  <p>{target.description} {target.rewarded ? 'Reward paid.' : `Reward: ${reward} emeralds${eventState.isActive ? ' during the current event.' : '.'}`}</p>
+                  <div className="daily-target-list__meta">
+                    <span>{target.progress} / {target.goal}</span>
+                    <span>{target.rewarded ? 'Paid' : target.completed ? 'Claimed' : 'Live'}</span>
+                  </div>
                 </div>
               )
             })}

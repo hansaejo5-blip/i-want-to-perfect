@@ -17,7 +17,13 @@ type HomePageProps = {
   progression: ProgressionState
 }
 
-const LOOP_STEPS = ['Play', 'Score', 'XP', 'Rewards', 'Market']
+const LOOP_STEPS = [
+  { label: 'Play', icon: '◎' },
+  { label: 'Score', icon: '▲' },
+  { label: 'XP', icon: '◌' },
+  { label: 'Reward', icon: '◆' },
+  { label: 'Market', icon: '◔' },
+]
 
 export function HomePage({ navigate, progression }: HomePageProps) {
   const level = getLevelProgress(progression)
@@ -63,23 +69,22 @@ export function HomePage({ navigate, progression }: HomePageProps) {
 
             <div className="home-hero-copy">
               <h2>Perfect Drop</h2>
-              <p>Level up. Clear dailies. Save emeralds.</p>
             </div>
 
             <div className="home-hero-metrics">
               <div className="card home-mini-card">
-                <span className="section-title__eyebrow">Status</span>
-                <strong>Level {progression.level}</strong>
+                <span className="home-metric-icon">◌</span>
+                <strong>Lv.{progression.level}</strong>
                 <span>{level.remainingXp} XP</span>
               </div>
               <div className="card home-mini-card home-mini-card--accent">
-                <span className="section-title__eyebrow">Daily Target</span>
+                <span className="home-metric-icon">◆</span>
                 <strong>{Math.round(daily.percent * 100)}%</strong>
                 <span>{daily.completed} / {daily.total}</span>
               </div>
               <div className="card home-mini-card">
-                <span className="section-title__eyebrow">Active Event</span>
-                <strong>{eventState.isActive ? 'Double Bloom' : 'Standard'}</strong>
+                <span className="home-metric-icon">◔</span>
+                <strong>{eventState.isActive ? 'Boost' : 'Standard'}</strong>
                 <span>{eventState.isActive ? eventState.countdownLabel : 'Ended'}</span>
               </div>
             </div>
@@ -87,11 +92,13 @@ export function HomePage({ navigate, progression }: HomePageProps) {
 
           <section className="home-visual-grid">
             <article className="card home-loop-card">
-              <span className="section-title__eyebrow">Growth Loop</span>
               <div className="home-loop-diagram">
                 {LOOP_STEPS.map((step, index) => (
-                  <div className="home-loop-diagram__step" key={step}>
-                    <span>{step}</span>
+                  <div className="home-loop-diagram__step" key={step.label}>
+                    <span className="home-loop-diagram__chip">
+                      <b>{step.icon}</b>
+                      <small>{step.label}</small>
+                    </span>
                     {index < LOOP_STEPS.length - 1 ? <i aria-hidden="true">→</i> : null}
                   </div>
                 ))}
@@ -99,18 +106,17 @@ export function HomePage({ navigate, progression }: HomePageProps) {
             </article>
 
             <article className="card home-progress-card">
-              <span className="section-title__eyebrow">Progress</span>
-              <div className="home-progress-card__row">
+              <div className="home-progress-card__row home-progress-card__row--visual">
                 <strong>{level.xpIntoLevel}</strong>
                 <span>/ {level.nextLevelXp}</span>
               </div>
               <div className="garden-progress garden-progress--large">
                 <div className="garden-progress__fill" style={{ width: Math.max(level.progress * 100, 6) + '%' }} />
               </div>
-              <div className="home-progress-card__stats">
-                <span>{progression.emeralds}◆</span>
-                <span>{progression.stats.bestScore} pts</span>
-                <span>x{Math.max(progression.stats.bestCombo, 1)}</span>
+              <div className="home-progress-card__stats home-progress-card__stats--visual">
+                <span><b>◆</b>{progression.emeralds}</span>
+                <span><b>◎</b>{progression.stats.bestScore}</span>
+                <span><b>×</b>{Math.max(progression.stats.bestCombo, 1)}</span>
               </div>
             </article>
           </section>
@@ -141,6 +147,10 @@ export function HomePage({ navigate, progression }: HomePageProps) {
                     <div className="garden-progress">
                       <div className="garden-progress__fill" style={{ width: Math.max(percent, target.progress > 0 ? 8 : 0) + '%' }} />
                     </div>
+                    <div className="home-daily-stack__meta">
+                      <span>{target.progress} / {target.goal}</span>
+                      <span>{target.completed ? 'Done' : 'Live'}</span>
+                    </div>
                   </div>
                 )
               })}
@@ -149,24 +159,23 @@ export function HomePage({ navigate, progression }: HomePageProps) {
 
           <article className={`card home-event-compact ${eventState.cardClassName}`}>
             <span className="section-title__eyebrow">Event</span>
-            <strong>{eventState.event.title}</strong>
+            <strong>{eventState.isActive ? 'XP +20%' : 'Standard'}</strong>
             <div className="home-event-compact__chips">
-              <span>XP +20%</span>
-              <span>Daily +10%</span>
+              <span>◆ +10%</span>
+              <span>{eventState.countdownLabel}</span>
             </div>
-            <strong>{eventState.countdownLabel}</strong>
           </article>
 
           <article className="card home-reward-card">
             <span className="section-title__eyebrow">Reward Focus</span>
             <strong>{topRewardTarget ? topRewardTarget.title : 'Daily Board'}</strong>
             <div className="home-reward-card__stats">
-              <span>{recentRewards?.xpGained ?? 0} XP</span>
-              <span>{recentRewards?.emeraldsGained ?? 0}◆</span>
+              <span><b>XP</b>{recentRewards?.xpGained ?? 0}</span>
+              <span><b>◆</b>{recentRewards?.emeraldsGained ?? 0}</span>
             </div>
             <div className="home-reward-card__footer">
-              <span>Skin ready</span>
-              <span>Board ready</span>
+              <span>Skin</span>
+              <span>Board</span>
             </div>
           </article>
         </div>

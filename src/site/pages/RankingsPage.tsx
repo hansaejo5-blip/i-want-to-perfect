@@ -11,10 +11,10 @@ type RankingsPageProps = {
 
 type LeaderboardScope = 'daily' | 'weekly' | 'all'
 
-const scopeOptions: Array<{ key: LeaderboardScope; label: string; description: string }> = [
-  { key: 'daily', label: 'Daily', description: 'Today\'s best runs, reset at midnight UTC.' },
-  { key: 'weekly', label: 'Weekly', description: 'Best runs from the last seven days.' },
-  { key: 'all', label: 'All Time', description: 'The strongest runs across the full history.' },
+const scopeOptions: Array<{ key: LeaderboardScope; label: string; icon: string }> = [
+  { key: 'daily', label: 'Daily', icon: '◌' },
+  { key: 'weekly', label: 'Weekly', icon: '◔' },
+  { key: 'all', label: 'All Time', icon: '✦' },
 ]
 
 export function RankingsPage({ navigate, progression }: RankingsPageProps) {
@@ -41,13 +41,12 @@ export function RankingsPage({ navigate, progression }: RankingsPageProps) {
       navigate={navigate}
       progression={progression}
       title="Rankings"
-      description="A cleaner look at your live board position, current competition window, and how each run converts into rank pressure."
+      description="Board view"
     >
-      <section className="rankings-page-grid">
-        <article className="card rankings-overview-card">
-          <span className="section-title__eyebrow">Personal Record</span>
+      <section className="rankings-page-grid rankings-page-grid--visual">
+        <article className="card rankings-overview-card rankings-overview-card--visual">
+          <span className="rankings-overview-card__icon">◎</span>
           <h2>{progression.stats.bestScore}</h2>
-          <p>Your best bloom score so far, supported by {progression.stats.totalRuns} total runs and {progression.stats.totalMerges} lifetime merges.</p>
           <div className="rankings-overview-card__stats">
             <div>
               <span className="hud-label">Runs</span>
@@ -58,16 +57,15 @@ export function RankingsPage({ navigate, progression }: RankingsPageProps) {
               <strong>{progression.stats.totalMerges}</strong>
             </div>
             <div>
-              <span className="hud-label">Best Combo</span>
+              <span className="hud-label">Combo</span>
               <strong>x{progression.stats.bestCombo}</strong>
             </div>
           </div>
         </article>
 
-        <article className="card rankings-overview-card rankings-overview-card--soft">
-          <span className="section-title__eyebrow">Board Status</span>
-          <h2>{personalEntry ? `#${personalIndex + 1}` : 'Unranked'}</h2>
-          <p>{personalEntry ? `Your current ${activeScopeCopy.label.toLowerCase()} position is live on the shared board.` : `Play one more run to stamp a ${activeScopeCopy.label.toLowerCase()} position.`}</p>
+        <article className="card rankings-overview-card rankings-overview-card--soft rankings-overview-card--visual">
+          <span className="rankings-overview-card__icon">{activeScopeCopy.icon}</span>
+          <h2>{personalEntry ? '#' + String(personalIndex + 1) : 'Unranked'}</h2>
           <div className="rankings-overview-card__stats">
             <div>
               <span className="hud-label">Entries</span>
@@ -94,38 +92,23 @@ export function RankingsPage({ navigate, progression }: RankingsPageProps) {
               type="button"
               onClick={() => setActiveScope(option.key)}
             >
-              {option.label}
+              {option.icon} {option.label}
             </button>
           ))}
         </div>
-        <article className="card rankings-table-card rankings-table-card--scoped">
-          <div className="rankings-table-card__header">
-            <div>
-              <span className="section-title__eyebrow">{activeScopeCopy.label} Board</span>
-              <h2>{activeScopeCopy.description}</h2>
-            </div>
-          </div>
-        </article>
       </section>
 
-      <section className="rankings-podium-grid">
+      <section className="rankings-podium-grid rankings-podium-grid--visual">
         {podium.map((entry, index) => (
           <article className={index === 0 ? 'card podium-card is-first' : 'card podium-card'} key={entry.playerId + entry.recordedAt}>
-            <span className="section-title__eyebrow">Top {index + 1}</span>
+            <span className="section-title__eyebrow">#{index + 1}</span>
             <h3>{entry.displayName || 'Anonymous Bloom'}</h3>
             <strong>{entry.score}</strong>
-            <p>{entry.shotCount} shots used in that run.</p>
           </article>
         ))}
       </section>
 
       <section className="card rankings-table-card">
-        <div className="rankings-table-card__header">
-          <div>
-            <span className="section-title__eyebrow">Top Keepers</span>
-            <h2>{activeScopeCopy.label} board snapshot</h2>
-          </div>
-        </div>
         <div className="rankings-table">
           {entries.slice(0, 12).map((entry, index) => (
             <div className={entry.playerId === playerId ? 'rankings-table__row is-player' : 'rankings-table__row'} key={entry.playerId + entry.recordedAt}>
@@ -137,7 +120,7 @@ export function RankingsPage({ navigate, progression }: RankingsPageProps) {
               <strong>{entry.score}</strong>
             </div>
           ))}
-          {entries.length === 0 ? <p className="leaderboard-empty">{isLoading ? 'Loading leaderboard...' : 'No runs have been recorded in this window yet.'}</p> : null}
+          {entries.length === 0 ? <p className="leaderboard-empty">{isLoading ? 'Loading leaderboard...' : 'No runs yet.'}</p> : null}
         </div>
       </section>
     </DashboardShell>

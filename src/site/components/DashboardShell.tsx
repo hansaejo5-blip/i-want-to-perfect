@@ -37,7 +37,7 @@ function SidebarIcon({ route }: { route: string }) {
   }
 }
 
-export function DashboardShell({ route, navigate, progression, title, description, actions, children }: DashboardShellProps) {
+export function DashboardShell({ route, navigate, progression, title, actions, children }: DashboardShellProps) {
   const level = getLevelProgress(progression)
   const daily = getDailyCompletion(progression)
   const dailyRefreshLabel = getDailyRefreshCountdown()
@@ -48,17 +48,20 @@ export function DashboardShell({ route, navigate, progression, title, descriptio
         <div className="garden-sidebar__brand">
           <span className="garden-sidebar__eyebrow">Velvet Garden</span>
           <strong>{SITE_NAME}</strong>
-          <p>Level {progression.level} Keeper</p>
+          <p>Lv.{progression.level}</p>
         </div>
 
         <div className="garden-sidebar__level card">
           <div className="garden-sidebar__level-copy">
-            <span className="hud-label">Level Progress</span>
-            <strong>Level {progression.level}</strong>
-            <p>{level.remainingXp} XP until the next bloom tier.</p>
+            <span className="hud-label">Level</span>
+            <strong>Lv.{progression.level}</strong>
           </div>
           <div className="garden-progress">
             <div className="garden-progress__fill" style={{ width: Math.max(level.progress * 100, 6) + '%' }} />
+          </div>
+          <div className="garden-sidebar__level-stats">
+            <span>{level.remainingXp} XP</span>
+            <span>{progression.emeralds}◆</span>
           </div>
         </div>
 
@@ -77,10 +80,13 @@ export function DashboardShell({ route, navigate, progression, title, descriptio
         </nav>
 
         <div className="garden-sidebar__footer">
-          <div className="garden-sidebar__mini-card card">
-            <span className="hud-label">Daily Bloom</span>
+          <div className="garden-sidebar__mini-card card garden-sidebar__mini-card--visual">
+            <span className="hud-label">Daily</span>
             <strong>{daily.completed} / {daily.total}</strong>
-            <p>Refresh in {dailyRefreshLabel}. The board rotates automatically each day.</p>
+            <div className="garden-sidebar__mini-stats">
+              <span>{dailyRefreshLabel}</span>
+              <span>◆ loop</span>
+            </div>
           </div>
           <div className="garden-sidebar__link-row">
             {SUPPORT_LINKS.map((item) => (
@@ -98,7 +104,6 @@ export function DashboardShell({ route, navigate, progression, title, descriptio
           <div>
             <p className="section-title__eyebrow">Garden Hub</p>
             <h1>{title}</h1>
-            <p>{description}</p>
           </div>
           <div className="garden-topbar__actions">
             <div className="garden-currency-pill">

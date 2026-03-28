@@ -4109,3 +4109,150 @@ summary:focus-visible {
     gap: 8px;
   }
 }
+.home-metric-icon,
+.market-overview-card__icon,
+.rankings-overview-card__icon,
+.garden-milestone-card__icon {
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: rgba(255, 252, 247, 0.92);
+  box-shadow: var(--shadow-soft);
+  color: #0f7a5a;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.home-mini-card,
+.market-overview-card--visual,
+.rankings-overview-card--visual,
+.garden-milestone-card {
+  align-content: start;
+}
+
+.home-mini-card {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 12px;
+}
+
+.home-mini-card strong,
+.home-mini-card span:last-child {
+  grid-column: 2;
+}
+
+.home-loop-diagram__chip {
+  width: 100%;
+  min-height: 74px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 6px;
+}
+
+.home-loop-diagram__chip b {
+  font-size: 1.1rem;
+  color: #0f7a5a;
+}
+
+.home-loop-diagram__chip small {
+  font-size: 0.84rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.home-progress-card__stats--visual span,
+.home-reward-card__stats span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.home-daily-stack__meta,
+.daily-target-list__meta,
+.garden-sidebar__level-stats,
+.garden-sidebar__mini-stats,
+.garden-daily-board__top,
+.garden-collection-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.home-daily-stack__meta,
+.daily-target-list__meta,
+.garden-sidebar__level-stats,
+.garden-sidebar__mini-stats {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.market-overview-grid--visual {
+  align-items: stretch;
+}
+
+.market-overview-card--visual,
+.rankings-overview-card--visual {
+  display: grid;
+  gap: 10px;
+}
+
+.market-overview-card--visual h2,
+.rankings-overview-card--visual h2 {
+  margin: 0;
+}
+
+.garden-level-card__stats--visual,
+.rankings-page-grid--visual {
+  align-items: stretch;
+}
+
+.garden-collection-grid--visual {
+  margin-top: 16px;
+}
+
+.garden-milestone-card__icon {
+  margin-bottom: 10px;
+}
+
+.rankings-podium-grid--visual .podium-card {
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .home-mini-card {
+    grid-template-columns: 1fr;
+    row-gap: 8px;
+  }
+
+  .home-mini-card strong,
+  .home-mini-card span:last-child {
+    grid-column: auto;
+  }
+
+  .home-metric-icon,
+  .market-overview-card__icon,
+  .rankings-overview-card__icon,
+  .garden-milestone-card__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 14px;
+  }
+
+  .home-loop-diagram__chip {
+    min-height: 60px;
+  }
+
+  .garden-sidebar__mini-stats,
+  .garden-sidebar__level-stats,
+  .daily-target-list__meta,
+  .home-daily-stack__meta {
+    flex-wrap: wrap;
+  }
+}
