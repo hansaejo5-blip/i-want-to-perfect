@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 const distDir = resolve(process.cwd(), 'dist')
@@ -55,3 +55,5 @@ for (const routePath of routePaths) {
   await mkdir(routeDir, { recursive: true })
   await writeFile(resolve(routeDir, 'index.html'), redirectHtml)
 }
+
+await copyFile(resolve(process.cwd(), 'public', 'ads.txt'), resolve(distDir, 'ads.txt'))
