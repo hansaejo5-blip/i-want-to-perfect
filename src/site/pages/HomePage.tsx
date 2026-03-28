@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
+import heroShot from '../../assets/hero-shot.png'
 import { CTAButton } from '../components/CTAButton'
 import { DashboardShell } from '../components/DashboardShell'
 import {
   getActiveEventState,
   getDailyCompletion,
   getDailyRefreshCountdown,
-  getEquippedBackground,
-  getEquippedSkin,
   getLevelProgress,
   getTargetRewardAmount,
   type ProgressionState,
@@ -23,8 +22,6 @@ const LOOP_STEPS = ['Play', 'Score', 'XP', 'Rewards', 'Market']
 export function HomePage({ navigate, progression }: HomePageProps) {
   const level = getLevelProgress(progression)
   const daily = getDailyCompletion(progression)
-  const skin = getEquippedSkin(progression)
-  const background = getEquippedBackground(progression)
   const recentRewards = progression.recentRewards
   const featuredTargets = progression.daily.targets
   const topRewardTarget = useMemo(
@@ -60,14 +57,8 @@ export function HomePage({ navigate, progression }: HomePageProps) {
       <section className="hub-home-grid home-dashboard-grid">
         <div className="hub-home-grid__main home-dashboard-grid__main">
           <article className="card home-hero-card">
-            <div className={`home-hero-visual ${background.previewClass}`}>
-              <div className="home-hero-visual__path" />
-              <div className="home-hero-visual__bloom home-hero-visual__bloom--left" />
-              <div className="home-hero-visual__bloom home-hero-visual__bloom--right" />
-              <div className="home-hero-visual__glass" />
-              <div className={`home-hero-visual__drop ${skin.previewClass}`} style={{ background: skin.accent, boxShadow: `0 22px 34px ${skin.glow}` }}>
-                <span className="home-orb__core" />
-              </div>
+            <div className="home-hero-visual">
+              <img className="home-hero-visual__image" src={heroShot} alt="Perfect Drop gameplay board" />
             </div>
 
             <div className="home-hero-copy">
@@ -174,8 +165,8 @@ export function HomePage({ navigate, progression }: HomePageProps) {
               <span>{recentRewards?.emeraldsGained ?? 0}◆</span>
             </div>
             <div className="home-reward-card__footer">
-              <span>{skin.name}</span>
-              <span>{background.name}</span>
+              <span>Skin ready</span>
+              <span>Board ready</span>
             </div>
           </article>
         </div>

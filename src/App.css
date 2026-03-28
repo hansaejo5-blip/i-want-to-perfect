@@ -3517,68 +3517,7 @@ summary:focus-visible {
     radial-gradient(circle at 86% 38%, rgba(127, 182, 136, 0.18), transparent 20%);
 }
 
-.home-hero-visual__path,
-.home-hero-visual__bloom,
-.home-hero-visual__glass,
-.home-hero-visual__drop {
-  position: absolute;
-}
-
-.home-hero-visual__path {
-  left: 50%;
-  bottom: -12px;
-  width: 132px;
-  height: 242px;
-  transform: translateX(-50%);
-  border-radius: 80px 80px 18px 18px;
-  background: linear-gradient(180deg, rgba(255, 251, 239, 0.96) 0%, rgba(247, 237, 210, 0.98) 100%);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
-}
-
-.home-hero-visual__bloom {
-  width: 170px;
-  height: 170px;
-  border-radius: 40px 40px 70px 70px;
-  filter: blur(0.2px);
-}
-
-.home-hero-visual__bloom--left {
-  left: -18px;
-  bottom: -8px;
-  background:
-    radial-gradient(circle at 28% 56%, rgba(243, 197, 82, 0.88), transparent 24%),
-    radial-gradient(circle at 64% 62%, rgba(241, 232, 255, 0.94), transparent 28%),
-    radial-gradient(circle at 46% 18%, rgba(82, 124, 67, 0.92), transparent 48%),
-    linear-gradient(180deg, rgba(46, 90, 44, 0.82) 0%, rgba(88, 126, 75, 0.56) 100%);
-}
-
-.home-hero-visual__bloom--right {
-  right: -12px;
-  bottom: -10px;
-  background:
-    radial-gradient(circle at 22% 64%, rgba(249, 202, 220, 0.95), transparent 28%),
-    radial-gradient(circle at 66% 52%, rgba(255, 255, 255, 0.92), transparent 30%),
-    radial-gradient(circle at 54% 14%, rgba(92, 135, 68, 0.94), transparent 46%),
-    linear-gradient(180deg, rgba(57, 104, 47, 0.84) 0%, rgba(104, 141, 86, 0.54) 100%);
-}
-
-.home-hero-visual__glass {
-  inset: 0;
-  background:
-    linear-gradient(90deg, transparent 0 14%, rgba(255, 255, 255, 0.2) 14% 15%, transparent 15% 84%, rgba(255, 255, 255, 0.18) 84% 85%, transparent 85% 100%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0 18%, transparent 18% 100%);
-}
-
-.home-hero-visual__drop {
-  width: 92px;
-  height: 92px;
-  left: 50%;
-  bottom: 34px;
-  transform: translateX(-50%);
-  border-radius: 50%;
-}
-
-.home-hero-copy {
+ .home-hero-copy {
   text-align: center;
 }
 
@@ -3765,4 +3704,12 @@ summary:focus-visible {
   .home-reward-card__footer {
     flex-wrap: wrap;
   }
+}
+
+.home-hero-visual__image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center top;
 }
