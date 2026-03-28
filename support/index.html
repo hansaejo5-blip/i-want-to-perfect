@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0; url=https://i-want-to-perfect.vercel.app" />
+    <meta name="robots" content="noindex" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redirecting to Perfect Drop</title>
+    <script>
+      (function () {
+        var siteOrigin = "https://i-want-to-perfect.vercel.app";
+        var repoBase = "/i-want-to-perfect";
+        var pathname = window.location.pathname;
+        var normalizedPath = pathname.indexOf(repoBase) === 0 ? pathname.slice(repoBase.length) || '/' : pathname;
+        var target = siteOrigin + normalizedPath + window.location.search + window.location.hash;
+        window.location.replace(target);
+      })();
+    </script>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        font-family: Arial, sans-serif;
+        background: #f6f2db;
+        color: #1f2a1f;
+      }
+      a {
+        color: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <p>Redirecting to <a href="https://i-want-to-perfect.vercel.app">Perfect Drop</a>...</p>
+  </body>
+</html>
