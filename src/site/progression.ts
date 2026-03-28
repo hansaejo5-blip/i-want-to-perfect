@@ -2,11 +2,12 @@ import type { RunEndedSummary } from '../game/stats'
 
 const PROGRESSION_STORAGE_KEY = 'blip-perfect-growth-v1'
 const CURRENT_DATE_KEY = () => new Date().toISOString().slice(0, 10)
-const PROGRESSION_SCHEMA_VERSION = 2
+const PROGRESSION_SCHEMA_VERSION = 3
 
 export type DailyTargetKind = 'runs' | 'score' | 'merges' | 'combo'
 export type MarketItemTier = 'starter' | 'rare' | 'prestige'
 export type MarketItemKind = 'background' | 'skin'
+export type SkinRenderVariant = 'classic' | 'dewdrop'
 
 export interface ProgressionRunSummary extends RunEndedSummary {
   mergeCount: number
@@ -32,6 +33,7 @@ export interface BackgroundDefinition extends BaseCosmeticDefinition {
 export interface SkinDefinition extends BaseCosmeticDefinition {
   kind: 'skin'
   visualRules: string[]
+  renderVariant: SkinRenderVariant
 }
 
 export interface MarketItemDefinition extends BaseCosmeticDefinition {
@@ -43,6 +45,7 @@ export interface MarketItemDefinition extends BaseCosmeticDefinition {
   boardGradient?: [string, string]
   surfaceTint?: string
   visualRules?: string[]
+  renderVariant?: SkinRenderVariant
 }
 
 export interface DailyTargetProgress {
@@ -126,22 +129,22 @@ export interface EventState {
 
 export const ECONOMY_BALANCE_TABLE = {
   xp: {
-    baseRun: 26,
-    scoreRate: '1 XP per 24 score',
-    mergeBonus: '4 XP per merge',
-    comboBonus: '8 XP per max combo tier',
+    baseRun: 24,
+    scoreRate: '1 XP per 28 score',
+    mergeBonus: '3 XP per merge',
+    comboBonus: '7 XP per max combo tier',
     eventBoost: '+20% XP during events',
   },
   emeralds: {
-    personalBest: 12,
-    levelRewardBase: '16 + level x 3',
-    dailyTargetRange: '18 to 46 emeralds',
+    personalBest: 8,
+    levelRewardBase: '14 + level x 3',
+    dailyTargetRange: '22 to 58 emeralds',
     eventDailyBoost: '+10% daily target emeralds during events',
   },
   pricing: {
-    starter: '80 to 120 emeralds',
-    rare: '140 to 240 emeralds',
-    prestige: '320 to 520 emeralds',
+    starter: '110 to 160 emeralds',
+    rare: '180 to 280 emeralds',
+    prestige: '360 to 620 emeralds',
   },
 } as const
 
@@ -149,34 +152,34 @@ const DAILY_TARGET_BLUEPRINTS: Array<Omit<DailyTargetProgress, 'progress' | 'com
   {
     id: 'daily-runs',
     title: 'Morning Watering',
-    description: 'Play 3 calm runs to keep the garden active.',
+    description: 'Play 4 calm runs to keep the garden active.',
     kind: 'runs',
-    goal: 3,
-    rewardEmeralds: 18,
+    goal: 4,
+    rewardEmeralds: 22,
   },
   {
     id: 'daily-score',
     title: 'Petal Score Push',
-    description: "Collect 720 score across today's sessions.",
+    description: "Collect 860 score across today's sessions.",
     kind: 'score',
-    goal: 720,
-    rewardEmeralds: 34,
+    goal: 860,
+    rewardEmeralds: 38,
   },
   {
     id: 'daily-merges',
     title: 'Merge Tending',
-    description: 'Create 14 merges in total today.',
+    description: 'Create 17 merges in total today.',
     kind: 'merges',
-    goal: 14,
-    rewardEmeralds: 28,
+    goal: 17,
+    rewardEmeralds: 34,
   },
   {
     id: 'daily-combo',
     title: 'Combo Bloom',
-    description: 'Reach a combo chain of 4 in one run.',
+    description: 'Reach a combo chain of 5 in one run.',
     kind: 'combo',
-    goal: 4,
-    rewardEmeralds: 46,
+    goal: 5,
+    rewardEmeralds: 58,
   },
 ]
 
@@ -202,6 +205,7 @@ export const DEFAULT_SKIN: SkinDefinition = {
   accent: '#4ea57f',
   glow: 'rgba(78, 165, 127, 0.18)',
   previewClass: 'theme-preview--garden-classic',
+  renderVariant: 'classic',
   visualRules: [
     'Small stages stay seed-like and warm.',
     'Mid stages keep the familiar petal ring.',
@@ -216,14 +220,14 @@ export const MARKET_CATALOG: MarketItemDefinition[] = [
     tier: 'starter',
     name: 'Moonlit Greenhouse',
     description: 'Calm moonlight through greenhouse glass for focused runs.',
-    supportingLine: 'A cooler garden atmosphere that keeps text and bloom shapes readable.',
-    preview: 'Deep sage glass framing, muted teal depth, warm ivory play surface, and soft plant silhouettes behind the board.',
-    price: 96,
-    unlockLevel: 2,
+    supportingLine: 'A cooler garden atmosphere that keeps text and bloom shapes readable during longer sessions.',
+    preview: 'Deep sage framing, muted teal depth, warm ivory board light, and soft foliage silhouettes behind the bowl.',
+    price: 136,
+    unlockLevel: 3,
     accent: '#355f56',
     glow: 'rgba(53, 95, 86, 0.18)',
     previewClass: 'theme-preview--moonlit-greenhouse',
-    boardGradient: ['#d8e6dd', '#eff0e6'],
+    boardGradient: ['#d6e3db', '#eff0e7'],
     surfaceTint: 'rgba(245, 244, 236, 0.84)',
   },
   {
@@ -231,18 +235,19 @@ export const MARKET_CATALOG: MarketItemDefinition[] = [
     kind: 'skin',
     tier: 'rare',
     name: 'Dewdrop Seed Set',
-    description: 'A reward-feeling drop skin with dewdrop translucency and a seed core.',
-    supportingLine: 'Made for players who want a cooler, cleaner object finish without breaking the current board readability.',
-    preview: 'Seed-centered early forms, brighter dew highlights in mid stages, and a subtle sprout edge in larger merges.',
-    price: 148,
+    description: 'A soft seed-core drop with gentle dew highlights.',
+    supportingLine: 'A calmer, more premium look for focused bloom runs that feels earned without breaking readability.',
+    preview: 'Seed-centered early forms, cleaner dew highlights in mid tiers, and a faint growth ring in larger blooms.',
+    price: 198,
     unlockLevel: 4,
-    accent: '#6ccfbb',
-    glow: 'rgba(108, 207, 187, 0.24)',
+    accent: '#74cfbe',
+    glow: 'rgba(116, 207, 190, 0.26)',
     previewClass: 'theme-preview--dewdrop-seed-set',
+    renderVariant: 'dewdrop',
     visualRules: [
-      'Small stages: a compact seed core with a soft droplet shell.',
-      'Mid stages: stronger dew highlight and mint-teal translucency.',
-      'Large stages: subtle sprout-edge energy while keeping silhouettes clean.',
+      'Small stages: clearer seed core with a softer droplet shell.',
+      'Mid stages: layered dew highlight and cooler mint-teal translucency.',
+      'Large stages: subtle outer growth ring with a restrained sprout-like lift.',
     ],
   },
 ]
@@ -298,7 +303,7 @@ function createDefaultState(): ProgressionState {
     schemaVersion: PROGRESSION_SCHEMA_VERSION,
     totalXp: 0,
     level: 1,
-    emeralds: 52,
+    emeralds: 24,
     ownedItemIds: [],
     equippedBackgroundId: DEFAULT_BACKGROUND.id,
     equippedSkinId: DEFAULT_SKIN.id,
@@ -320,7 +325,7 @@ function createDefaultState(): ProgressionState {
 
 export function getXpForNextLevel(level: number) {
   const clampedLevel = Math.max(level, 1)
-  return 108 + (clampedLevel - 1) * 42 + Math.floor(Math.pow(clampedLevel - 1, 1.28) * 18)
+  return 116 + (clampedLevel - 1) * 48 + Math.floor(Math.pow(clampedLevel - 1, 1.3) * 20)
 }
 
 export function getLevelFromXp(totalXp: number) {
@@ -412,6 +417,7 @@ export function getEquippedSkin(state: ProgressionState): SkinDefinition {
     accent: item.accent,
     glow: item.glow,
     previewClass: item.previewClass,
+    renderVariant: item.renderVariant ?? DEFAULT_SKIN.renderVariant,
     visualRules: item.visualRules ?? DEFAULT_SKIN.visualRules,
   }
 }
@@ -465,13 +471,13 @@ function normalizeState(input: unknown): ProgressionState {
     ? candidate.ownedSkinIds.filter((itemId): itemId is string => typeof itemId === 'string')
     : []
   const legacyPaidCount = legacyOwnedSkinIds.filter((itemId) => itemId !== 'classic-garden').length
-  const migrationBonus = candidate.schemaVersion === PROGRESSION_SCHEMA_VERSION ? 0 : legacyPaidCount * 70
+  const migrationBonus = candidate.schemaVersion === PROGRESSION_SCHEMA_VERSION ? 0 : legacyPaidCount * 96
 
   const next: ProgressionState = {
     schemaVersion: PROGRESSION_SCHEMA_VERSION,
     totalXp: Number(candidate.totalXp) || 0,
     level: Number(candidate.level) || 1,
-    emeralds: (Number(candidate.emeralds) || 0) + migrationBonus,
+    emeralds: Math.max(0, (Number(candidate.emeralds) || 0) + migrationBonus),
     ownedItemIds,
     equippedBackgroundId: typeof candidate.equippedBackgroundId === 'string' ? candidate.equippedBackgroundId : DEFAULT_BACKGROUND.id,
     equippedSkinId: typeof candidate.equippedSkinId === 'string' ? candidate.equippedSkinId : DEFAULT_SKIN.id,
@@ -572,7 +578,7 @@ export function saveProgressionState(state: ProgressionState) {
 export function applyRunProgression(current: ProgressionState, summary: ProgressionRunSummary): ProgressionState {
   const state = syncProgressionState(current)
   const eventState = getActiveEventState()
-  const baseXp = ECONOMY_BALANCE_TABLE.xp.baseRun + Math.floor(summary.score / 24) + summary.mergeCount * 4 + summary.maxCombo * 8
+  const baseXp = ECONOMY_BALANCE_TABLE.xp.baseRun + Math.floor(summary.score / 28) + summary.mergeCount * 3 + summary.maxCombo * 7
   const xpGained = Math.max(12, Math.round(baseXp * eventState.xpMultiplier))
   const previousLevel = state.level
   const wasPersonalBest = summary.score > state.stats.bestScore
@@ -597,7 +603,7 @@ export function applyRunProgression(current: ProgressionState, summary: Progress
 
   if (levelState.level > previousLevel) {
     for (let level = previousLevel + 1; level <= levelState.level; level += 1) {
-      const levelReward = 16 + level * 3
+      const levelReward = 14 + level * 3
       emeraldsGained += levelReward
       reasonLabels.push('Level ' + level + ' +' + levelReward)
     }

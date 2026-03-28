@@ -11,6 +11,8 @@ type GameScreenProps = {
   isMuted?: boolean
   onRunEnded?: (summary: RunEndedSummary) => void
   autoEnterFullscreenSignal?: number
+  backgroundGradient?: [string, string]
+  skinVariant?: 'classic' | 'dewdrop'
 }
 
 type ScreenOrientationApi = {
@@ -69,6 +71,8 @@ export function GameScreen({
   isMuted = false,
   onRunEnded,
   autoEnterFullscreenSignal = 0,
+  backgroundGradient,
+  skinVariant = 'classic',
 }: GameScreenProps) {
   const frameRef = useRef<HTMLDivElement | null>(null)
   const stageRef = useRef<HTMLDivElement | null>(null)
@@ -116,6 +120,10 @@ export function GameScreen({
       onShoot: () => audio.playShoot(),
       onMerge: () => audio.playMerge(),
       onGameOver: () => audio.playGameOver(),
+      theme: {
+        backgroundGradient,
+        skinVariant,
+      },
     })
 
     gameRef.current = game
@@ -182,7 +190,7 @@ export function GameScreen({
       game.destroy()
       gameRef.current = null
     }
-  }, [audio, sessionId])
+  }, [audio, backgroundGradient, sessionId, skinVariant])
 
   useEffect(() => {
     audio.setMuted(isMuted)

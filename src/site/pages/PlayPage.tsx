@@ -618,6 +618,8 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
             <GameScreen
               key={sessionKey}
               isMuted={isMuted}
+              backgroundGradient={equippedBackground.boardGradient}
+              skinVariant={equippedSkin.renderVariant}
               autoEnterFullscreenSignal={autoEnterFullscreenSignal}
               onRunEnded={(summary) => {
                 onCompleteRun(summary)

@@ -56,6 +56,10 @@ interface CreateGameOptions {
   onShoot?: () => void
   onMerge?: () => void
   onGameOver?: () => void
+  theme?: {
+    backgroundGradient?: [string, string]
+    skinVariant?: 'classic' | 'dewdrop'
+  }
 }
 
 interface Viewport {
@@ -126,6 +130,7 @@ export function createGame({
   onShoot,
   onMerge,
   onGameOver,
+  theme,
 }: CreateGameOptions): GameInstance {
   const context = canvas.getContext('2d')
 
@@ -135,6 +140,8 @@ export function createGame({
 
   const storedBestScore = readBestScore()
   const initialSnapshot = createInitialGameSnapshot(storedBestScore)
+  const activeBackgroundGradient = theme?.backgroundGradient ?? [BACKGROUND_TOP, BACKGROUND_BOTTOM]
+  const activeSkinVariant = theme?.skinVariant ?? 'classic'
   const { engine, bowl } = createPhysicsEngine()
   let gameTime = 0
   const collisionHooks = createCollisionHooks(engine, () => gameTime)
@@ -513,8 +520,8 @@ export function createGame({
     context.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr)
 
     const gradient = context.createLinearGradient(0, 0, 0, viewport.height)
-    gradient.addColorStop(0, BACKGROUND_TOP)
-    gradient.addColorStop(1, BACKGROUND_BOTTOM)
+    gradient.addColorStop(0, activeBackgroundGradient[0])
+    gradient.addColorStop(1, activeBackgroundGradient[1])
 
     context.fillStyle = gradient
     context.fillRect(0, 0, viewport.width, viewport.height)
@@ -527,13 +534,13 @@ export function createGame({
     drawGround(context)
     drawBowl(context, bowl.geometry)
     drawDangerLine(context, bowl.geometry, isDangerActive, dangerStartTime, isGameOver, now)
-    drawCannon(context, cannon.x, cannon.y, cannon.angleDeg, cannon.currentLevel)
+    drawCannon(context, cannon.x, cannon.y, cannon.angleDeg, cannon.currentLevel, activeSkinVariant)
     drawAimGuide(context, buildAimGuide())
 
     const bodies = Composite.allBodies(engine.world)
     for (const body of bodies) {
       if (isBallBody(body)) {
-        drawBall(context, body)
+        drawBall(context, body, activeSkinVariant)
       }
     }
 
@@ -778,6 +785,7 @@ function drawCannon(
   y: number,
   angleDeg: number,
   level: BallLevel,
+  skinVariant: 'classic' | 'dewdrop',
 ) {
   const angleRad = (angleDeg * Math.PI) / 180
   const definition = getBallDefinition(level)
@@ -825,7 +833,7 @@ function drawCannon(
   context.arc(x, y, CANNON_BASE_RADIUS - 4, 0, Math.PI * 2)
   context.fill()
 
-  drawBallSprite(context, previewX, previewY, 0, definition, true)
+  drawBallSprite(context, previewX, previewY, 0, definition, true, skinVariant)
 }
 
 function drawAimGuide(
@@ -980,7 +988,7 @@ function drawFloatingScores(
   }
 }
 
-function drawBall(context: CanvasRenderingContext2D, body: MatterBody) {
+function drawBall(context: CanvasRenderingContext2D, body: MatterBody, skinVariant: 'classic' | 'dewdrop') {
   if (isBallBody(body) === false) {
     return
   }
@@ -991,14 +999,14 @@ function drawBall(context: CanvasRenderingContext2D, body: MatterBody) {
   }
 
   const definition = getBallDefinition(ball.level)
-  drawBallSprite(context, body.position.x, body.position.y, body.angle, definition, false)
+  drawBallSprite(context, body.position.x, body.position.y, body.angle, definition, false, skinVariant)
 }
 
 export function drawBallPreviewToCanvas(
   canvas: HTMLCanvasElement,
   level: BallLevel,
   size = 220,
-  options?: { silhouette?: boolean },
+  options?: { silhouette?: boolean; skinVariant?: 'classic' | 'dewdrop' },
 ) {
   const context = canvas.getContext('2d')
   if (!context) {
@@ -1023,7 +1031,7 @@ export function drawBallPreviewToCanvas(
   context.save()
   context.translate(size * 0.5, size * 0.56)
   context.scale(scale, scale)
-  drawBallSprite(context, 0, 0, 0, definition, true)
+  drawBallSprite(context, 0, 0, 0, definition, true, options?.skinVariant ?? 'classic')
   context.restore()
 
   if (options?.silhouette) {
@@ -1054,6 +1062,7 @@ function drawBallSprite(
   angle: number,
   definition: ReturnType<typeof getBallDefinition>,
   isPreview: boolean,
+  skinVariant: 'classic' | 'dewdrop' = 'classic',
 ) {
   const radius = definition.radius
 
@@ -1066,7 +1075,7 @@ function drawBallSprite(
   context.arc(radius * 0.16, radius * 0.18, radius * 0.95, 0, Math.PI * 2)
   context.fill()
 
-  if (definition.level === 7) {
+  if (definition.level === 7 && skinVariant === 'classic') {
     drawFinalCrownedBody(context, radius)
   } else {
     context.beginPath()
@@ -1081,26 +1090,34 @@ function drawBallSprite(
       0,
       radius * 1.1,
     )
-    bodyGradient.addColorStop(0, '#fff8ef')
-    bodyGradient.addColorStop(0.24, definition.accent)
-    bodyGradient.addColorStop(0.55, definition.fill)
-    bodyGradient.addColorStop(1, definition.stroke)
+    if (skinVariant === 'dewdrop') {
+      const palette = getDewdropPalette(definition.level)
+      bodyGradient.addColorStop(0, palette.highlight)
+      bodyGradient.addColorStop(0.2, palette.top)
+      bodyGradient.addColorStop(0.62, palette.mid)
+      bodyGradient.addColorStop(1, palette.bottom)
+    } else {
+      bodyGradient.addColorStop(0, '#fff8ef')
+      bodyGradient.addColorStop(0.24, definition.accent)
+      bodyGradient.addColorStop(0.55, definition.fill)
+      bodyGradient.addColorStop(1, definition.stroke)
+    }
     context.fillStyle = bodyGradient
     context.beginPath()
     context.arc(0, 0, radius, 0, Math.PI * 2)
     context.fill()
   }
 
-  drawBallDetails(context, definition)
+  drawBallDetails(context, definition, skinVariant)
 
   context.restore()
 
   context.save()
   context.translate(x, y)
   context.rotate(angle)
-  context.strokeStyle = definition.stroke
+  context.strokeStyle = skinVariant === 'dewdrop' ? getDewdropPalette(definition.level).stroke : definition.stroke
   context.lineWidth = isPreview ? 3.5 : 3
-  if (definition.level === 7) {
+  if (definition.level === 7 && skinVariant === 'classic') {
     traceFinalCrownedBodyPath(context, radius)
   } else {
     context.beginPath()
@@ -1118,8 +1135,14 @@ function drawBallSprite(
 function drawBallDetails(
   context: CanvasRenderingContext2D,
   definition: ReturnType<typeof getBallDefinition>,
+  skinVariant: 'classic' | 'dewdrop' = 'classic',
 ) {
   const radius = definition.radius
+
+  if (skinVariant === 'dewdrop') {
+    drawDewdropDetails(context, radius, definition.level)
+    return
+  }
 
   switch (definition.level) {
     case 0:
@@ -1178,6 +1201,135 @@ function drawBallDetails(
 
   if (definition.level < 6) {
     drawFace(context, radius, definition.stroke)
+  }
+}
+
+function getDewdropPalette(level: BallLevel) {
+  const byLevel = [
+    { top: '#f3faf6', mid: '#d8eee7', bottom: '#8eb7a6', stroke: '#58796d', core: '#7a6942', highlight: 'rgba(255,255,255,0.72)', ring: 'rgba(129, 175, 159, 0.38)' },
+    { top: '#f0fbf8', mid: '#d4f0e8', bottom: '#86baa8', stroke: '#53766a', core: '#6c6a40', highlight: 'rgba(255,255,255,0.74)', ring: 'rgba(116, 184, 165, 0.42)' },
+    { top: '#eefbf8', mid: '#c9efe7', bottom: '#79c0ad', stroke: '#4f756a', core: '#5d6c3e', highlight: 'rgba(255,255,255,0.76)', ring: 'rgba(112, 197, 177, 0.46)' },
+    { top: '#f1fcfb', mid: '#c5f0ea', bottom: '#72cab7', stroke: '#4b7268', core: '#4d6a46', highlight: 'rgba(255,255,255,0.78)', ring: 'rgba(113, 205, 187, 0.48)' },
+    { top: '#f3fcfb', mid: '#bdeee8', bottom: '#6fcdbc', stroke: '#486f67', core: '#44714e', highlight: 'rgba(255,255,255,0.8)', ring: 'rgba(116, 212, 193, 0.52)' },
+    { top: '#f5fdfc', mid: '#b8eee9', bottom: '#68cfbe', stroke: '#446d66', core: '#3e7458', highlight: 'rgba(255,255,255,0.82)', ring: 'rgba(124, 218, 197, 0.56)' },
+    { top: '#f5fdfc', mid: '#b4ece9', bottom: '#60c8bd', stroke: '#426d67', core: '#417a5b', highlight: 'rgba(255,255,255,0.84)', ring: 'rgba(136, 221, 199, 0.58)' },
+    { top: '#f6fdfc', mid: '#bcece9', bottom: '#65cbc0', stroke: '#416f69', core: '#45835f', highlight: 'rgba(255,255,255,0.84)', ring: 'rgba(148, 225, 204, 0.58)' },
+  ]
+  return byLevel[level] ?? byLevel[0]
+}
+
+function drawDewdropDetails(
+  context: CanvasRenderingContext2D,
+  radius: number,
+  level: BallLevel,
+) {
+  const palette = getDewdropPalette(level)
+
+  context.save()
+  context.fillStyle = palette.ring
+  context.beginPath()
+  context.arc(0, 0, radius * (level >= 4 ? 0.92 : 0.86), 0, Math.PI * 2)
+  context.fill()
+  context.restore()
+
+  context.save()
+  context.fillStyle = palette.highlight
+  context.beginPath()
+  context.ellipse(-radius * 0.26, -radius * 0.38, radius * 0.22, radius * 0.14, -0.5, 0, Math.PI * 2)
+  context.fill()
+  context.beginPath()
+  context.ellipse(radius * 0.08, -radius * 0.18, radius * 0.12, radius * 0.08, -0.28, 0, Math.PI * 2)
+  context.globalAlpha = 0.68
+  context.fill()
+  context.restore()
+
+  context.save()
+  context.fillStyle = palette.core
+  context.beginPath()
+  context.ellipse(0, radius * 0.04, radius * (level <= 1 ? 0.16 : level <= 3 ? 0.18 : 0.2), radius * (level <= 1 ? 0.22 : level <= 3 ? 0.24 : 0.26), 0.08, 0, Math.PI * 2)
+  context.fill()
+  context.strokeStyle = 'rgba(255, 250, 240, 0.34)'
+  context.lineWidth = Math.max(1.2, radius * 0.032)
+  context.beginPath()
+  context.moveTo(-radius * 0.02, -radius * 0.1)
+  context.quadraticCurveTo(radius * 0.06, radius * 0.04, 0, radius * 0.18)
+  context.stroke()
+  context.restore()
+
+  if (level >= 2) {
+    context.save()
+    context.strokeStyle = palette.ring
+    context.lineWidth = Math.max(1.5, radius * 0.045)
+    context.beginPath()
+    context.arc(0, 0, radius * 0.48, -0.2, Math.PI + 0.6)
+    context.stroke()
+    context.restore()
+  }
+
+  if (level >= 3) {
+    context.save()
+    context.strokeStyle = 'rgba(255,255,255,0.4)'
+    context.lineWidth = Math.max(1.2, radius * 0.03)
+    context.beginPath()
+    context.arc(0, 0, radius * 0.64, 0.25, Math.PI - 0.15)
+    context.stroke()
+    context.restore()
+  }
+
+  if (level >= 4) {
+    context.save()
+    context.strokeStyle = 'rgba(108, 176, 146, 0.52)'
+    context.lineWidth = Math.max(1.2, radius * 0.028)
+    context.beginPath()
+    context.moveTo(-radius * 0.22, -radius * 0.54)
+    context.quadraticCurveTo(-radius * 0.06, -radius * 0.68, radius * 0.02, -radius * 0.44)
+    context.stroke()
+    context.beginPath()
+    context.moveTo(radius * 0.02, -radius * 0.44)
+    context.quadraticCurveTo(radius * 0.18, -radius * 0.68, radius * 0.28, -radius * 0.46)
+    context.stroke()
+    context.restore()
+  }
+
+  if (level >= 5) {
+    for (let index = 0; index < 6; index += 1) {
+      const angle = (Math.PI * 2 * index) / 6 - 0.25
+      const ring = radius * 0.82
+      context.fillStyle = index % 2 === 0 ? 'rgba(190, 240, 224, 0.34)' : 'rgba(255, 255, 255, 0.26)'
+      context.beginPath()
+      context.arc(Math.cos(angle) * ring, Math.sin(angle) * ring, radius * 0.06, 0, Math.PI * 2)
+      context.fill()
+    }
+  }
+
+  if (level >= 6) {
+    context.save()
+    context.strokeStyle = 'rgba(175, 232, 214, 0.46)'
+    context.lineWidth = Math.max(1.4, radius * 0.026)
+    context.beginPath()
+    context.arc(0, 0, radius * 0.9, 0.16, Math.PI * 1.82)
+    context.stroke()
+    context.restore()
+
+    for (let index = 0; index < 10; index += 1) {
+      const angle = (Math.PI * 2 * index) / 10 - 0.4
+      const ring = radius * 0.92
+      context.fillStyle = index % 2 === 0 ? 'rgba(219, 248, 238, 0.28)' : 'rgba(130, 208, 183, 0.24)'
+      context.beginPath()
+      context.arc(Math.cos(angle) * ring, Math.sin(angle) * ring, radius * 0.038, 0, Math.PI * 2)
+      context.fill()
+    }
+  }
+
+  if (level >= 7) {
+    context.save()
+    context.strokeStyle = 'rgba(235, 252, 246, 0.52)'
+    context.lineWidth = Math.max(1.6, radius * 0.024)
+    context.beginPath()
+    context.moveTo(-radius * 0.18, -radius * 0.84)
+    context.quadraticCurveTo(0, -radius * 1.02, radius * 0.18, -radius * 0.84)
+    context.stroke()
+    context.restore()
   }
 }
 

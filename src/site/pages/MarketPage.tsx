@@ -15,7 +15,7 @@ type MarketPageProps = {
   onEquipSkin: (itemId: string) => void
 }
 
-type MarketStatus = 'buy' | 'equipped' | 'owned' | 'locked' | 'not-enough'
+type MarketStatus = 'buy' | 'equipped' | 'owned' | 'not-enough'
 
 function getStatus(item: MarketItemDefinition, progression: ProgressionState): MarketStatus {
   const isOwned = progression.ownedItemIds.includes(item.id)
@@ -29,23 +29,22 @@ function getStatus(item: MarketItemDefinition, progression: ProgressionState): M
   if (isOwned) {
     return 'owned'
   }
-  if (progression.level < item.unlockLevel) {
-    return 'locked'
-  }
-  if (progression.emeralds < item.price) {
+  if (progression.level < item.unlockLevel || progression.emeralds < item.price) {
     return 'not-enough'
   }
   return 'buy'
 }
 
-function getStatusLabel(status: MarketStatus) {
+function getPrimaryLabel(item: MarketItemDefinition, progression: ProgressionState, status: MarketStatus) {
+  if (progression.level < item.unlockLevel) {
+    return `Lv.${item.unlockLevel} required`
+  }
+
   switch (status) {
     case 'equipped':
       return 'Equipped'
     case 'owned':
       return 'Owned'
-    case 'locked':
-      return 'Locked'
     case 'not-enough':
       return 'Not enough emeralds'
     default:
@@ -64,13 +63,13 @@ export function MarketPage({ navigate, progression, onBuySkin, onEquipSkin }: Ma
       navigate={navigate}
       progression={progression}
       title="Market"
-      description="Spend emeralds on a small, readable cosmetic economy. The first buy should feel reachable, but not free enough to erase the choice."
+      description="Spend emeralds on a slower cosmetic economy where the first purchase feels meaningful and the second still needs a target."
     >
       <section className="market-overview-grid">
         <article className="card market-overview-card">
           <span className="section-title__eyebrow">Emerald Balance</span>
           <h2>{progression.emeralds} emeralds ready</h2>
-          <p>You can currently afford {affordableCount} of {MARKET_CATALOG.length} featured items.</p>
+          <p>{affordableCount > 0 ? `${affordableCount} featured item${affordableCount > 1 ? 's are' : ' is'} affordable right now.` : 'Nothing is fully affordable yet. A few more strong runs or daily clears will change that.'}</p>
         </article>
         <article className="card market-overview-card">
           <span className="section-title__eyebrow">Equipped</span>
@@ -80,8 +79,22 @@ export function MarketPage({ navigate, progression, onBuySkin, onEquipSkin }: Ma
         <article className="card market-overview-card">
           <span className="section-title__eyebrow">Decision Pressure</span>
           <h2>Starter before Rare</h2>
-          <p>Moonlit Greenhouse is a calmer first buy. Dewdrop Seed Set asks for a longer push and should usually come after a few stronger dailies.</p>
+          <p>Moonlit Greenhouse lands first at 136. Dewdrop Seed Set asks for a rarer spend at 198, so a single daily sweep will not trivialize both purchases.</p>
         </article>
+      </section>
+
+      <section className="market-affordability-grid">
+        {MARKET_CATALOG.map((item) => {
+          const shortfall = Math.max(item.price - progression.emeralds, 0)
+          const canAfford = shortfall === 0 && progression.level >= item.unlockLevel
+          return (
+            <article className="card market-affordability-card" key={item.id + '-affordability'}>
+              <span className="section-title__eyebrow">{item.name}</span>
+              <strong>{item.price}◆</strong>
+              <p>{canAfford ? 'Ready to buy now.' : progression.level < item.unlockLevel ? `Unlocks at level ${item.unlockLevel}.` : `${shortfall}◆ more needed.`}</p>
+            </article>
+          )
+        })}
       </section>
 
       <section className="market-grid">
@@ -90,6 +103,7 @@ export function MarketPage({ navigate, progression, onBuySkin, onEquipSkin }: Ma
           const isOwned = progression.ownedItemIds.includes(item.id)
           const isEquipped = status === 'equipped'
           const shortfall = Math.max(item.price - progression.emeralds, 0)
+          const levelLocked = progression.level < item.unlockLevel
 
           return (
             <article className={isEquipped ? 'card market-card is-equipped' : 'card market-card'} key={item.id}>
@@ -121,12 +135,12 @@ export function MarketPage({ navigate, progression, onBuySkin, onEquipSkin }: Ma
                 <p className="market-card__preview-copy">{item.supportingLine}</p>
                 <p className="market-card__preview-copy">{item.preview}</p>
                 <div className="market-card__meta">
-                  <span>Unlock Lv.{item.unlockLevel}</span>
-                  <span>{progression.emeralds}◆ owned</span>
+                  <span>Current emeralds: {progression.emeralds}◆</span>
+                  <span>{levelLocked ? `Level ${item.unlockLevel} required` : shortfall > 0 ? `${shortfall}◆ short` : 'Enough saved'}</span>
                 </div>
                 <div className="market-card__status-row">
-                  <span className={`market-status-pill market-status-pill--${status}`}>{getStatusLabel(status)}</span>
-                  <span>{status === 'not-enough' ? `${shortfall}◆ short` : isOwned ? 'Ready to equip' : 'Spend deliberately'}</span>
+                  <span className={`market-status-pill market-status-pill--${status}`}>{status === 'buy' ? 'Buy' : status === 'owned' ? 'Owned' : status === 'equipped' ? 'Equipped' : 'Not enough emeralds'}</span>
+                  <span>{isOwned ? 'Purchase saved in local progression.' : 'Daily targets are the fastest emerald source.'}</span>
                 </div>
                 <div className="market-card__actions">
                   <button
@@ -135,7 +149,7 @@ export function MarketPage({ navigate, progression, onBuySkin, onEquipSkin }: Ma
                     disabled={status !== 'buy'}
                     onClick={() => onBuySkin(item.id)}
                   >
-                    Buy
+                    {getPrimaryLabel(item, progression, status)}
                   </button>
                   <button
                     className={isOwned && !isEquipped ? 'market-card__action market-card__action--secondary' : 'market-card__action market-card__action--secondary is-disabled'}
@@ -143,7 +157,7 @@ export function MarketPage({ navigate, progression, onBuySkin, onEquipSkin }: Ma
                     disabled={!isOwned || isEquipped}
                     onClick={() => onEquipSkin(item.id)}
                   >
-                    {isEquipped ? 'Equipped' : isOwned ? 'Equip now' : 'Owned'}
+                    {isEquipped ? 'Equipped' : isOwned ? 'Equip' : 'Owned'}
                   </button>
                 </div>
               </div>
