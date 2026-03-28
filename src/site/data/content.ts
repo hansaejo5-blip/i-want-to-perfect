@@ -83,6 +83,11 @@ export const homeSupportCards = [
 
 export const updates = [
   {
+    title: 'Update 1.5 – Rotating daily board and cleaner hub HUD',
+    date: 'March 28, 2026',
+    summary: 'Daily quests now rotate by day, reset automatically, and the hub trims redundant cosmetic labels so the play, reward, and savings loop reads faster.',
+  },
+  {
     title: 'Update 1.4 – Growth hub and live event timer',
     date: 'March 28, 2026',
     summary: 'Rebuilt the home hub around level growth, daily targets, emerald income, and a real countdown event with active reward bonuses.',

@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CTAButton } from '../components/CTAButton'
 import { DashboardShell } from '../components/DashboardShell'
 import { AppLink } from '../components/AppLink'
 import {
   getActiveEventState,
   getDailyCompletion,
+  getDailyRefreshCountdown,
   getEquippedBackground,
   getEquippedSkin,
   getLevelProgress,
@@ -24,12 +25,18 @@ export function HomePage({ navigate, progression }: HomePageProps) {
   const skin = getEquippedSkin(progression)
   const background = getEquippedBackground(progression)
   const recentRewards = progression.recentRewards
-  const featuredTargets = progression.daily.targets.slice(0, 3)
+  const featuredTargets = progression.daily.targets
+  const topRewardTarget = useMemo(
+    () => [...progression.daily.targets].sort((left, right) => right.rewardEmeralds - left.rewardEmeralds)[0],
+    [progression.daily.targets],
+  )
   const [eventState, setEventState] = useState(() => getActiveEventState())
+  const [dailyRefreshLabel, setDailyRefreshLabel] = useState(() => getDailyRefreshCountdown())
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       setEventState(getActiveEventState())
+      setDailyRefreshLabel(getDailyRefreshCountdown())
     }, 1000)
 
     return () => window.clearInterval(intervalId)
@@ -77,7 +84,7 @@ export function HomePage({ navigate, progression }: HomePageProps) {
               <div>
                 <span className="section-title__eyebrow">Ready to Drop</span>
                 <h2>One more bloom run now feeds your whole garden.</h2>
-                <p>Score turns into XP, daily progress, emerald rewards, and cleaner market decisions without breaking the calm Perfect Drop mood.</p>
+                <p>Today&apos;s board, daily payout path, and current event bonus all connect directly to the same run, so the next match has immediate value.</p>
               </div>
               <div className="home-play-entry-card__meta">
                 <div>
@@ -96,7 +103,6 @@ export function HomePage({ navigate, progression }: HomePageProps) {
                 className="home-play-stage-preview__board"
                 style={{ background: `linear-gradient(180deg, ${background.boardGradient[0]} 0%, ${background.boardGradient[1]} 100%)` }}
               >
-                <span className="home-play-stage-preview__pill">{background.name}</span>
                 <div className="home-play-stage-preview__glass" />
                 <div className="home-play-stage-preview__foliage" />
                 <div className="home-orb home-orb--rose" />
@@ -127,20 +133,20 @@ export function HomePage({ navigate, progression }: HomePageProps) {
             </article>
 
             <article className="card hub-stat-card">
-              <span className="section-title__eyebrow">Recent Reward</span>
-              <h3>{recentRewards ? `+${recentRewards.xpGained} XP from your last run` : 'Your next run will feed the board'}</h3>
+              <span className="section-title__eyebrow">Today&apos;s Best Payout</span>
+              <h3>{topRewardTarget ? `${topRewardTarget.title} pays first` : 'Daily board rotates automatically'}</h3>
               <p>
-                {recentRewards
-                  ? `${recentRewards.emeraldsGained} emeralds earned${recentRewards.reasonLabels.length ? ` from ${recentRewards.reasonLabels.join(', ')}` : ''}.`
-                  : 'Play, level up, clear daily targets, and choose what to buy first instead of letting emeralds sit unused.'}
+                {topRewardTarget
+                  ? `${topRewardTarget.description} Reward: ${getTargetRewardAmount(topRewardTarget.rewardEmeralds, eventState.dailyEmeraldMultiplier)} emeralds${eventState.isActive ? ' during the current event bonus.' : '.'}`
+                  : `The next daily board refresh lands in ${dailyRefreshLabel}.`}
               </p>
             </article>
 
             <article className="card hub-stat-card">
-              <span className="section-title__eyebrow">Market Hook</span>
-              <h3>{skin.name} with {background.name}</h3>
+              <span className="section-title__eyebrow">Run Finish</span>
+              <h3>{skin.name}</h3>
               <p>{skin.preview}</p>
-              <AppLink href="/market" navigate={navigate} className="hub-inline-link">Browse market choices</AppLink>
+              <AppLink href="/market" navigate={navigate} className="hub-inline-link">Manage market choices</AppLink>
             </article>
           </div>
         </div>
@@ -151,6 +157,7 @@ export function HomePage({ navigate, progression }: HomePageProps) {
               <div>
                 <span className="section-title__eyebrow">Daily Targets</span>
                 <h2>{Math.round(daily.percent * 100)}% complete</h2>
+                <p>Refresh in {dailyRefreshLabel}. Today&apos;s four targets rotate automatically.</p>
               </div>
               <strong>{daily.completed} / {daily.total}</strong>
             </div>
@@ -186,20 +193,20 @@ export function HomePage({ navigate, progression }: HomePageProps) {
                 <strong>{progression.emeralds}</strong>
               </div>
               <div>
-                <span className="hud-label">Merges</span>
-                <strong>{progression.stats.totalMerges}</strong>
+                <span className="hud-label">Runs</span>
+                <strong>{progression.stats.totalRuns}</strong>
               </div>
               <div>
-                <span className="hud-label">Best Combo</span>
-                <strong>x{progression.stats.bestCombo}</strong>
+                <span className="hud-label">Merges</span>
+                <strong>{progression.stats.totalMerges}</strong>
               </div>
             </div>
           </article>
 
           <article className="card hub-side-card">
-            <span className="section-title__eyebrow">Spend Path</span>
-            <h3>Starter market pressure</h3>
-            <p>Moonlit Greenhouse opens at 136 emeralds, while Dewdrop Seed Set now sits at 1980 as a long-range skin goal. Daily target clears and event boosts matter much more once you start saving for it.</p>
+            <span className="section-title__eyebrow">Savings Path</span>
+            <h3>Use dailies before passive grinding</h3>
+            <p>A starter board unlock is still close enough to chase, but the premium skin now needs multiple daily clears and event windows to feel worth the spend.</p>
             <CTAButton label="Open Market" href="/market" navigate={navigate} variant="secondary" block />
           </article>
         </div>

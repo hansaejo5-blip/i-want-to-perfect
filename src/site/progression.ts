@@ -2,7 +2,7 @@ import type { RunEndedSummary } from '../game/stats'
 
 const PROGRESSION_STORAGE_KEY = 'blip-perfect-growth-v1'
 const CURRENT_DATE_KEY = () => new Date().toISOString().slice(0, 10)
-const PROGRESSION_SCHEMA_VERSION = 3
+const PROGRESSION_SCHEMA_VERSION = 4
 
 export type DailyTargetKind = 'runs' | 'score' | 'merges' | 'combo'
 export type MarketItemTier = 'starter' | 'rare' | 'prestige'
@@ -148,40 +148,116 @@ export const ECONOMY_BALANCE_TABLE = {
   },
 } as const
 
-const DAILY_TARGET_BLUEPRINTS: Array<Omit<DailyTargetProgress, 'progress' | 'completed' | 'rewarded'>> = [
-  {
-    id: 'daily-runs',
-    title: 'Morning Watering',
-    description: 'Play 4 calm runs to keep the garden active.',
-    kind: 'runs',
-    goal: 4,
-    rewardEmeralds: 22,
-  },
-  {
-    id: 'daily-score',
-    title: 'Petal Score Push',
-    description: "Collect 860 score across today's sessions.",
-    kind: 'score',
-    goal: 860,
-    rewardEmeralds: 38,
-  },
-  {
-    id: 'daily-merges',
-    title: 'Merge Tending',
-    description: 'Create 17 merges in total today.',
-    kind: 'merges',
-    goal: 17,
-    rewardEmeralds: 34,
-  },
-  {
-    id: 'daily-combo',
-    title: 'Combo Bloom',
-    description: 'Reach a combo chain of 5 in one run.',
-    kind: 'combo',
-    goal: 5,
-    rewardEmeralds: 58,
-  },
-]
+type DailyTargetBlueprint = Omit<DailyTargetProgress, 'progress' | 'completed' | 'rewarded'>
+
+const DAILY_TARGET_ORDER: DailyTargetKind[] = ['runs', 'score', 'merges', 'combo']
+
+const DAILY_TARGET_VARIANTS: Record<DailyTargetKind, DailyTargetBlueprint[]> = {
+  runs: [
+    {
+      id: 'daily-runs-steady',
+      title: 'Steady Watering',
+      description: 'Play 3 measured runs and keep the garden active.',
+      kind: 'runs',
+      goal: 3,
+      rewardEmeralds: 24,
+    },
+    {
+      id: 'daily-runs-volume',
+      title: 'Long Bed Sweep',
+      description: 'Play 5 runs to build a fuller reward chain today.',
+      kind: 'runs',
+      goal: 5,
+      rewardEmeralds: 34,
+    },
+    {
+      id: 'daily-runs-rhythm',
+      title: 'Keeper Rhythm',
+      description: 'Complete 4 runs so XP, dailies, and score gains all move together.',
+      kind: 'runs',
+      goal: 4,
+      rewardEmeralds: 28,
+    },
+  ],
+  score: [
+    {
+      id: 'daily-score-quick',
+      title: 'Petal Score Push',
+      description: "Collect 760 total score across today's sessions.",
+      kind: 'score',
+      goal: 760,
+      rewardEmeralds: 34,
+    },
+    {
+      id: 'daily-score-deep',
+      title: 'Glasshouse Pressure',
+      description: 'Push through 1040 total score for the larger daily payout.',
+      kind: 'score',
+      goal: 1040,
+      rewardEmeralds: 44,
+    },
+    {
+      id: 'daily-score-peak',
+      title: 'Evening Bloom Total',
+      description: 'Reach 920 score before the board rolls over.',
+      kind: 'score',
+      goal: 920,
+      rewardEmeralds: 40,
+    },
+  ],
+  merges: [
+    {
+      id: 'daily-merges-clean',
+      title: 'Merge Tending',
+      description: 'Create 14 merges in total today.',
+      kind: 'merges',
+      goal: 14,
+      rewardEmeralds: 30,
+    },
+    {
+      id: 'daily-merges-stretch',
+      title: 'Canopy Stack',
+      description: 'Hit 20 total merges to cash in on a longer board session.',
+      kind: 'merges',
+      goal: 20,
+      rewardEmeralds: 38,
+    },
+    {
+      id: 'daily-merges-focus',
+      title: 'Garden Sorting',
+      description: 'Create 17 merges with cleaner placements and fewer wasted drops.',
+      kind: 'merges',
+      goal: 17,
+      rewardEmeralds: 34,
+    },
+  ],
+  combo: [
+    {
+      id: 'daily-combo-light',
+      title: 'Combo Bloom',
+      description: 'Reach a combo chain of 4 in one run.',
+      kind: 'combo',
+      goal: 4,
+      rewardEmeralds: 46,
+    },
+    {
+      id: 'daily-combo-rare',
+      title: 'Combo Crest',
+      description: 'Find one run with a combo chain of 6 for the biggest daily premium.',
+      kind: 'combo',
+      goal: 6,
+      rewardEmeralds: 58,
+    },
+    {
+      id: 'daily-combo-balanced',
+      title: 'Bloom Chain',
+      description: 'Reach a combo chain of 5 before reset to keep the event loop efficient.',
+      kind: 'combo',
+      goal: 5,
+      rewardEmeralds: 52,
+    },
+  ],
+}
 
 export const DEFAULT_BACKGROUND: BackgroundDefinition = {
   id: 'sunlit-workbench',
@@ -279,8 +355,19 @@ function getMetricValue(kind: DailyTargetKind, metrics: DailyMetrics) {
   }
 }
 
-function buildDailyTargets(metrics: DailyMetrics): DailyTargetProgress[] {
-  return DAILY_TARGET_BLUEPRINTS.map((target) => {
+function getDailySeed(dateKey: string) {
+  const [year, month, day] = dateKey.split('-').map((value) => Number(value) || 0)
+  return year * 372 + month * 31 + day
+}
+
+function getTargetVariant(kind: DailyTargetKind, dateKey: string, index: number) {
+  const variants = DAILY_TARGET_VARIANTS[kind]
+  return variants[(getDailySeed(dateKey) + index * 5) % variants.length]
+}
+
+function buildDailyTargets(metrics: DailyMetrics, dateKey = CURRENT_DATE_KEY()): DailyTargetProgress[] {
+  return DAILY_TARGET_ORDER.map((kind, index) => {
+    const target = getTargetVariant(kind, dateKey, index)
     const progress = Math.min(getMetricValue(target.kind, metrics), target.goal)
     return {
       ...target,
@@ -310,7 +397,7 @@ function createDefaultState(): ProgressionState {
     daily: {
       dateKey: CURRENT_DATE_KEY(),
       metrics,
-      targets: buildDailyTargets(metrics),
+      targets: buildDailyTargets(metrics, CURRENT_DATE_KEY()),
     },
     stats: {
       totalRuns: 0,
@@ -358,6 +445,12 @@ export function formatCountdown(remainingMs: number) {
   const minutes = Math.floor((clamped % 3600) / 60)
   const seconds = clamped % 60
   return [hours, minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':')
+}
+
+export function getDailyRefreshCountdown(now = Date.now()) {
+  const nextReset = new Date(now)
+  nextReset.setUTCHours(24, 0, 0, 0)
+  return formatCountdown(nextReset.getTime() - now)
 }
 
 export function getActiveEventState(now = Date.now()): EventState {
@@ -491,7 +584,7 @@ function normalizeState(input: unknown): ProgressionState {
             completed: Boolean(target.completed),
             rewarded: Boolean(target.rewarded),
           }))
-        : buildDailyTargets(dailyMetrics),
+        : buildDailyTargets(dailyMetrics, typeof candidate.daily?.dateKey === 'string' ? candidate.daily.dateKey : CURRENT_DATE_KEY()),
     },
     stats: {
       totalRuns: Number(candidate.stats?.totalRuns) || 0,
@@ -519,7 +612,7 @@ export function syncProgressionState(state: ProgressionState): ProgressionState 
         bestCombo: 0,
       }
 
-  const targets = buildDailyTargets(metrics).map((target) => {
+  const targets = buildDailyTargets(metrics, todayKey).map((target) => {
     const existing = isCurrentDay
       ? state.daily.targets.find((item) => item.id === target.id)
       : null

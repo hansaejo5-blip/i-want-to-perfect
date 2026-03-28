@@ -3,6 +3,7 @@ import { CTAButton } from '../components/CTAButton'
 import {
   getActiveEventState,
   getDailyCompletion,
+  getDailyRefreshCountdown,
   getLevelProgress,
   getOwnedCosmetics,
   getTargetRewardAmount,
@@ -50,6 +51,7 @@ export function GardenPage({ navigate, progression }: GardenPageProps) {
   const ownedCosmetics = getOwnedCosmetics(progression)
   const milestones = buildMilestones(progression)
   const eventState = getActiveEventState()
+  const dailyRefreshLabel = getDailyRefreshCountdown()
 
   return (
     <DashboardShell
@@ -123,6 +125,7 @@ export function GardenPage({ navigate, progression }: GardenPageProps) {
         <article className="card garden-daily-board__card">
           <span className="section-title__eyebrow">Daily Cultivation</span>
           <h2>Targets that feed the emerald loop</h2>
+          <p>Refresh in {dailyRefreshLabel}. Each day rotates the score, merge, combo, and run pressure so the payout path stays useful.</p>
           <div className="daily-target-list">
             {progression.daily.targets.map((target) => {
               const percent = Math.min((target.progress / target.goal) * 100, 100)

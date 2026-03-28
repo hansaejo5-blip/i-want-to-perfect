@@ -3,7 +3,7 @@ import { CTAButton } from './CTAButton'
 import { AppLink } from './AppLink'
 import { HUB_NAV_ITEMS, SITE_NAME, type Route } from '../router'
 import type { ProgressionState } from '../progression'
-import { getDailyCompletion, getEquippedSkin, getLevelProgress } from '../progression'
+import { getDailyCompletion, getDailyRefreshCountdown, getLevelProgress } from '../progression'
 
 type DashboardShellProps = {
   route: Route
@@ -40,7 +40,7 @@ function SidebarIcon({ route }: { route: string }) {
 export function DashboardShell({ route, navigate, progression, title, description, actions, children }: DashboardShellProps) {
   const level = getLevelProgress(progression)
   const daily = getDailyCompletion(progression)
-  const skin = getEquippedSkin(progression)
+  const dailyRefreshLabel = getDailyRefreshCountdown()
 
   return (
     <div className="garden-dashboard">
@@ -80,7 +80,7 @@ export function DashboardShell({ route, navigate, progression, title, descriptio
           <div className="garden-sidebar__mini-card card">
             <span className="hud-label">Daily Bloom</span>
             <strong>{daily.completed} / {daily.total}</strong>
-            <p>{skin.name} is currently equipped.</p>
+            <p>Refresh in {dailyRefreshLabel}. The board rotates automatically each day.</p>
           </div>
           <div className="garden-sidebar__link-row">
             {SUPPORT_LINKS.map((item) => (

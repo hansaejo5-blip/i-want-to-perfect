@@ -18,7 +18,7 @@ import { DashboardShell } from "../components/DashboardShell"
 import { SectionTitle } from "../components/SectionTitle"
 import { playPageCopy } from "../data/content"
 import { getAbsoluteSiteUrl, type Route } from "../router"
-import { getActiveEventState, getDailyCompletion, getEquippedBackground, getEquippedSkin, getLevelProgress, type ProgressionRunSummary, type ProgressionState } from "../progression"
+import { getActiveEventState, getDailyCompletion, getDailyRefreshCountdown, getEquippedBackground, getEquippedSkin, getLevelProgress, type ProgressionRunSummary, type ProgressionState } from "../progression"
 
 type PlayPageProps = {
   navigate: (route: Route) => void
@@ -584,10 +584,12 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
   const equippedSkin = getEquippedSkin(progression)
   const equippedBackground = getEquippedBackground(progression)
   const [eventState, setEventState] = useState(() => getActiveEventState())
+  const [dailyRefreshLabel, setDailyRefreshLabel] = useState(() => getDailyRefreshCountdown())
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       setEventState(getActiveEventState())
+      setDailyRefreshLabel(getDailyRefreshCountdown())
     }, 1000)
 
     return () => window.clearInterval(intervalId)
@@ -650,6 +652,7 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
               <strong>{eventState.countdownLabel}</strong>
               <span>{eventState.isActive ? 'bonus window' : 'ended'}</span>
             </div>
+            <p>Daily board resets in {dailyRefreshLabel}. Clear the current payout path before it rolls over.</p>
           </section>
 
           <section className="card play-mini-hud-card">
@@ -660,13 +663,13 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
             <div className="garden-progress">
               <div className="garden-progress__fill" style={{ width: Math.max(levelProgress.progress * 100, 6) + '%' }} />
             </div>
-            <p>{levelProgress.remainingXp} XP until the next bloom tier. Daily board: {dailyProgress.completed} / {dailyProgress.total}.</p>
+            <p>{levelProgress.remainingXp} XP until the next bloom tier. Daily board: {dailyProgress.completed} / {dailyProgress.total}, refresh in {dailyRefreshLabel}.</p>
           </section>
 
           <section className="card play-cosmetic-card">
-            <span className="section-title__eyebrow">Equipped Look</span>
-            <h3>{equippedBackground.name}</h3>
-            <p>{equippedSkin.name} is active for this run.</p>
+            <span className="section-title__eyebrow">Run Finish</span>
+            <h3>{equippedSkin.name}</h3>
+            <p>The active skin and board theme are already applied to the live run, without spending extra space on cosmetic labels.</p>
             <div className={'play-cosmetic-preview ' + equippedBackground.previewClass}>
               <div className={'play-cosmetic-preview__orb ' + equippedSkin.previewClass} style={{ background: equippedSkin.accent, boxShadow: '0 18px 30px ' + equippedSkin.glow }}>
                 <span className="play-cosmetic-preview__core" />
