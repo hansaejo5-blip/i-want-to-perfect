@@ -2429,3 +2429,625 @@ summary:focus-visible {
   gap: 10px;
   min-width: 220px;
 }
+
+.site-shell--hub {
+  min-height: 100vh;
+}
+
+.garden-dashboard {
+  width: min(1440px, calc(100% - 28px));
+  margin: 0 auto;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 28px;
+  padding: 24px 0 40px;
+}
+
+.garden-dashboard__sidebar {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  display: grid;
+  gap: 18px;
+  padding: 28px 18px;
+  border-radius: 30px;
+  background: rgba(244, 236, 222, 0.76);
+  border: 1px solid rgba(120, 102, 79, 0.08);
+  box-shadow: 0 28px 60px rgba(79, 65, 47, 0.08);
+  backdrop-filter: blur(16px);
+}
+
+.garden-sidebar__brand {
+  display: grid;
+  gap: 4px;
+}
+
+.garden-sidebar__brand strong {
+  font-size: 1.85rem;
+  color: #0b7a58;
+}
+
+.garden-sidebar__brand p,
+.garden-dashboard__topbar p,
+.hub-stat-card p,
+.hub-side-card p,
+.growth-play-card p,
+.garden-level-card p,
+.garden-collection-chip p,
+.garden-milestone-card p,
+.market-card p,
+.rankings-overview-card p,
+.podium-card p,
+.rankings-table p,
+.daily-target-list__item p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.garden-sidebar__eyebrow {
+  font-size: 0.76rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sage-700);
+}
+
+.garden-sidebar__level,
+.garden-sidebar__mini-card,
+.growth-play-card,
+.hub-stat-card,
+.hub-side-card,
+.garden-level-card,
+.garden-collection-card,
+.garden-milestone-card,
+.rankings-overview-card,
+.podium-card,
+.market-card {
+  padding: 22px;
+}
+
+.garden-sidebar__nav {
+  display: grid;
+  gap: 8px;
+}
+
+.garden-sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--muted);
+  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.garden-sidebar__link svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.garden-sidebar__link:hover,
+.garden-sidebar__link.is-active {
+  background: rgba(255, 252, 247, 0.95);
+  color: #0b7a58;
+  transform: translateX(2px);
+}
+
+.garden-sidebar__footer {
+  display: grid;
+  gap: 14px;
+}
+
+.garden-sidebar__mini-card strong,
+.growth-play-card strong,
+.hub-stat-card strong,
+.hub-side-card strong,
+.garden-level-card strong,
+.garden-milestone-card strong,
+.market-card__price,
+.rankings-overview-card strong,
+.podium-card strong {
+  font-size: 1.4rem;
+  color: #0f7a5a;
+}
+
+.garden-dashboard__main {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.garden-dashboard__topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 8px 6px 0;
+}
+
+.garden-dashboard__topbar h1 {
+  margin: 2px 0 8px;
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  color: #0b7a58;
+}
+
+.garden-topbar__actions,
+.garden-topbar__icon-row,
+.dashboard-hero-actions,
+.home-play-entry-card__footer,
+.hub-side-card__stats,
+.garden-level-card__stats,
+.rankings-overview-card__stats,
+.play-toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.garden-currency-pill,
+.garden-icon-button,
+.garden-profile-pill,
+.home-highlight-pill {
+  border-radius: 999px;
+  border: 1px solid rgba(120, 102, 79, 0.12);
+  background: rgba(255, 252, 247, 0.92);
+  box-shadow: var(--shadow-soft);
+}
+
+.garden-currency-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  min-height: 52px;
+}
+
+.garden-currency-pill__icon {
+  color: #9c6805;
+}
+
+.garden-icon-button,
+.garden-profile-pill {
+  min-width: 46px;
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(120, 102, 79, 0.12);
+  cursor: pointer;
+}
+
+.garden-profile-pill {
+  background: #0b7a58;
+  color: #fff7ef;
+}
+
+.garden-dashboard__content {
+  display: grid;
+  gap: 22px;
+}
+
+.garden-progress {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(16, 122, 90, 0.1);
+  overflow: hidden;
+}
+
+.garden-progress--large {
+  height: 14px;
+}
+
+.garden-progress__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #70a377 0%, #0f7a5a 100%);
+}
+
+.hub-home-grid,
+.garden-page-grid,
+.rankings-page-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.75fr);
+  gap: 22px;
+}
+
+.hub-home-grid__main,
+.hub-home-grid__side {
+  display: grid;
+  gap: 22px;
+}
+
+.growth-event-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 26px 28px;
+  background: linear-gradient(135deg, #0f7a5a 0%, #0c6a4e 100%);
+  color: #fff7ef;
+}
+
+.growth-event-banner h2,
+.home-play-entry-card h2,
+.daily-target-card h2,
+.hub-side-card h3,
+.hub-stat-card h3,
+.garden-level-card h2,
+.garden-collection-card h2,
+.rankings-overview-card h2,
+.rankings-table-card h2,
+.market-card h3,
+.podium-card h3 {
+  margin: 0 0 8px;
+}
+
+.growth-event-banner__tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 187, 74, 0.92);
+  color: #6b3700;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.growth-event-banner__timer {
+  text-align: right;
+}
+
+.growth-event-banner__timer strong {
+  display: block;
+  font-size: 2.2rem;
+}
+
+.growth-event-banner__timer span {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.72rem;
+  color: rgba(255, 247, 239, 0.72);
+}
+
+.home-play-entry-card {
+  padding: 28px;
+}
+
+.home-play-entry-card__header,
+.home-play-entry-card__meta,
+.daily-target-card__header,
+.market-card__header,
+.rankings-table-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.home-play-entry-card__meta {
+  min-width: 180px;
+  flex-direction: column;
+}
+
+.home-play-stage-preview {
+  padding-top: 18px;
+}
+
+.home-play-stage-preview__board {
+  position: relative;
+  min-height: 380px;
+  border-radius: 34px;
+  background: linear-gradient(180deg, rgba(255, 252, 247, 0.88) 0%, rgba(242, 235, 221, 0.9) 100%);
+  border: 1px solid rgba(120, 102, 79, 0.08);
+  overflow: hidden;
+}
+
+.home-play-stage-preview__pill {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.home-orb {
+  position: absolute;
+  border-radius: 50%;
+  box-shadow: 0 20px 34px rgba(79, 65, 47, 0.12);
+}
+
+.home-orb--rose {
+  width: 112px;
+  height: 112px;
+  top: 120px;
+  left: 120px;
+  background: #ffbcc0;
+}
+
+.home-orb--mint {
+  width: 84px;
+  height: 84px;
+  top: 192px;
+  left: 212px;
+}
+
+.home-orb--seed {
+  width: 54px;
+  height: 54px;
+  top: 248px;
+  left: 148px;
+  background: #f4df92;
+}
+
+.home-highlight-pill {
+  padding: 12px 18px;
+  font-weight: 700;
+}
+
+.home-highlight-pill--combo {
+  background: linear-gradient(180deg, #ffb236 0%, #ff9a1f 100%);
+  color: #513200;
+}
+
+.hub-home-secondary-grid,
+.garden-milestone-grid,
+.rankings-podium-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.daily-target-card--accent {
+  background: linear-gradient(180deg, rgba(255, 197, 201, 0.9) 0%, rgba(255, 208, 212, 0.96) 100%);
+}
+
+.daily-target-list,
+.garden-collection-grid,
+.rankings-table {
+  display: grid;
+  gap: 14px;
+}
+
+.daily-target-list__item {
+  display: grid;
+  gap: 8px;
+  padding: 14px 0;
+  border-top: 1px solid rgba(120, 102, 79, 0.08);
+}
+
+.daily-target-list__item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.daily-target-list__copy {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.hub-side-card__stats,
+.garden-level-card__stats,
+.rankings-overview-card__stats {
+  margin-top: 14px;
+}
+
+.hub-side-card__stats > div,
+.garden-level-card__stats > div,
+.rankings-overview-card__stats > div {
+  min-width: 88px;
+}
+
+.hub-inline-link {
+  font-weight: 700;
+  color: #0b7a58;
+  text-decoration: none;
+}
+
+.growth-play-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.growth-play-card {
+  min-height: 144px;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.garden-collection-chip,
+.rankings-table__row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: rgba(255, 248, 239, 0.8);
+}
+
+.garden-collection-chip__swatch {
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  flex: 0 0 auto;
+}
+
+.garden-milestone-card.is-complete {
+  background: linear-gradient(180deg, rgba(232, 246, 232, 0.95) 0%, rgba(245, 252, 245, 0.96) 100%);
+}
+
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.market-card {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 20px;
+}
+
+.market-card.is-equipped {
+  border-color: rgba(15, 122, 90, 0.28);
+  box-shadow: 0 20px 40px rgba(15, 122, 90, 0.12);
+}
+
+.market-card__preview {
+  position: relative;
+  min-height: 220px;
+  border-radius: 24px;
+  overflow: hidden;
+  background: rgba(240, 233, 221, 0.8);
+}
+
+.market-card__orb {
+  position: absolute;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  top: 58px;
+  left: 52px;
+  box-shadow: 0 18px 30px rgba(79, 65, 47, 0.16);
+}
+
+.market-card__mist {
+  position: absolute;
+  inset: auto 24px 22px;
+  height: 38px;
+  border-radius: 999px;
+  filter: blur(8px);
+}
+
+.market-card__body {
+  display: grid;
+  gap: 12px;
+}
+
+.market-card__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.market-card__action {
+  min-height: 48px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #89a173 0%, #0f7a5a 100%);
+  color: #fff7ef;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.market-card__action.is-equipped,
+.market-card__action:disabled {
+  background: rgba(223, 214, 198, 0.9);
+  color: var(--muted);
+  cursor: default;
+}
+
+.rankings-overview-card--soft {
+  background: rgba(255, 248, 239, 0.86);
+}
+
+.podium-card.is-first {
+  background: linear-gradient(180deg, rgba(255, 245, 201, 0.95) 0%, rgba(255, 252, 240, 0.96) 100%);
+}
+
+.rankings-table__row {
+  justify-content: space-between;
+}
+
+.rankings-table__row.is-player {
+  border: 1px solid rgba(15, 122, 90, 0.18);
+  background: rgba(231, 246, 237, 0.9);
+}
+
+.rankings-table__rank {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 181, 57, 0.24);
+  color: #8d5f09;
+  font-weight: 700;
+}
+
+@media (max-width: 1180px) {
+  .garden-dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .garden-dashboard__sidebar {
+    position: static;
+  }
+
+  .hub-home-grid,
+  .garden-page-grid,
+  .rankings-page-grid,
+  .market-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hub-home-secondary-grid,
+  .garden-milestone-grid,
+  .rankings-podium-grid,
+  .growth-play-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .market-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .garden-dashboard {
+    width: min(100%, calc(100% - 20px));
+    padding-top: 18px;
+  }
+
+  .garden-dashboard__topbar,
+  .home-play-entry-card__header,
+  .home-play-entry-card__meta,
+  .daily-target-card__header,
+  .market-card__header {
+    flex-direction: column;
+  }
+
+  .home-play-stage-preview__board {
+    min-height: 280px;
+  }
+
+  .home-orb--rose {
+    top: 96px;
+    left: 52px;
+  }
+
+  .home-orb--mint {
+    top: 158px;
+    left: 158px;
+  }
+
+  .home-orb--seed {
+    top: 216px;
+    left: 96px;
+  }
+}

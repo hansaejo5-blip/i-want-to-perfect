@@ -1,4 +1,5 @@
-export type Route = '/' | '/play' | '/guide' | '/updates' | '/support' | '/privacy'
+export type Route = '/' | '/play' | '/garden' | '/market' | '/rankings' | '/guide' | '/updates' | '/support' | '/privacy'
+export type HubRoute = '/' | '/play' | '/garden' | '/market' | '/rankings'
 
 export type RouteMeta = {
   title: string
@@ -6,7 +7,8 @@ export type RouteMeta = {
   canonicalPath: Route
 }
 
-const INTERNAL_ROUTES: Route[] = ['/', '/play', '/guide', '/updates', '/support', '/privacy']
+const INTERNAL_ROUTES: Route[] = ['/', '/play', '/garden', '/market', '/rankings', '/guide', '/updates', '/support', '/privacy']
+const HUB_ROUTES: HubRoute[] = ['/', '/play', '/garden', '/market', '/rankings']
 const EXTERNAL_URL_PATTERN = /^(?:[a-z][a-z\d+.-]*:|\/\/)/i
 
 export const SITE_NAME = 'Perfect Drop'
@@ -16,7 +18,15 @@ export const DISCORD_URL = 'https://discord.gg/your-community'
 export const NEWSLETTER_URL = 'mailto:hello@perfectdrop.game'
 export const APP_BASE_PATH = normalizeBasePath(import.meta.env.BASE_URL || '/')
 
-export const NAV_ITEMS: Array<{ href: Exclude<Route, '/privacy'>; label: string }> = [
+export const HUB_NAV_ITEMS: Array<{ href: HubRoute; label: string }> = [
+  { href: '/', label: 'Home' },
+  { href: '/play', label: 'Play' },
+  { href: '/garden', label: 'Garden' },
+  { href: '/market', label: 'Market' },
+  { href: '/rankings', label: 'Rankings' },
+]
+
+export const NAV_ITEMS: Array<{ href: Exclude<Route, '/privacy' | '/garden' | '/market' | '/rankings'>; label: string }> = [
   { href: '/', label: 'Home' },
   { href: '/play', label: 'Play' },
   { href: '/guide', label: 'Guide' },
@@ -26,41 +36,54 @@ export const NAV_ITEMS: Array<{ href: Exclude<Route, '/privacy'>; label: string 
 
 export const ROUTE_META: Record<Route, RouteMeta> = {
   '/': {
-    title: 'Perfect Drop | Free Flower Merge Browser Game',
-    description:
-      'Play Perfect Drop, a free flower merge browser game with quick rounds, simple controls, a live leaderboard, and no download required.',
+    title: 'Perfect Drop Hub | Garden Growth Dashboard',
+    description: 'Track your level, daily bloom targets, emerald balance, skins, and recent Perfect Drop runs from one calm garden dashboard.',
     canonicalPath: '/',
   },
   '/play': {
-    title: 'Play Perfect Drop Online | Free Merge Game',
-    description:
-      'Play Perfect Drop online in your browser. Merge matching flowers, chase a high score, and restart instantly on desktop or mobile.',
+    title: 'Play Perfect Drop | Runs, Rewards, and Growth',
+    description: 'Play Perfect Drop online and turn each run into XP, emerald rewards, daily target progress, and new garden unlocks.',
     canonicalPath: '/play',
+  },
+  '/garden': {
+    title: 'Perfect Drop Garden | Progress, Unlocks, and Milestones',
+    description: 'See your Perfect Drop level progress, bloom milestones, collection unlocks, and daily growth status inside the Garden.',
+    canonicalPath: '/garden',
+  },
+  '/market': {
+    title: 'Perfect Drop Market | Buy Skins with Emeralds',
+    description: 'Spend emeralds on Perfect Drop skins, preview unlocks, and equip new garden-themed finishes for your runs.',
+    canonicalPath: '/market',
+  },
+  '/rankings': {
+    title: 'Perfect Drop Rankings | Best Score and Leaderboards',
+    description: 'Review your best Perfect Drop score, leaderboard standings, and current competitive pace from the Rankings hub.',
+    canonicalPath: '/rankings',
   },
   '/guide': {
     title: 'Perfect Drop Guide | How to Play, Rules, Tips',
-    description:
-      'Learn how to play Perfect Drop with controls, rules, failure conditions, beginner tips, common mistakes, and merge strategy.',
+    description: 'Learn how to play Perfect Drop with controls, rules, failure conditions, beginner tips, common mistakes, and merge strategy.',
     canonicalPath: '/guide',
   },
   '/updates': {
     title: 'Perfect Drop Updates | Patch Notes for the Merge Game',
-    description:
-      'Read Perfect Drop patch notes covering gameplay tuning, physics changes, controls, and new content for the flower merge browser game.',
+    description: 'Read Perfect Drop patch notes covering gameplay tuning, physics changes, controls, and new content for the flower merge browser game.',
     canonicalPath: '/updates',
   },
   '/support': {
     title: 'Support Perfect Drop | itch.io and Future Plans',
-    description:
-      'Support Perfect Drop on itch.io, follow future updates, and find the next steps for this browser merge game project.',
+    description: 'Support Perfect Drop on itch.io, follow future updates, and find the next steps for this browser merge game project.',
     canonicalPath: '/support',
   },
   '/privacy': {
     title: 'Perfect Drop Privacy | Site and Data Notice',
-    description:
-      'Read the Perfect Drop privacy notice covering data handling, cookies, analytics-ready structure, and contact options.',
+    description: 'Read the Perfect Drop privacy notice covering data handling, cookies, analytics-ready structure, and contact options.',
     canonicalPath: '/privacy',
   },
+}
+
+export function isHubRoute(route: Route): route is HubRoute {
+  return HUB_ROUTES.includes(route as HubRoute)
 }
 
 function normalizeBasePath(basePath: string) {

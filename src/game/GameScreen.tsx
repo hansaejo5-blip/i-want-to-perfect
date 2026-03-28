@@ -203,8 +203,10 @@ export function GameScreen({
       score: snapshot.score,
       bestScore: snapshot.bestScore,
       shotCount: snapshot.shotCount,
+      mergeCount: snapshot.mergeCount,
+      maxCombo: snapshot.maxCombo,
     })
-  }, [onRunEnded, snapshot.bestScore, snapshot.isGameOver, snapshot.score, snapshot.shotCount])
+  }, [onRunEnded, snapshot.bestScore, snapshot.isGameOver, snapshot.maxCombo, snapshot.mergeCount, snapshot.score, snapshot.shotCount])
 
   useEffect(() => {
     return () => {

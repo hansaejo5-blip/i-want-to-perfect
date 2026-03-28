@@ -20,6 +20,8 @@ export interface RunEndedSummary {
   score: number
   bestScore: number
   shotCount: number
+  mergeCount: number
+  maxCombo: number
 }
 
 export interface LeaderboardEntry {

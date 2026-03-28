@@ -170,6 +170,8 @@ export function createGame({
   let score = 0
   let bestScore = storedBestScore
   let comboCount = 0
+  let mergeCount = 0
+  let maxCombo = 0
   let lastMergeAt: number | null = null
 
   const triggerGameOver = () => {
@@ -240,6 +242,8 @@ export function createGame({
       score,
       bestScore,
       comboCount,
+      mergeCount,
+      maxCombo,
       currentLevel: cannon.currentLevel,
       nextLevel: cannon.nextLevel,
       floorBallCount,
@@ -406,6 +410,8 @@ export function createGame({
       } else {
         comboCount = 1
       }
+      mergeCount += 1
+      maxCombo = Math.max(maxCombo, comboCount)
       lastMergeAt = time
 
       const comboBonus = comboCount > 1

@@ -22,6 +22,8 @@ export interface GameSnapshot {
   score: number
   bestScore: number
   comboCount: number
+  mergeCount: number
+  maxCombo: number
   currentLevel: BallLevel
   nextLevel: BallLevel
   floorBallCount: number

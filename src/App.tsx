@@ -3,7 +3,7 @@ import './App.css'
 import { trackPageView } from './site/analytics'
 import { SiteLayout } from './site/components/SiteLayout'
 import { faqs } from './site/data/content'
-import { GuidePage, HomePage, PlayPage, PrivacyPage, SupportPage, UpdatesPage } from './site/pages'
+import { GardenPage, GuidePage, HomePage, MarketPage, PlayPage, PrivacyPage, RankingsPage, SupportPage, UpdatesPage } from './site/pages'
 import {
   ROUTE_META,
   SITE_NAME,
@@ -12,6 +12,15 @@ import {
   routeToHref,
   type Route,
 } from './site/router'
+import {
+  applyRunProgression,
+  equipSkin,
+  loadProgressionState,
+  purchaseSkin,
+  saveProgressionState,
+  syncProgressionState,
+  type ProgressionRunSummary,
+} from './site/progression'
 
 const ensureMetaTag = (selector: string, create: () => HTMLMetaElement) => {
   const existing = document.head.querySelector<HTMLMetaElement>(selector)
@@ -51,6 +60,7 @@ const ensureScriptTag = (selector: string, create: () => HTMLScriptElement) => {
 
 function App() {
   const [route, setRoute] = useState<Route>(() => normalizeRoute(window.location.pathname))
+  const [progression, setProgression] = useState(() => loadProgressionState())
   const meta = ROUTE_META[route]
 
   useEffect(() => {
@@ -61,6 +71,18 @@ function App() {
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
+
+  useEffect(() => {
+    const syncInterval = window.setInterval(() => {
+      setProgression((current) => syncProgressionState(current))
+    }, 60_000)
+
+    return () => window.clearInterval(syncInterval)
+  }, [])
+
+  useEffect(() => {
+    saveProgressionState(progression)
+  }, [progression])
 
   useEffect(() => {
     document.documentElement.lang = 'en'
@@ -214,13 +236,31 @@ function App() {
 
     window.history.pushState({}, '', routeToHref(nextRoute))
     setRoute(nextRoute)
+    setProgression((current) => syncProgressionState(current))
     window.scrollTo({ top: 0, behavior: 'auto' })
+  }
+
+  const handleRunCompleted = (summary: ProgressionRunSummary) => {
+    setProgression((current) => applyRunProgression(current, summary))
   }
 
   const renderPage = () => {
     switch (route) {
       case '/play':
-        return <PlayPage navigate={navigate} />
+        return <PlayPage navigate={navigate} progression={progression} onCompleteRun={handleRunCompleted} />
+      case '/garden':
+        return <GardenPage navigate={navigate} progression={progression} />
+      case '/market':
+        return (
+          <MarketPage
+            navigate={navigate}
+            progression={progression}
+            onBuySkin={(skinId) => setProgression((current) => purchaseSkin(current, skinId))}
+            onEquipSkin={(skinId) => setProgression((current) => equipSkin(current, skinId))}
+          />
+        )
+      case '/rankings':
+        return <RankingsPage navigate={navigate} progression={progression} />
       case '/guide':
         return <GuidePage />
       case '/updates':
@@ -231,7 +271,7 @@ function App() {
         return <PrivacyPage />
       case '/':
       default:
-        return <HomePage navigate={navigate} />
+        return <HomePage navigate={navigate} progression={progression} />
     }
   }
 

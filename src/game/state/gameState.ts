@@ -15,6 +15,8 @@ export function createInitialGameSnapshot(bestScore = 0): GameSnapshot {
     score: 0,
     bestScore,
     comboCount: 0,
+    mergeCount: 0,
+    maxCombo: 0,
     currentLevel,
     nextLevel,
     floorBallCount: 0,

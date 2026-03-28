@@ -14,13 +14,16 @@ import {
 } from "../../game/stats"
 import { CTAButton } from "../components/CTAButton"
 import { FinalStagePreviewArt } from '../components/FinalStagePreviewArt'
-import { PageContainer } from "../components/PageContainer"
+import { DashboardShell } from "../components/DashboardShell"
 import { SectionTitle } from "../components/SectionTitle"
 import { playPageCopy } from "../data/content"
 import { getAbsoluteSiteUrl, type Route } from "../router"
+import { getDailyCompletion, getEquippedSkin, getLevelProgress, type ProgressionRunSummary, type ProgressionState } from "../progression"
 
 type PlayPageProps = {
   navigate: (route: Route) => void
+  progression: ProgressionState
+  onCompleteRun: (summary: ProgressionRunSummary) => void
 }
 
 type LeaderboardFilter = "all" | "weekly" | "daily" | "friends"
@@ -378,7 +381,7 @@ function getFilterCopy(filter: LeaderboardFilter) {
 
 const PLAY_FULLSCREEN_FLAG = 'perfect-drop-enter-fullscreen'
 
-export function PlayPage({ navigate }: PlayPageProps) {
+export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps) {
   const [sessionKey, setSessionKey] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
   const [latestRun, setLatestRun] = useState<RecordedRunSummary | null>(null)
@@ -576,9 +579,35 @@ export function PlayPage({ navigate }: PlayPageProps) {
   const shareChallengeCopy = currentEntry
     ? "Share your score and challenge friends to beat #" + currentEntry.rank + "."
     : "Post your best run and challenge friends to beat your score."
+  const levelProgress = getLevelProgress(progression)
+  const dailyProgress = getDailyCompletion(progression)
+  const equippedSkin = getEquippedSkin(progression)
 
   return (
-    <PageContainer>
+    <DashboardShell
+      route="/play"
+      navigate={navigate}
+      progression={progression}
+      title="Play"
+      description="Stay in the focused game view, but keep your level, dailies, emeralds, and equipped skin visible while you play."
+    >
+      <section className="page-section growth-play-strip" aria-label="Growth summary">
+        <article className="card growth-play-card">
+          <span className="hud-label">Level</span>
+          <strong>Level {progression.level}</strong>
+          <p>{levelProgress.remainingXp} XP until the next bloom tier.</p>
+        </article>
+        <article className="card growth-play-card">
+          <span className="hud-label">Daily Targets</span>
+          <strong>{dailyProgress.completed} / {dailyProgress.total}</strong>
+          <p>{Math.round(dailyProgress.percent * 100)}% of today's board is complete.</p>
+        </article>
+        <article className="card growth-play-card">
+          <span className="hud-label">Emeralds</span>
+          <strong>{progression.emeralds}</strong>
+          <p>{equippedSkin.name} is currently equipped.</p>
+        </article>
+      </section>
       <section className="page-section play-page__hero card">
         <SectionTitle eyebrow="Play" title={playPageCopy.heading} />
         <p>{playPageCopy.description}</p>
@@ -622,6 +651,7 @@ export function PlayPage({ navigate }: PlayPageProps) {
             isMuted={isMuted}
             autoEnterFullscreenSignal={autoEnterFullscreenSignal}
             onRunEnded={(summary) => {
+              onCompleteRun(summary)
               void recordRun(summary).then((result) => {
                 setLatestRun(result)
                 setPlayerNameInput(result.playerDisplayName)
@@ -948,6 +978,6 @@ export function PlayPage({ navigate }: PlayPageProps) {
           <CTAButton label="Read Guide" href="/guide" navigate={navigate} variant="ghost" />
         </div>
       </section>
-    </PageContainer>
+    </DashboardShell>
   )
 }

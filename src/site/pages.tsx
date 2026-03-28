@@ -1,1 +1,1 @@
-export { GuidePage, HomePage, PlayPage, PrivacyPage, SupportPage, UpdatesPage } from './pages/index'
+export { GardenPage, GuidePage, HomePage, MarketPage, PlayPage, PrivacyPage, RankingsPage, SupportPage, UpdatesPage } from './pages/index'
