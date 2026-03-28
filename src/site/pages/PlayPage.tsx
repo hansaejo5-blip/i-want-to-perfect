@@ -18,7 +18,7 @@ import { DashboardShell } from "../components/DashboardShell"
 import { SectionTitle } from "../components/SectionTitle"
 import { playPageCopy } from "../data/content"
 import { getAbsoluteSiteUrl, type Route } from "../router"
-import { getActiveEventState, getDailyCompletion, getDailyRefreshCountdown, getEquippedBackground, getEquippedSkin, getLevelProgress, type ProgressionRunSummary, type ProgressionState } from "../progression"
+import { getActiveEventState, getEquippedBackground, getEquippedSkin, type ProgressionRunSummary, type ProgressionState } from "../progression"
 
 type PlayPageProps = {
   navigate: (route: Route) => void
@@ -579,17 +579,13 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
   const shareChallengeCopy = currentEntry
     ? "Share your score and challenge friends to beat #" + currentEntry.rank + "."
     : "Post your best run and challenge friends to beat your score."
-  const levelProgress = getLevelProgress(progression)
-  const dailyProgress = getDailyCompletion(progression)
   const equippedSkin = getEquippedSkin(progression)
   const equippedBackground = getEquippedBackground(progression)
   const [eventState, setEventState] = useState(() => getActiveEventState())
-  const [dailyRefreshLabel, setDailyRefreshLabel] = useState(() => getDailyRefreshCountdown())
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       setEventState(getActiveEventState())
-      setDailyRefreshLabel(getDailyRefreshCountdown())
     }, 1000)
 
     return () => window.clearInterval(intervalId)
@@ -644,28 +640,6 @@ export function PlayPage({ navigate, progression, onCompleteRun }: PlayPageProps
           </div>
         </div>
         <div className="play-live-grid__side">
-          <section className={'card play-event-card ' + eventState.cardClassName}>
-            <span className="section-title__eyebrow">Current Event</span>
-            <h3>{eventState.event.title}</h3>
-            <p>{eventState.event.bonusSummary}</p>
-            <div className="play-event-card__row">
-              <strong>{eventState.countdownLabel}</strong>
-              <span>{eventState.isActive ? 'bonus window' : 'ended'}</span>
-            </div>
-            <p>Daily board resets in {dailyRefreshLabel}. Clear the current payout path before it rolls over.</p>
-          </section>
-
-          <section className="card play-mini-hud-card">
-            <div className="play-mini-hud-card__row">
-              <span className="hud-label">Level</span>
-              <strong>Level {progression.level}</strong>
-            </div>
-            <div className="garden-progress">
-              <div className="garden-progress__fill" style={{ width: Math.max(levelProgress.progress * 100, 6) + '%' }} />
-            </div>
-            <p>{levelProgress.remainingXp} XP until the next bloom tier. Daily board: {dailyProgress.completed} / {dailyProgress.total}, refresh in {dailyRefreshLabel}.</p>
-          </section>
-
           <section className="card control-card">
             <SectionTitle eyebrow="Controls" title="Game controls" />
             <div className="control-stack">
