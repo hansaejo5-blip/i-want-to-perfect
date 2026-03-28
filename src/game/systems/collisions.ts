@@ -11,10 +11,11 @@ import { getNextBallLevel, isBallBody } from '../entities/fruits'
 import type { BallLevel, BallBody } from '../types'
 
 const MERGE_CONTACT_MS = 0.0001
-const MAX_RELATIVE_SPEED = 19.2
-const IMMEDIATE_MERGE_SPEED = 17.8
-const MERGE_DISTANCE_TOLERANCE = 72
-const LAUNCHED_MERGE_WINDOW_MS = 3000
+const MAX_RELATIVE_SPEED = 20.4
+const IMMEDIATE_MERGE_SPEED = 18.8
+const MERGE_DISTANCE_TOLERANCE = 78
+const LAUNCHED_MERGE_WINDOW_MS = 3200
+const CLOSE_DRIFT_MERGE_SPEED = 9.6
 
 export interface MergeCandidate {
   bodyAId: number
@@ -163,7 +164,7 @@ export function createCollisionHooks(engine: Engine, nowProvider: () => number =
     const hasLaunchHit =
       launchedBodyTouchesSettledBall &&
       penetrationDepth >= minRadius * 0.012 &&
-      relativeSpeed <= 18.4
+      relativeSpeed <= 19.6
 
     state.hadDeepContact = state.hadDeepContact || hasDeepContact
     state.hadStrongPush = state.hadStrongPush || hasStrongPush
@@ -176,7 +177,7 @@ export function createCollisionHooks(engine: Engine, nowProvider: () => number =
 
     const sustainedContact = state.contactMs >= MERGE_CONTACT_MS
     const immediateMerge = allowImmediate && relativeSpeed <= IMMEDIATE_MERGE_SPEED
-    const restingContact = bodyA.speed <= 2.6 || bodyB.speed <= 2.6 || bodyA.isSleeping || bodyB.isSleeping
+    const restingContact = bodyA.speed <= 3.1 || bodyB.speed <= 3.1 || bodyA.isSleeping || bodyB.isSleeping
     const fallingIntoRestingMerge =
       (state.hadDeepContact || state.hadStrongPush || state.hadDropContact) &&
       relativeSpeed <= MAX_RELATIVE_SPEED &&
@@ -191,10 +192,15 @@ export function createCollisionHooks(engine: Engine, nowProvider: () => number =
       penetrationDepth >= minRadius * 0.02
     const launchedMerge =
       state.hadLaunchHit &&
-      relativeSpeed <= 18.4 &&
+      relativeSpeed <= 19.6 &&
       penetrationDepth >= minRadius * 0.012
+    const closeDriftMerge =
+      isCloseEnough &&
+      centerDistance <= radiusA + radiusB + Math.min(MERGE_DISTANCE_TOLERANCE * 0.35, minRadius * 0.45) &&
+      relativeSpeed <= CLOSE_DRIFT_MERGE_SPEED &&
+      (state.hadDeepContact || state.hadStrongPush || state.hadDropContact || state.hadLaunchHit || state.contactMs >= FIXED_TIMESTEP_MS * 0.5)
 
-    if (sustainedContact === false && immediateMerge === false && fallingIntoRestingMerge === false && pushedMerge === false && dropMerge === false && launchedMerge === false) {
+    if (sustainedContact === false && immediateMerge === false && fallingIntoRestingMerge === false && pushedMerge === false && dropMerge === false && launchedMerge === false && closeDriftMerge === false) {
       return
     }
 
